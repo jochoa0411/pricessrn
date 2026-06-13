@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LGM · Admin Precios</title>
+<style>
+:root { --bg: #f7f8fa; --card: #fff; --green: #1a6b45; --green-light: #e8f5e9; --green-dark: #14432a; --red: #d32f2f; --amber: #d97706; --blue: #0066cc; --border: #e2e5e9; --text: #1a1a1a; --muted: #8a919a; --radius: 8px; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
+
+/* Header */
+.topbar { background: linear-gradient(135deg, var(--green-dark), var(--green)); color: white; padding: 18px 32px; display: flex; justify-content: space-between; align-items: center; }
+.topbar h1 { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+.topbar h1 small { font-weight: 400; opacity: 0.7; font-size: 13px; margin-left: 8px; }
+.topbar-right { display: flex; gap: 10px; align-items: center; }
+.status { font-size: 12px; padding: 5px 12px; border-radius: 99px; font-weight: 600; }
+.status.ok { background: rgba(255,255,255,0.2); }
+.status.dirty { background: #ff9500; color: white; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
+
+/* Layout */
+.container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+.toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+.toolbar-left { display: flex; gap: 10px; align-items: center; flex: 1; }
+.toolbar-right { display: flex; gap: 10px; align-items: center; }
+
+/* Buttons */
+.btn { padding: 10px 18px; border: none; border-radius: var(--radius); font-weight: 600; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; }
+.btn-green { background: var(--green); color: white; }
+.btn-green:hover { background: var(--green-dark); }
+.btn-red { background: var(--red); color: white; }
+.btn-blue { background: var(--blue); color: white; }
+.btn-ghost { background: var(--border); color: var(--text); }
+.btn-ghost:hover { background: #d0d4da; }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Tabs */
+.tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 20px; }
+.tab { padding: 12px 24px; border: none; background: transparent; cursor: pointer; font-weight: 600; color: var(--muted); border-bottom: 3px solid transparent; margin-bottom: -2px; font-size: 14px; }
+.tab.active { color: var(--green); border-bottom-color: var(--green); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* Table */
+.card { background: var(--card); border-radius: var(--radius); box-shadow: 0 1px 3px rgba(0,0,0,0.06); overflow: hidden; margin-bottom: 20px; }
+table { width: 100%; border-collapse: collapse; }
+th { background: var(--green-light); color: var(--green-dark); padding: 10px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; text-align: left; font-weight: 700; position: sticky; top: 0; }
+td { padding: 8px 14px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+tr:hover td { background: #f9fafb; }
+td input { width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px; font-family: inherit; }
+td input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 2px rgba(26,107,69,0.1); }
+td input.changed { background: #fffde7; border-color: var(--amber); }
+td input[type="number"] { font-variant-numeric: tabular-nums; }
+.col-id { width: 50px; color: var(--muted); }
+.col-actions { width: 80px; text-align: center; }
+.row-new td { background: #f0f9f5; }
+
+/* Config */
+.config-card { background: var(--card); border-radius: var(--radius); padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 20px; max-width: 600px; }
+.config-card label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; }
+.config-card input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; font-family: monospace; }
+.config-card input:focus { outline: none; border-color: var(--green); }
+.config-card p { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+
+/* Toast */
+.toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 22px; border-radius: var(--radius); font-size: 13px; font-weight: 600; z-index: 9999; opacity: 0; transform: translateY(12px); transition: all 0.25s; pointer-events: none; color: white; max-width: 400px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.ok { background: var(--green); }
+.toast.err { background: var(--red); }
+
+/* Diff modal */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.overlay.hidden { display: none; }
+.diff-box { background: white; border-radius: 12px; padding: 28px; width: 100%; max-width: 580px; max-height: 80vh; overflow-y: auto; }
+.diff-box h2 { font-size: 17px; color: var(--green); margin-bottom: 16px; }
+.diff-line { padding: 6px 10px; border-radius: 4px; margin: 4px 0; font-size: 13px; font-family: monospace; }
+.diff-add { background: #e8f5e9; color: #1b5e20; }
+.diff-del { background: #ffebee; color: #b71c1c; }
+.diff-mod { background: #fff8e1; color: #f57f17; }
+.diff-btns { display: flex; gap: 10px; margin-top: 20px; }
+.diff-btns .btn { flex: 1; justify-content: center; }
+
+/* Version */
+.version-bar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--green-light); border-radius: var(--radius); margin-bottom: 20px; font-size: 13px; }
+.version-bar strong { color: var(--green); font-size: 18px; }
+.version-bar input { width: 70px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 16px; font-weight: 700; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>LGM <small>Admin de Precios</small></h1>
+  <div class="topbar-right">
+    <span id="statusBadge" class="status ok">Sin cambios</span>
+    <button class="btn btn-ghost" onclick="switchTab('config')" style="background:rgba(255,255,255,0.15);color:white;">⚙️ Config</button>
+  </div>
+</div>
+
+<div class="container">
+  <!-- CONFIG -->
+  <div id="panelConfig" class="tab-panel">
+    <div class="config-card">
+      <h2 style="color:var(--green);margin-bottom:16px;">Configuración de GitHub</h2>
+      <label>Personal Access Token (classic)</label>
+      <input type="password" id="cfgToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+      <p>Necesitás un token con permiso <strong>repo</strong>. Generalo en <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens</a>. Se guarda solo en este navegador.</p>
+      <br>
+      <label>Repositorio</label>
+      <input type="text" id="cfgRepo" value="jochoa0411/pricessrn">
+      <p>Formato: <code>usuario/repo</code></p>
+      <br>
+      <label>Archivo</label>
+      <input type="text" id="cfgFile" value="precios.json">
+      <br><br>
+      <button class="btn btn-green" onclick="guardarConfig()">💾 Guardar configuración</button>
+      <button class="btn btn-ghost" onclick="switchTab('editor')" style="margin-left:8px;">← Volver al editor</button>
+    </div>
+  </div>
+
+  <!-- EDITOR -->
+  <div id="panelEditor" class="tab-panel active">
+
+    <div class="version-bar">
+      <span>Versión actual:</span>
+      <input type="hidden" id="inputVersion">
+      <strong id="versionDisplay" style="font-size:18px;color:var(--green);">v-</strong><span id="lastUpdate" style="color:var(--muted);font-size:12px;margin-left:12px;"></span>
+      <span id="lastUpdate" style="color:var(--muted);font-size:12px;margin-left:12px;"></span>
+      <div style="flex:1"></div>
+      <button class="btn btn-ghost btn-sm" onclick="cargarDesdeGH()">🔄 Recargar desde GitHub</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchSubTab(this,'tabTelas')">📊 Telas (<span id="countTelas">0</span>)</button>
+      <button class="tab" onclick="switchSubTab(this,'tabSacos')">🛍️ Sacos (<span id="countSacos">0</span>)</button>
+    </div>
+
+    <!-- TELAS -->
+    <div id="tabTelas" class="tab-panel active">
+      <div class="card">
+        <table>
+          <thead><tr>
+            <th class="col-id">ID</th>
+            <th>Nombre</th>
+            <th>Cat</th>
+            <th>Sombra</th>
+            <th>Rollo</th>
+            <th style="width:100px">Master $/pie²</th>
+            <th style="width:100px">Conf $/pie²</th>
+            <th class="col-actions"></th>
+          </tr></thead>
+          <tbody id="tbodyTelas"></tbody>
+        </table>
+      </div>
+      <button class="btn btn-blue" onclick="addTela()">➕ Agregar tela</button>
+    </div>
+
+    <!-- SACOS -->
+    <div id="tabSacos" class="tab-panel">
+      <div class="card">
+        <table>
+          <thead><tr>
+            <th class="col-id">ID</th>
+            <th>Nombre</th>
+            <th>Medidas</th>
+            <th style="width:70px">Peso gm</th>
+            <th style="width:90px">Precio A</th>
+            <th style="width:90px">Precio B</th>
+            <th style="width:90px">Precio C</th>
+            <th class="col-actions"></th>
+          </tr></thead>
+          <tbody id="tbodySacos"></tbody>
+        </table>
+      </div>
+      <button class="btn btn-blue" onclick="addSaco()">➕ Agregar saco</button>
+    </div>
+
+    <div class="toolbar" style="margin-top:20px;">
+      <div style="flex:1"></div>
+      <button class="btn btn-green" id="btnPublicar" onclick="prepararPublicacion()" disabled>🚀 Publicar cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- DIFF MODAL -->
+<div id="diffModal" class="overlay hidden" onclick="if(event.target===this) cerrarDiff()">
+  <div class="diff-box" onclick="event.stopPropagation()">
+    <h2>📋 Resumen de cambios</h2>
+    <div id="diffContent"></div>
+    <div class="diff-btns">
+      <button class="btn btn-green" onclick="publicar()">✅ Confirmar y publicar</button>
+      <button class="btn btn-ghost" onclick="cerrarDiff()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast ok"></div>
+
+<script>
+// ── State ──
+let DATA = { version: 1, actualizado: '', telas: [], sacos: [] };
+let ORIGINAL = null; // snapshot para diff
+let dirty = false;
+let GH_SHA = null; // sha del archivo actual para commits
+
+// ── Config ──
+function getConfig(){
+  return {
+    token: localStorage.getItem('GH_TOKEN') || '',
+    repo: localStorage.getItem('GH_REPO') || 'jochoa0411/pricessrn',
+    file: localStorage.getItem('GH_FILE') || 'precios.json'
+  };
+}
+function guardarConfig(){
+  localStorage.setItem('GH_TOKEN', document.getElementById('cfgToken').value.trim());
+  localStorage.setItem('GH_REPO', document.getElementById('cfgRepo').value.trim());
+  localStorage.setItem('GH_FILE', document.getElementById('cfgFile').value.trim());
+  toast('✅ Configuración guardada');
+  switchTab('editor');
+  cargarDesdeGH();
+}
+
+// ── Toast ──
+let _tt;
+function toast(msg, tipo='ok'){
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'toast '+tipo+' show';
+  clearTimeout(_tt); _tt = setTimeout(()=> el.classList.remove('show'), 3000);
+}
+
+// ── Tabs ──
+function switchTab(t){
+  document.getElementById('panelConfig').classList.toggle('active', t==='config');
+  document.getElementById('panelEditor').classList.toggle('active', t==='editor');
+}
+function switchSubTab(btn, id){
+  document.querySelectorAll('.tabs .tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#panelEditor > .tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ── Dirty tracking ──
+function markDirty(){
+  dirty = true;
+  document.getElementById('statusBadge').textContent = '● Cambios sin publicar';
+  document.getElementById('statusBadge').className = 'status dirty';
+  document.getElementById('btnPublicar').disabled = false;
+}
+function markClean(){
+  dirty = false;
+  document.getElementById('statusBadge').textContent = 'Sin cambios';
+  document.getElementById('statusBadge').className = 'status ok';
+  document.getElementById('btnPublicar').disabled = true;
+}
+
+// ── Render tables ──
+function renderTelas(){
+  const tb = document.getElementById('tbodyTelas');
+  tb.innerHTML = '';
+  DATA.telas.forEach((t,i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="col-id">${t.id}</td>
+      <td><input value="${esc(t.nombre)}" oninput="DATA.telas[${i}].nombre=this.value;markDirty();this.classList.add('changed')"></td>
+      <td><input value="${esc(t.cat)}" oninput="DATA.telas[${i}].cat=this.value;markDirty();this.classList.add('changed')" style="width:80px"></td>
+      <td><input value="${esc(t.sombra)}" oninput="DATA.telas[${i}].sombra=this.value;markDirty();this.classList.add('changed')" style="width:60px"></td>
+      <td><input value="${esc(t.rollo)}" oninput="DATA.telas[${i}].rollo=this.value;markDirty();this.classList.add('changed')" style="width:90px"></td>
+      <td><input type="number" step="0.001" value="${t.pm}" oninput="DATA.telas[${i}].pm=+this.value;markDirty();this.classList.add('changed')"></td>
+      <td><input type="number" step="0.001" value="${t.pc}" oninput="DATA.telas[${i}].pc=+this.value;markDirty();this.classList.add('changed')"></td>
+      <td class="col-actions"><button class="btn btn-red btn-sm" onclick="DATA.telas.splice(${i},1);renderTelas();markDirty()">🗑️</button></td>`;
+    tb.appendChild(tr);
+  });
+  document.getElementById('countTelas').textContent = DATA.telas.length;
+}
+function renderSacos(){
+  const tb = document.getElementById('tbodySacos');
+  tb.innerHTML = '';
+  DATA.sacos.forEach((s,i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="col-id">${s.id}</td>
+      <td><input value="${esc(s.nombre)}" oninput="DATA.sacos[${i}].nombre=this.value;markDirty();this.classList.add('changed')"></td>
+      <td><input value="${esc(s.medidas)}" oninput="DATA.sacos[${i}].medidas=this.value;markDirty();this.classList.add('changed')" style="width:90px"></td>
+      <td><input type="number" value="${s.gm}" oninput="DATA.sacos[${i}].gm=+this.value;markDirty();this.classList.add('changed')"></td>
+      <td><input type="number" step="0.01" value="${s.pA}" oninput="DATA.sacos[${i}].pA=+this.value;markDirty();this.classList.add('changed')"></td>
+      <td><input type="number" step="0.01" value="${s.pB}" oninput="DATA.sacos[${i}].pB=+this.value;markDirty();this.classList.add('changed')"></td>
+      <td><input type="number" step="0.01" value="${s.pC}" oninput="DATA.sacos[${i}].pC=+this.value;markDirty();this.classList.add('changed')"></td>
+      <td class="col-actions"><button class="btn btn-red btn-sm" onclick="DATA.sacos.splice(${i},1);renderSacos();markDirty()">🗑️</button></td>`;
+    tb.appendChild(tr);
+  });
+  document.getElementById('countSacos').textContent = DATA.sacos.length;
+}
+
+function esc(s){ return (s||'').replace(/"/g, '&quot;'); }
+
+// ── Add rows ──
+function addTela(){
+  const maxId = Math.max(0, ...DATA.telas.map(t=>t.id));
+  DATA.telas.push({id:maxId+1, nombre:'', cat:'', sombra:'', rollo:'', pm:0, pc:0});
+  renderTelas(); markDirty();
+  document.getElementById('tbodyTelas').lastChild.querySelector('input').focus();
+}
+function addSaco(){
+  const maxId = Math.max(0, ...DATA.sacos.map(s=>s.id));
+  DATA.sacos.push({id:maxId+1, nombre:'', medidas:'', gm:0, pA:0, pB:0, pC:0});
+  renderSacos(); markDirty();
+  document.getElementById('tbodySacos').lastChild.querySelector('input').focus();
+}
+
+// ── Cargar desde GitHub ──
+async function cargarDesdeGH(){
+  const cfg = getConfig();
+  if(!cfg.token){ switchTab('config'); toast('Configurá tu token de GitHub primero','err'); return; }
+
+  try {
+    toast('Cargando desde GitHub...');
+    const r = await fetch(`https://api.github.com/repos/${cfg.repo}/contents/${cfg.file}`, {
+      headers: { 'Authorization': 'Bearer '+cfg.token, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const meta = await r.json();
+    GH_SHA = meta.sha;
+
+    const content = atob(meta.content.replace(/\n/g,''));
+    DATA = JSON.parse(content);
+    // Migrar formato viejo
+    DATA.sacos = DATA.sacos.map(s => s.pA !== undefined ? s : {...s, pA:s.p2||0, pB:s.p2||0, pC:s.p2||0});
+
+    ORIGINAL = JSON.parse(JSON.stringify(DATA));
+
+    document.getElementById('inputVersion').value = DATA.version;
+    renderTelas(); renderSacos(); markClean();
+    toast('✅ Cargado v'+DATA.version+' ('+DATA.telas.length+' telas, '+DATA.sacos.length+' sacos)');
+  } catch(e){
+    toast('Error: '+e.message, 'err');
+  }
+}
+
+// ── Diff ──
+function prepararPublicacion(){
+  DATA.version = parseInt(document.getElementById('inputVersion').value) || (ORIGINAL.version + 1);
+  DATA.actualizado = new Date().toISOString().slice(0,10);
+
+  const cambios = [];
+
+  // Telas
+  DATA.telas.forEach(nt => {
+    const o = ORIGINAL.telas.find(x=>x.id===nt.id);
+    if(!o){ cambios.push({t:'add', msg:'+ Tela nueva: '+nt.nombre}); return; }
+    if(o.pm!==nt.pm) cambios.push({t:'mod', msg: nt.nombre+' Master: $'+o.pm.toFixed(3)+' → $'+nt.pm.toFixed(3)});
+    if(o.pc!==nt.pc) cambios.push({t:'mod', msg: nt.nombre+' Conf: $'+o.pc.toFixed(3)+' → $'+nt.pc.toFixed(3)});
+    if(o.nombre!==nt.nombre) cambios.push({t:'mod', msg: 'Tela #'+nt.id+' renombrada: '+o.nombre+' → '+nt.nombre});
+  });
+  ORIGINAL.telas.forEach(o => {
+    if(!DATA.telas.find(x=>x.id===o.id)) cambios.push({t:'del', msg: '- Tela eliminada: '+o.nombre});
+  });
+
+  // Sacos
+  DATA.sacos.forEach(ns => {
+    const o = ORIGINAL.sacos.find(x=>x.id===ns.id);
+    if(!o){ cambios.push({t:'add', msg:'+ Saco nuevo: '+ns.nombre}); return; }
+    ['pA','pB','pC'].forEach(k=>{
+      if(o[k]!==ns[k]) cambios.push({t:'mod', msg: ns.nombre+' Tier '+k.slice(1)+': Q'+o[k].toFixed(2)+' → Q'+ns[k].toFixed(2)});
+    });
+    if(o.nombre!==ns.nombre) cambios.push({t:'mod', msg: 'Saco #'+ns.id+' renombrado: '+o.nombre+' → '+ns.nombre});
+  });
+  ORIGINAL.sacos.forEach(o => {
+    if(!DATA.sacos.find(x=>x.id===o.id)) cambios.push({t:'del', msg: '- Saco eliminado: '+o.nombre});
+  });
+
+  if(!cambios.length){ cambios.push({t:'mod', msg:'Solo cambio de versión: '+ORIGINAL.version+' → '+DATA.version}); }
+
+  const html = cambios.map(c => `<div class="diff-line diff-${c.t}">${c.msg}</div>`).join('');
+  document.getElementById('diffContent').innerHTML = html;
+  document.getElementById('diffModal').classList.remove('hidden');
+}
+function cerrarDiff(){ document.getElementById('diffModal').classList.add('hidden'); }
+
+// ── Publicar (commit a GitHub) ──
+async function publicar(){
+  const cfg = getConfig();
+  cerrarDiff();
+
+  const jsonStr = JSON.stringify(DATA, null, 2);
+  const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
+
+  try {
+    toast('Publicando a GitHub...');
+    const r = await fetch(`https://api.github.com/repos/${cfg.repo}/contents/${cfg.file}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': 'Bearer '+cfg.token,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: 'Precios v'+DATA.version+' — '+new Date().toLocaleDateString('es-GT'),
+        content: b64,
+        sha: GH_SHA
+      })
+    });
+
+    if(!r.ok){
+      const err = await r.json();
+      throw new Error(err.message || 'HTTP '+r.status);
+    }
+
+    const result = await r.json();
+    GH_SHA = result.content.sha;
+    ORIGINAL = JSON.parse(JSON.stringify(DATA));
+    markClean();
+    toast('✅ Publicado v'+DATA.version+' — los iPhones se actualizarán al abrir el app');
+  } catch(e){
+    toast('Error: '+e.message, 'err');
+  }
+}
+
+// ── Init ──
+window.addEventListener('load', function(){
+  const cfg = getConfig();
+  document.getElementById('cfgToken').value = cfg.token;
+  document.getElementById('cfgRepo').value = cfg.repo;
+  document.getElementById('cfgFile').value = cfg.file;
+
+  if(cfg.token){ cargarDesdeGH(); }
+  else { switchTab('config'); }
+});
+
+// Warn antes de cerrar con cambios
+window.addEventListener('beforeunload', function(e){
+  if(dirty){ e.preventDefault(); e.returnValue = ''; }
+});
+</script>
+</body>
+</html>
+<script>
+// Mostrar fecha/hora de última actualización
+const _origCargar = cargarDesdeGH;
+cargarDesdeGH = async function(){
+  await _origCargar();
+  if(DATA.actualizado){
+    document.getElementById('lastUpdate').textContent = '📅 Última actualización: ' + DATA.actualizado;
+  }
+};
+
+// Override publicar para guardar fecha+hora
+const _origPublicar = publicar;
+publicar = async function(){
+  DATA.actualizado = new Date().toLocaleString('es-GT', {
+    day:'2-digit', month:'2-digit', year:'numeric',
+    hour:'2-digit', minute:'2-digit', second:'2-digit'
+  });
+  await _origPublicar();
+  document.getElementById('lastUpdate').textContent = '📅 Última actualización: ' + DATA.actualizado;
+};
+</script>
+<script>
+// Auto-incrementar versión al primer cambio
+const _origMarkDirty = markDirty;
+let _versionBumped = false;
+markDirty = function(){
+  _origMarkDirty();
+  if(!_versionBumped){
+    _versionBumped = true;
+    const inp = document.getElementById('inputVersion');
+    inp.value = parseInt(inp.value || 0) + 1;
+  }
+};
+// Reset flag al cargar o publicar
+const _origCargar2 = cargarDesdeGH;
+cargarDesdeGH = async function(){ await _origCargar2(); _versionBumped = false; };
+const _origPublicar2 = publicar;
+publicar = async function(){ await _origPublicar2(); _versionBumped = false; };
+</script>
+<script>
+// Ocultar input manual, mostrar solo versión como badge
+document.querySelector('.version-bar').innerHTML = '<span>Versión:</span> <strong id="versionDisplay">-</strong><span id="lastUpdate" style="color:#8a919a;font-size:12px;margin-left:12px;"></span><div style="flex:1"></div><button class="btn btn-ghost btn-sm" onclick="cargarDesdeGH()">🔄 Recargar desde GitHub</button>';
+
+// Mostrar versión al cargar
+const _origCargar3 = cargarDesdeGH;
+cargarDesdeGH = async function(){
+  await _origCargar3();
+  document.getElementById('versionDisplay').textContent = 'v' + DATA.version;
+  if(DATA.actualizado) document.getElementById('lastUpdate').textContent = '📅 ' + DATA.actualizado;
+  document.getElementById('inputVersion').value = DATA.version;
+};
+
+// Auto-incrementar al primer cambio + actualizar display
+const _origMarkDirty2 = markDirty;
+let _bumped2 = false;
+markDirty = function(){
+  _origMarkDirty2();
+  if(!_bumped2){
+    _bumped2 = true;
+    DATA.version = (DATA.version || 1) + 1;
+    document.getElementById('versionDisplay').textContent = 'v' + DATA.version + ' (pendiente)';
+  }
+};
+
+// Reset después de publicar
+const _origPublicar3 = publicar;
+publicar = async function(){
+  document.getElementById('inputVersion').value = DATA.version;
+  await _origPublicar3();
+  _bumped2 = false;
+  document.getElementById('versionDisplay').textContent = 'v' + DATA.version;
+  if(DATA.actualizado) document.getElementById('lastUpdate').textContent = '📅 ' + DATA.actualizado;
+};
+</script>
