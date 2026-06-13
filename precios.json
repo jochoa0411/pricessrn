@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "actualizado": "2026-06-12",
+  "telas": [
+    {"id":1,"nombre":"Saran Negro 40%","cat":"Saran","sombra":"40%","rollo":"12'x300'","pm":0.080,"pc":0.097},
+    {"id":2,"nombre":"Saran Negro 63%","cat":"Saran","sombra":"63%","rollo":"12'x300'","pm":0.097,"pc":0.114},
+    {"id":3,"nombre":"Saran Negro 73%","cat":"Saran","sombra":"73%","rollo":"12'x300'","pm":0.108,"pc":0.125},
+    {"id":4,"nombre":"Saran Negro 80%","cat":"Saran","sombra":"80%","rollo":"12'x300'","pm":0.118,"pc":0.136},
+    {"id":5,"nombre":"Saran Negro Triple Urdimbre 80%","cat":"Saran","sombra":"80%","rollo":"12'x300'","pm":0.108,"pc":0.123},
+    {"id":6,"nombre":"Saran Verde 80%","cat":"Saran","sombra":"80%","rollo":"12'x300'","pm":0.124,"pc":0.141},
+    {"id":7,"nombre":"Saran Negro 95%","cat":"Saran","sombra":"95%","rollo":"12'x300'","pm":0.161,"pc":0.179},
+    {"id":8,"nombre":"Saran Raschel 80%","cat":"Saran","sombra":"80%","rollo":"20.3x656","pm":0.070,"pc":0.070},
+    {"id":9,"nombre":"Geotex 2400 (verde/negro)","cat":"Geotex","sombra":"","rollo":"12'x300'","pm":0.178,"pc":0.199},
+    {"id":10,"nombre":"Geotex 2200 Negro","cat":"Geotex","sombra":"","rollo":"12'x300'","pm":0.129,"pc":0.151},
+    {"id":11,"nombre":"Geotex 2100 Negro","cat":"Geotex","sombra":"","rollo":"12'x300'","pm":0.046,"pc":0.053}
+  ],
+  "sacos": [
+    {"id":1,"nombre":"Super Rocola 48x61","medidas":"48x61","gm":298,"pA":7.37,"pB":7.37,"pC":7.37},
+    {"id":2,"nombre":"Rocola 36x48","medidas":"36x48","gm":200,"pA":4.79,"pB":4.79,"pC":4.79},
+    {"id":3,"nombre":"Afrechero 30x48","medidas":"30x48","gm":120,"pA":3.19,"pB":3.19,"pC":3.19},
+    {"id":4,"nombre":"Buff Santiago 28x44","medidas":"28x44","gm":175,"pA":4.35,"pB":4.35,"pC":4.35},
+    {"id":5,"nombre":"Buff Quetzal 28x44","medidas":"28x44","gm":175,"pA":4.35,"pB":4.35,"pC":4.35},
+    {"id":6,"nombre":"Rojo Liso 28x44","medidas":"28x44","gm":135,"pA":3.41,"pB":3.41,"pC":3.41},
+    {"id":7,"nombre":"Rojo Quetzal 28x44","medidas":"28x44","gm":110,"pA":2.86,"pB":2.86,"pC":2.86},
+    {"id":8,"nombre":"Buff Liso 28x44","medidas":"28x44","gm":110,"pA":2.86,"pB":2.86,"pC":2.86},
+    {"id":9,"nombre":"Blanco Liso 28x44","medidas":"28x44","gm":110,"pA":2.81,"pB":2.81,"pC":2.81},
+    {"id":10,"nombre":"Blanco Guisquil 24x38","medidas":"24x38","gm":74,"pA":1.93,"pB":1.93,"pC":1.93},
+    {"id":11,"nombre":"Blanco Pajaro Rojo 24x38","medidas":"24x38","gm":74,"pA":1.87,"pB":1.87,"pC":1.87},
+    {"id":12,"nombre":"Blanco Premium 22x38","medidas":"22x38","gm":68,"pA":1.54,"pB":1.54,"pC":1.54},
+    {"id":13,"nombre":"Azul Tramado Liso 22x37","medidas":"22x37","gm":68,"pA":1.65,"pB":1.65,"pC":1.65},
+    {"id":14,"nombre":"Blanco 22x37","medidas":"22x37","gm":68,"pA":1.76,"pB":1.76,"pC":1.76},
+    {"id":15,"nombre":"Leno 22x36","medidas":"22x36","gm":66,"pA":2.37,"pB":2.37,"pC":2.37},
+    {"id":16,"nombre":"Leno 18x31","medidas":"18x31","gm":47,"pA":1.71,"pB":1.71,"pC":1.71},
+    {"id":17,"nombre":"Multicolor Grande 22x25","medidas":"22x25","gm":55,"pA":1.65,"pB":1.65,"pC":1.65},
+    {"id":18,"nombre":"Multicolor Mediana 18x21","medidas":"18x21","gm":40,"pA":1.21,"pB":1.21,"pC":1.21},
+    {"id":19,"nombre":"Multicolor Pequena 15x18","medidas":"15x18","gm":32,"pA":0.97,"pB":0.97,"pC":0.97}
+  ]
+}
