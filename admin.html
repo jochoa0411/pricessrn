@@ -125,7 +125,7 @@ td input[type="number"] { font-variant-numeric: tabular-nums; }
     <div class="version-bar">
       <span>Versión actual:</span>
       <input type="hidden" id="inputVersion">
-      <strong id="versionDisplay" style="font-size:18px;color:var(--green);">v-</strong><span id="lastUpdate" style="color:var(--muted);font-size:12px;margin-left:12px;"></span>
+      <input type="hidden" id="inputVersion"><strong id="versionDisplay" style="font-size:18px;color:var(--green);">v-</strong><span id="lastUpdate" style="color:var(--muted);font-size:12px;margin-left:12px;"></span>
       <span id="lastUpdate" style="color:var(--muted);font-size:12px;margin-left:12px;"></span>
       <div style="flex:1"></div>
       <button class="btn btn-ghost btn-sm" onclick="cargarDesdeGH()">🔄 Recargar desde GitHub</button>
@@ -476,7 +476,7 @@ publicar = async function(){ await _origPublicar2(); _versionBumped = false; };
 </script>
 <script>
 // Ocultar input manual, mostrar solo versión como badge
-document.querySelector('.version-bar').innerHTML = '<span>Versión:</span> <strong id="versionDisplay">-</strong><span id="lastUpdate" style="color:#8a919a;font-size:12px;margin-left:12px;"></span><div style="flex:1"></div><button class="btn btn-ghost btn-sm" onclick="cargarDesdeGH()">🔄 Recargar desde GitHub</button>';
+document.querySelector('.version-bar').innerHTML = '<span>Versión:</span> <input type="hidden" id="inputVersion"><strong id="versionDisplay">-</strong><span id="lastUpdate" style="color:#8a919a;font-size:12px;margin-left:12px;"></span><div style="flex:1"></div><button class="btn btn-ghost btn-sm" onclick="cargarDesdeGH()">🔄 Recargar desde GitHub</button>';
 
 // Mostrar versión al cargar
 const _origCargar3 = cargarDesdeGH;
