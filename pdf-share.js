@@ -177,13 +177,13 @@ if(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Loca
 }
 
 // -- Sync de precios --
-var PRECIOS_URL = 'https://raw.githubusercontent.com/jochoa0411/pricessrn/main/precios.json';
+var PRECIOS_URL = 'https://api.github.com/repos/jochoa0411/pricessrn/contents/precios.json';
 
 async function syncPrecios(manual){
   try {
-    var r = await fetch(PRECIOS_URL + '?t=' + Date.now());
+    var r = await fetch(PRECIOS_URL, {headers:{'Accept':'application/vnd.github.v3+json'}});
     if(!r.ok) throw new Error('HTTP '+r.status);
-    var data = await r.json();
+    var meta = await r.json(); var data = JSON.parse(atob(meta.content.replace(/\n/g,'')));
     var vLocal = parseInt(localStorage.getItem('PRECIOS_VERSION')||'0');
     if(data.version > vLocal){
       var cambios = [];
@@ -203,7 +203,14 @@ async function syncPrecios(manual){
       TELAS = data.telas; SACOS = data.sacos;
       saveTelas(); saveSacos(); loadSelects();
       localStorage.setItem('PRECIOS_VERSION', data.version);
-      if(cambios.length > 0){ alert('Precios actualizados (v'+data.version+'):\n\n' + cambios.join('\n')); }
+      if(cambios.length > 0){
+        var msg = cambios.join(', ');
+        if(navigator.vibrate) navigator.vibrate([300,100,300]);
+        if(window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.LocalNotifications){
+          Capacitor.Plugins.LocalNotifications.schedule({notifications:[{title:'Precios actualizados v'+data.version,body:msg,id:Math.floor(Math.random()*99999)+1,schedule:{at:new Date(Date.now()+1000)},sound:'default'}]});
+        }
+        toast('v'+data.version+': '+msg);
+      }
       else { toast('Catalogo actualizado a v'+data.version); }
     } else if(manual){
       toast('Ya tenes la ultima version (v'+vLocal+')');
@@ -223,7 +230,7 @@ window.addEventListener('load', function(){
   header.replaceChild(btn, header.lastElementChild);
 });
 
-setInterval(function(){ syncPrecios(false); }, 5000);
+setInterval(function(){ syncPrecios(false); }, 10000);
 
 if(window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App){
   Capacitor.Plugins.App.addListener('appStateChange', function(state){
