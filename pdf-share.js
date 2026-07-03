@@ -256,13 +256,18 @@ if(window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App){
 (function(){
   var badge = document.createElement('div');
   badge.id = 'preciosVersion';
-  badge.style.cssText = 'position:fixed;bottom:8px;right:8px;background:#1a6b45;color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:99px;z-index:99;opacity:0.7;pointer-events:none;';
-  badge.textContent = 'v' + (localStorage.getItem('PRECIOS_VERSION') || '?');
-  document.body.appendChild(badge);
+  badge.style.cssText = 'background:rgba(255,255,255,0.2);color:white;font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;';
+  badge.textContent = 'v' + (localStorage.getItem('PRECIOS_VERSION') || '...');
+  var header = document.querySelector('header');
+  if(header){
+    var h1 = header.querySelector('h1');
+    if(h1) h1.insertAdjacentElement('afterend', badge);
+  }
 
   var _origSync = syncPrecios;
   syncPrecios = async function(manual){
     await _origSync(manual);
-    document.getElementById('preciosVersion').textContent = 'v' + (localStorage.getItem('PRECIOS_VERSION') || '?');
+    var el = document.getElementById('preciosVersion');
+    if(el) el.textContent = 'v' + (localStorage.getItem('PRECIOS_VERSION') || '?');
   };
 })();
