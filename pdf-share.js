@@ -176,26 +176,14 @@ if(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Loca
   window.Capacitor.Plugins.LocalNotifications.requestPermissions();
 }
 
-// -- Sync de precios (GitHub API con Token) --
-var GITHUB_API_URL = 'https://api.github.com/repos/jochoa0411/pricessrn/contents/precios.json';
-var GITHUB_TOKEN = 'REMOVED'; // <--- PEGA TU TOKEN AQUÍ (Ej: 'REMOVED...')
+// -- Sync de precios --
+var PRECIOS_URL = 'https://raw.githubusercontent.com/jochoa0411/pricessrn/main/precios.json';
 
 async function syncPrecios(manual){
   try {
-    var headers = {};
-    if(GITHUB_TOKEN) {
-      headers['Authorization'] = 'token ' + GITHUB_TOKEN;
-    }
-
-    // Usamos la API de GitHub que es más rápida y no tiene tanto caché como la URL raw
-    var r = await fetch(GITHUB_API_URL + '?t=' + Date.now(), { headers: headers });
+    var r = await fetch(PRECIOS_URL + '?t=' + Date.now());
     if(!r.ok) throw new Error('HTTP '+r.status);
-    var jsonResponse = await r.json();
-
-    // La API devuelve el contenido en Base64, hay que decodificarlo
-    var content = decodeURIComponent(escape(atob(jsonResponse.content.replace(/\s/g, ''))));
-    var data = JSON.parse(content);
-
+    var data = await r.json();
     var vLocal = parseInt(localStorage.getItem('PRECIOS_VERSION')||'0');
     if(data.version > vLocal){
       var cambios = [];
@@ -212,15 +200,9 @@ async function syncPrecios(manual){
           if(viejo[k] !== ns[k]) cambios.push(viejo.nombre+' Tier '+k.slice(1)+': Q'+viejo[k].toFixed(2)+' > Q'+ns[k].toFixed(2));
         });
       });
-      TELAS.forEach(function(t){ if(!data.telas.find(function(x){ return x.id===t.id; })) cambios.push('- Tela eliminada: '+t.nombre); });
-      SACOS.forEach(function(s){ if(!data.sacos.find(function(x){ return x.id===s.id; })) cambios.push('- Saco eliminado: '+s.nombre); });
       TELAS = data.telas; SACOS = data.sacos;
       saveTelas(); saveSacos(); loadSelects();
       localStorage.setItem('PRECIOS_VERSION', data.version);
-
-      // Notificación del sistema (usa el logo de la app por defecto)
-      showLocalNotification('Nueva Actualizacion de Precios', 'Los precios se han actualizado a la v' + data.version);
-
       if(cambios.length > 0){ alert('Precios actualizados (v'+data.version+'):\n\n' + cambios.join('\n')); }
       else { toast('Catalogo actualizado a v'+data.version); }
     } else if(manual){
@@ -241,10 +223,7 @@ window.addEventListener('load', function(){
   header.replaceChild(btn, header.lastElementChild);
 });
 
-// Intervalo de producción (con Token): 5 segundos
 setInterval(function(){ syncPrecios(false); }, 5000);
-document.addEventListener('resume', function(){ syncPrecios(false); });
-document.addEventListener('visibilitychange', function(){ if(!document.hidden) syncPrecios(false); });
 
 if(window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App){
   Capacitor.Plugins.App.addListener('appStateChange', function(state){
@@ -252,22 +231,13 @@ if(window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App){
   });
 }
 
-// ── Mostrar version de precios en el app ──
 (function(){
   var badge = document.createElement('div');
   badge.id = 'preciosVersion';
   badge.style.cssText = 'background:rgba(255,255,255,0.2);color:white;font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;';
   badge.textContent = 'v' + (localStorage.getItem('PRECIOS_VERSION') || '...');
   var header = document.querySelector('header');
-  if(header){
-    var h1 = header.querySelector('h1');
-    if(h1) h1.insertAdjacentElement('afterend', badge);
-  }
-
+  if(header){ var h1 = header.querySelector('h1'); if(h1) h1.insertAdjacentElement('afterend', badge); }
   var _origSync = syncPrecios;
-  syncPrecios = async function(manual){
-    await _origSync(manual);
-    var el = document.getElementById('preciosVersion');
-    if(el) el.textContent = 'v' + (localStorage.getItem('PRECIOS_VERSION') || '?');
-  };
+  syncPrecios = async function(manual){ await _origSync(manual); var el = document.getElementById('preciosVersion'); if(el) el.textContent = 'v' + (localStorage.getItem('PRECIOS_VERSION') || '?'); };
 })();
