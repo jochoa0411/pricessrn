@@ -4,433 +4,203 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LGM · Admin Precios</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-:root { --bg: #f7f8fa; --card: #fff; --green: #1a6b45; --green-light: #e8f5e9; --green-dark: #14432a; --red: #d32f2f; --amber: #d97706; --blue: #0066cc; --border: #e2e5e9; --text: #1a1a1a; --muted: #8a919a; --radius: 8px; }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
-
-/* Header */
-.topbar { background: linear-gradient(135deg, var(--green-dark), var(--green)); color: white; padding: 18px 32px; display: flex; justify-content: space-between; align-items: center; }
-.topbar h1 { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
-.topbar h1 small { font-weight: 400; opacity: 0.7; font-size: 13px; margin-left: 8px; }
-.topbar-right { display: flex; gap: 10px; align-items: center; }
-.status { font-size: 12px; padding: 5px 12px; border-radius: 99px; font-weight: 600; }
-.status.ok { background: rgba(255,255,255,0.2); }
-.status.dirty { background: #ff9500; color: white; animation: pulse 1.5s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
-
-/* Layout */
-.container { max-width: 1200px; margin: 0 auto; padding: 24px; }
-.toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
-.toolbar-left { display: flex; gap: 10px; align-items: center; flex: 1; }
-.toolbar-right { display: flex; gap: 10px; align-items: center; }
-
-/* Buttons */
-.btn { padding: 10px 18px; border: none; border-radius: var(--radius); font-weight: 600; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; }
-.btn-green { background: var(--green); color: white; }
-.btn-green:hover { background: var(--green-dark); }
-.btn-red { background: var(--red); color: white; }
-.btn-blue { background: var(--blue); color: white; }
-.btn-ghost { background: var(--border); color: var(--text); }
-.btn-ghost:hover { background: #d0d4da; }
-.btn-sm { padding: 6px 12px; font-size: 12px; }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-/* Tabs */
-.tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 20px; }
-.tab { padding: 12px 24px; border: none; background: transparent; cursor: pointer; font-weight: 600; color: var(--muted); border-bottom: 3px solid transparent; margin-bottom: -2px; font-size: 14px; }
-.tab.active { color: var(--green); border-bottom-color: var(--green); }
-.tab-panel { display: none; }
-.tab-panel.active { display: block; }
-
-/* Table */
-.card { background: var(--card); border-radius: var(--radius); box-shadow: 0 1px 3px rgba(0,0,0,0.06); overflow: hidden; margin-bottom: 20px; }
-table { width: 100%; border-collapse: collapse; }
-th { background: var(--green-light); color: var(--green-dark); padding: 10px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; text-align: left; font-weight: 700; position: sticky; top: 0; }
-td { padding: 8px 14px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
-tr:hover td { background: #f9fafb; }
-td input { width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px; font-family: inherit; }
-td input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 2px rgba(26,107,69,0.1); }
-td input.changed { background: #fffde7; border-color: var(--amber); }
-td input[type="number"] { font-variant-numeric: tabular-nums; }
-.col-id { width: 50px; color: var(--muted); }
-.col-actions { width: 80px; text-align: center; }
-.row-new td { background: #f0f9f5; }
-
-/* Config */
-.config-card { background: var(--card); border-radius: var(--radius); padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 20px; max-width: 600px; }
-.config-card label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; }
-.config-card input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; font-family: monospace; }
-.config-card input:focus { outline: none; border-color: var(--green); }
-.config-card p { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
-
-/* Toast */
-.toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 22px; border-radius: var(--radius); font-size: 13px; font-weight: 600; z-index: 9999; opacity: 0; transform: translateY(12px); transition: all 0.25s; pointer-events: none; color: white; max-width: 400px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
-.toast.show { opacity: 1; transform: translateY(0); }
-.toast.ok { background: var(--green); }
-.toast.err { background: var(--red); }
-
-/* Diff modal */
-.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 24px; }
-.overlay.hidden { display: none; }
-.diff-box { background: white; border-radius: 12px; padding: 28px; width: 100%; max-width: 580px; max-height: 80vh; overflow-y: auto; }
-.diff-box h2 { font-size: 17px; color: var(--green); margin-bottom: 16px; }
-.diff-line { padding: 6px 10px; border-radius: 4px; margin: 4px 0; font-size: 13px; font-family: monospace; }
-.diff-add { background: #e8f5e9; color: #1b5e20; }
-.diff-del { background: #ffebee; color: #b71c1c; }
-.diff-mod { background: #fff8e1; color: #f57f17; }
-.diff-btns { display: flex; gap: 10px; margin-top: 20px; }
-.diff-btns .btn { flex: 1; justify-content: center; }
-
-/* Version */
-.version-bar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--green-light); border-radius: var(--radius); margin-bottom: 20px; font-size: 13px; }
-.version-bar strong { color: var(--green); font-size: 18px; }
-.version-bar input { width: 70px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 16px; font-weight: 700; text-align: center; }
+:root{--bg:#f0f2f5;--card:#fff;--green:#1a6b45;--gl:#e8f5e9;--gd:#0d3d26;--red:#e53935;--amber:#f59e0b;--blue:#2563eb;--border:#e5e7eb;--text:#111827;--muted:#6b7280;--r:12px;--shadow:0 1px 3px rgba(0,0,0,.04),0 4px 12px rgba(0,0,0,.06)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+.topbar{background:var(--gd);color:#fff;padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-icon{width:32px;height:32px;background:var(--green);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;box-shadow:0 2px 8px rgba(26,107,69,.4)}
+.brand h1{font-size:15px;font-weight:700}.brand h1 span{font-weight:400;opacity:.5;font-size:12px;margin-left:6px}
+.topbar-right{display:flex;gap:6px;align-items:center}
+.status{font-size:10px;padding:5px 12px;border-radius:99px;font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+.status.ok{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1)}
+.status.dirty{background:var(--amber);color:#000;border:1px solid transparent;animation:glow 2s infinite}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.4)}50%{box-shadow:0 0 0 6px rgba(245,158,11,0)}}
+.top-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#fff;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.top-btn:hover{background:rgba(255,255,255,.12)}
+.container{max-width:1280px;margin:0 auto;padding:20px}
+.btn{padding:10px 20px;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;gap:6px;transition:all .15s;font-family:inherit}
+.btn-green{background:var(--green);color:#fff;box-shadow:0 1px 2px rgba(26,107,69,.3)}
+.btn-green:hover{background:#15593a;transform:translateY(-1px);box-shadow:0 4px 12px rgba(26,107,69,.3)}
+.btn-red{background:var(--red);color:#fff}
+.btn-blue{background:var(--blue);color:#fff;box-shadow:0 1px 2px rgba(37,99,235,.3)}
+.btn-blue:hover{background:#1d4ed8}
+.btn-ghost{background:#fff;color:var(--text);border:1px solid var(--border);box-shadow:var(--shadow)}
+.btn-ghost:hover{background:#f9fafb}
+.btn-sm{padding:5px 10px;font-size:11px;border-radius:6px}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+.tabs{display:flex;gap:4px;margin-bottom:20px;background:#fff;padding:4px;border-radius:10px;box-shadow:var(--shadow)}
+.tab{flex:1;padding:10px 16px;border:none;background:transparent;cursor:pointer;font-weight:600;color:var(--muted);border-radius:8px;font-size:13px;transition:all .2s;font-family:inherit}
+.tab.active{background:var(--green);color:#fff;box-shadow:0 2px 8px rgba(26,107,69,.25)}
+.tab:not(.active):hover{background:#f3f4f6;color:var(--text)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);overflow-x:auto;margin-bottom:16px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;min-width:600px}
+th{background:#f8fafc;color:var(--muted);padding:10px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;text-align:left;font-weight:700;border-bottom:2px solid var(--border);white-space:nowrap}
+td{padding:5px 6px;border-bottom:1px solid #f3f4f6;font-size:13px}
+tr:hover td{background:#fafbfc}
+tr:last-child td{border-bottom:none}
+td input{width:100%;padding:7px 8px;border:1.5px solid transparent;border-radius:6px;font-size:13px;font-family:inherit;background:#f9fafb;transition:all .15s}
+td input:hover{border-color:#e5e7eb;background:#fff}
+td input:focus{outline:none;border-color:var(--green);background:#fff;box-shadow:0 0 0 3px rgba(26,107,69,.08)}
+td input.changed{background:#fffbeb;border-color:var(--amber)}
+td input[type="number"]{font-variant-numeric:tabular-nums;text-align:right}
+.col-id{width:40px;text-align:center;color:var(--muted);font-size:11px;font-weight:600}
+.col-actions{width:40px;text-align:center}
+.del-btn{width:28px;height:28px;border-radius:6px;border:none;background:#fef2f2;color:var(--red);cursor:pointer;font-size:14px;display:inline-flex;align-items:center;justify-content:center}
+.del-btn:hover{background:var(--red);color:#fff}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px}
+.overlay.hidden{display:none}
+.modal-box{background:#fff;border-radius:16px;padding:28px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.2);animation:slideUp .3s cubic-bezier(.16,1,.3,1)}
+@keyframes slideUp{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-box h2{font-size:18px;font-weight:800;margin-bottom:20px}
+.modal-box h2 span{color:var(--green)}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.field input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:#f9fafb}
+.field input:focus{outline:none;border-color:var(--green);background:#fff}
+.field p{font-size:12px;color:var(--muted);margin-top:5px}.field p a{color:var(--blue);font-weight:600;text-decoration:none}
+.diff-line{padding:8px 12px;border-radius:6px;margin:4px 0;font-size:12px;font-family:'SF Mono','Fira Code',monospace;font-weight:500}
+.diff-add{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
+.diff-del{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+.diff-mod{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+.diff-btns{display:flex;gap:10px;margin-top:20px}.diff-btns .btn{flex:1;justify-content:center}
+.version-bar{display:flex;align-items:center;gap:12px;padding:14px 16px;background:#fff;border-radius:var(--r);margin-bottom:20px;box-shadow:var(--shadow);border:1px solid var(--border);flex-wrap:wrap}
+.v-badge{background:var(--gl);color:var(--green);font-size:16px;font-weight:900;padding:5px 14px;border-radius:8px}
+.v-info{flex:1;min-width:120px}
+.v-title{font-weight:700;font-size:13px;color:var(--text)}
+.v-date{color:var(--muted);font-size:11px;margin-top:2px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(16px) scale(.95);padding:12px 24px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:all .3s cubic-bezier(.16,1,.3,1);pointer-events:none;color:#fff;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}
+.toast.ok{background:linear-gradient(135deg,var(--green),#2d9d6a);box-shadow:0 8px 32px rgba(26,107,69,.3)}
+.toast.err{background:linear-gradient(135deg,#dc2626,var(--red));box-shadow:0 8px 32px rgba(229,57,53,.3)}
+.bottom-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:20px;flex-wrap:wrap}
+@media(max-width:768px){
+  .container{padding:12px}
+  .topbar{padding:0 12px;height:50px}
+  .brand h1 span{display:none}
+  .version-bar{gap:8px;padding:12px}
+  .v-badge{font-size:14px;padding:4px 10px}
+  .tabs{flex-direction:column;gap:2px}
+  .tab{padding:10px 14px;text-align:center}
+  table{min-width:500px}
+  th,td{padding:6px 5px;font-size:12px}
+  td input{padding:6px;font-size:12px}
+  .bottom-bar{flex-direction:column}
+  .bottom-bar .btn{width:100%;justify-content:center}
+}
 </style>
 </head>
 <body>
-
 <div class="topbar">
-  <h1>LGM <small>Admin de Precios</small></h1>
+  <div class="brand">
+    <div class="brand-icon">LG</div>
+    <h1>Admin Precios<span>La Gran Montana</span></h1>
+  </div>
   <div class="topbar-right">
-    <span id="statusBadge" class="status ok">Sin cambios</span>
-    <button class="btn btn-ghost" onclick="switchTab('config')" style="background:rgba(255,255,255,0.15);color:white;">⚙️ Config</button>
+    <span id="statusBadge" class="status ok">Sincronizado</span>
+    <a href="./" class="top-btn">&#9664; Menu</a>
+    <button class="top-btn" onclick="switchTab('config')">&#9881;</button>
+  </div>
+</div>
+<div class="container">
+  <div id="panelConfig" class="tab-panel">
+    <div class="modal-box" style="margin:0 auto;box-shadow:var(--shadow);animation:none">
+      <h2><span>&#9881;</span> Conexion GitHub</h2>
+      <div class="field"><label>Personal Access Token</label>
+        <input type="password" id="cfgToken" placeholder="ghp_xxxx">
+        <p>Token con permiso <strong>repo</strong>. <a href="https://github.com/settings/tokens/new" target="_blank">Generar &rarr;</a></p>
+      </div>
+      <div class="field"><label>Repositorio</label><input type="text" id="cfgRepo" value="jochoa0411/pricessrn"></div>
+      <div class="field"><label>Archivo</label><input type="text" id="cfgFile" value="precios.json"></div>
+      <div style="display:flex;gap:10px;margin-top:24px">
+        <button class="btn btn-green" onclick="guardarConfig()">Guardar</button>
+        <button class="btn btn-ghost" onclick="switchTab('editor')">Volver</button>
+      </div>
+    </div>
+  </div>
+  <div id="panelEditor" class="tab-panel active">
+    <div class="version-bar">
+      <span class="v-badge" id="versionDisplay">v-</span>
+      <div class="v-info">
+        <div class="v-title">Lista de precios</div>
+        <div class="v-date" id="lastUpdate"></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="recargar()">&#8635; Actualizar</button>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchSubTab(this,'tabTelas')">Telas <span id="countTelas">0</span></button>
+      <button class="tab" onclick="switchSubTab(this,'tabSacos')">Sacos <span id="countSacos">0</span></button>
+    </div>
+    <div id="tabTelas" class="tab-panel active">
+      <div class="card"><table>
+        <thead><tr><th class="col-id">#</th><th>Nombre</th><th>Cat</th><th>Sombra</th><th>Rollo</th><th style="width:90px;text-align:right">Master</th><th style="width:90px;text-align:right">Conf</th><th class="col-actions"></th></tr></thead>
+        <tbody id="tbodyTelas"></tbody>
+      </table></div>
+      <button class="btn btn-blue btn-sm" onclick="addTela()">+ Agregar tela</button>
+    </div>
+    <div id="tabSacos" class="tab-panel">
+      <div class="card"><table>
+        <thead><tr><th class="col-id">#</th><th>Nombre</th><th>Medidas</th><th style="width:90px;text-align:right">Peso gm</th><th style="width:90px;text-align:right">Precio A</th><th style="width:90px;text-align:right">Precio B</th><th style="width:90px;text-align:right">Precio C</th><th class="col-actions"></th></tr></thead>
+        <tbody id="tbodySacos"></tbody>
+      </table></div>
+      <button class="btn btn-blue btn-sm" onclick="addSaco()">+ Agregar saco</button>
+    </div>
+    <div class="bottom-bar">
+      <button class="btn btn-ghost" onclick="descargarExcel()">&#11015; Descargar Excel</button>
+      <button class="btn btn-green" id="btnPublicar" onclick="prepararPublicacion()" disabled style="padding:12px 28px;font-size:14px">&#x1F680; Publicar cambios</button>
+    </div>
   </div>
 </div>
 
-<div class="container">
-  <!-- CONFIG -->
-  <div id="panelConfig" class="tab-panel">
-    <div class="config-card">
-      <h2 style="color:var(--green);margin-bottom:16px;">Configuración de GitHub</h2>
-      <label>Personal Access Token (classic)</label>
-      <input type="password" id="cfgToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
-      <p>Necesitás un token con permiso <strong>repo</strong>. Generalo en <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens</a>. Se guarda solo en este navegador.</p>
-      <br>
-      <label>Repositorio</label>
-      <input type="text" id="cfgRepo" value="jochoa0411/pricessrn">
-      <p>Formato: <code>usuario/repo</code></p>
-      <br>
-      <label>Archivo</label>
-      <input type="text" id="cfgFile" value="precios.json">
-      <br><br>
-      <button class="btn btn-green" onclick="guardarConfig()">💾 Guardar configuración</button>
-      <button class="btn btn-ghost" onclick="switchTab('editor')" style="margin-left:8px;">← Volver al editor</button>
-    </div>
-  </div>
-
-  <!-- EDITOR -->
-  <div id="panelEditor" class="tab-panel active">
-
-    <div class="version-bar">
-      <span>Versión actual:</span>
-      <input type="number" id="inputVersion" min="1" step="1" oninput="markDirty()">
-      <span style="color:var(--muted);font-size:12px;">↑ Incrementá para que los iPhones detecten la actualización</span>
-      <div style="flex:1"></div>
-      <button class="btn btn-ghost btn-sm" onclick="cargarDesdeGH()">🔄 Recargar desde GitHub</button>
-    </div>
-
-    <div class="tabs">
-      <button class="tab active" onclick="switchSubTab(this,'tabTelas')">📊 Telas (<span id="countTelas">0</span>)</button>
-      <button class="tab" onclick="switchSubTab(this,'tabSacos')">🛍️ Sacos (<span id="countSacos">0</span>)</button>
-    </div>
-
-    <!-- TELAS -->
-    <div id="tabTelas" class="tab-panel active">
-      <div class="card">
-        <table>
-          <thead><tr>
-            <th class="col-id">ID</th>
-            <th>Nombre</th>
-            <th>Cat</th>
-            <th>Sombra</th>
-            <th>Rollo</th>
-            <th style="width:100px">Master $/pie²</th>
-            <th style="width:100px">Conf $/pie²</th>
-            <th class="col-actions"></th>
-          </tr></thead>
-          <tbody id="tbodyTelas"></tbody>
-        </table>
-      </div>
-      <button class="btn btn-blue" onclick="addTela()">➕ Agregar tela</button>
-    </div>
-
-    <!-- SACOS -->
-    <div id="tabSacos" class="tab-panel">
-      <div class="card">
-        <table>
-          <thead><tr>
-            <th class="col-id">ID</th>
-            <th>Nombre</th>
-            <th>Medidas</th>
-            <th style="width:70px">Peso gm</th>
-            <th style="width:90px">Precio A</th>
-            <th style="width:90px">Precio B</th>
-            <th style="width:90px">Precio C</th>
-            <th class="col-actions"></th>
-          </tr></thead>
-          <tbody id="tbodySacos"></tbody>
-        </table>
-      </div>
-      <button class="btn btn-blue" onclick="addSaco()">➕ Agregar saco</button>
-    </div>
-
-    <div class="toolbar" style="margin-top:20px;">
-      <div style="flex:1"></div>
-      <button class="btn btn-green" id="btnPublicar" onclick="prepararPublicacion()" disabled>🚀 Publicar cambios</button>
-    </div>
+<!-- TOKEN PROMPT -->
+<div id="tokenPrompt" class="overlay hidden">
+  <div class="modal-box">
+    <h2><span>&#128274;</span> Acceso requerido</h2>
+    <p style="color:var(--muted);margin-bottom:20px;font-size:13px;line-height:1.6">Para conectar con la lista de precios necesitas un token de GitHub.<br>Pediselo al administrador o genera uno en <a href="https://github.com/settings/tokens/new" target="_blank" style="color:var(--blue);font-weight:600">github.com</a></p>
+    <div class="field"><label>Token</label><input type="password" id="promptToken" placeholder="ghp_xxxx" autofocus></div>
+    <button class="btn btn-green" onclick="guardarTokenPrompt()" style="width:100%;justify-content:center;padding:12px">Conectar</button>
   </div>
 </div>
 
 <!-- DIFF MODAL -->
-<div id="diffModal" class="overlay hidden" onclick="if(event.target===this) cerrarDiff()">
-  <div class="diff-box" onclick="event.stopPropagation()">
-    <h2>📋 Resumen de cambios</h2>
+<div id="diffModal" class="overlay hidden" onclick="if(event.target===this)cerrarDiff()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <h2>Resumen de cambios</h2>
     <div id="diffContent"></div>
     <div class="diff-btns">
-      <button class="btn btn-green" onclick="publicar()">✅ Confirmar y publicar</button>
+      <button class="btn btn-green" onclick="publicar()">Confirmar y publicar</button>
       <button class="btn btn-ghost" onclick="cerrarDiff()">Cancelar</button>
     </div>
   </div>
 </div>
-
 <div id="toast" class="toast ok"></div>
-
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script>
-// ── State ──
-let DATA = { version: 1, actualizado: '', telas: [], sacos: [] };
-let ORIGINAL = null; // snapshot para diff
-let dirty = false;
-let GH_SHA = null; // sha del archivo actual para commits
-
-// ── Config ──
-function getConfig(){
-  return {
-    token: localStorage.getItem('GH_TOKEN') || '',
-    repo: localStorage.getItem('GH_REPO') || 'jochoa0411/pricessrn',
-    file: localStorage.getItem('GH_FILE') || 'precios.json'
-  };
-}
-function guardarConfig(){
-  localStorage.setItem('GH_TOKEN', document.getElementById('cfgToken').value.trim());
-  localStorage.setItem('GH_REPO', document.getElementById('cfgRepo').value.trim());
-  localStorage.setItem('GH_FILE', document.getElementById('cfgFile').value.trim());
-  toast('✅ Configuración guardada');
-  switchTab('editor');
-  cargarDesdeGH();
-}
-
-// ── Toast ──
-let _tt;
-function toast(msg, tipo='ok'){
-  const el = document.getElementById('toast');
-  el.textContent = msg; el.className = 'toast '+tipo+' show';
-  clearTimeout(_tt); _tt = setTimeout(()=> el.classList.remove('show'), 3000);
-}
-
-// ── Tabs ──
-function switchTab(t){
-  document.getElementById('panelConfig').classList.toggle('active', t==='config');
-  document.getElementById('panelEditor').classList.toggle('active', t==='editor');
-}
-function switchSubTab(btn, id){
-  document.querySelectorAll('.tabs .tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll('#panelEditor > .tab-panel').forEach(p=>p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-
-// ── Dirty tracking ──
-function markDirty(){
-  dirty = true;
-  document.getElementById('statusBadge').textContent = '● Cambios sin publicar';
-  document.getElementById('statusBadge').className = 'status dirty';
-  document.getElementById('btnPublicar').disabled = false;
-}
-function markClean(){
-  dirty = false;
-  document.getElementById('statusBadge').textContent = 'Sin cambios';
-  document.getElementById('statusBadge').className = 'status ok';
-  document.getElementById('btnPublicar').disabled = true;
-}
-
-// ── Render tables ──
-function renderTelas(){
-  const tb = document.getElementById('tbodyTelas');
-  tb.innerHTML = '';
-  DATA.telas.forEach((t,i) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td class="col-id">${t.id}</td>
-      <td><input value="${esc(t.nombre)}" oninput="DATA.telas[${i}].nombre=this.value;markDirty();this.classList.add('changed')"></td>
-      <td><input value="${esc(t.cat)}" oninput="DATA.telas[${i}].cat=this.value;markDirty();this.classList.add('changed')" style="width:80px"></td>
-      <td><input value="${esc(t.sombra)}" oninput="DATA.telas[${i}].sombra=this.value;markDirty();this.classList.add('changed')" style="width:60px"></td>
-      <td><input value="${esc(t.rollo)}" oninput="DATA.telas[${i}].rollo=this.value;markDirty();this.classList.add('changed')" style="width:90px"></td>
-      <td><input type="number" step="0.001" value="${t.pm}" oninput="DATA.telas[${i}].pm=+this.value;markDirty();this.classList.add('changed')"></td>
-      <td><input type="number" step="0.001" value="${t.pc}" oninput="DATA.telas[${i}].pc=+this.value;markDirty();this.classList.add('changed')"></td>
-      <td class="col-actions"><button class="btn btn-red btn-sm" onclick="DATA.telas.splice(${i},1);renderTelas();markDirty()">🗑️</button></td>`;
-    tb.appendChild(tr);
-  });
-  document.getElementById('countTelas').textContent = DATA.telas.length;
-}
-function renderSacos(){
-  const tb = document.getElementById('tbodySacos');
-  tb.innerHTML = '';
-  DATA.sacos.forEach((s,i) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td class="col-id">${s.id}</td>
-      <td><input value="${esc(s.nombre)}" oninput="DATA.sacos[${i}].nombre=this.value;markDirty();this.classList.add('changed')"></td>
-      <td><input value="${esc(s.medidas)}" oninput="DATA.sacos[${i}].medidas=this.value;markDirty();this.classList.add('changed')" style="width:90px"></td>
-      <td><input type="number" value="${s.gm}" oninput="DATA.sacos[${i}].gm=+this.value;markDirty();this.classList.add('changed')"></td>
-      <td><input type="number" step="0.01" value="${s.pA}" oninput="DATA.sacos[${i}].pA=+this.value;markDirty();this.classList.add('changed')"></td>
-      <td><input type="number" step="0.01" value="${s.pB}" oninput="DATA.sacos[${i}].pB=+this.value;markDirty();this.classList.add('changed')"></td>
-      <td><input type="number" step="0.01" value="${s.pC}" oninput="DATA.sacos[${i}].pC=+this.value;markDirty();this.classList.add('changed')"></td>
-      <td class="col-actions"><button class="btn btn-red btn-sm" onclick="DATA.sacos.splice(${i},1);renderSacos();markDirty()">🗑️</button></td>`;
-    tb.appendChild(tr);
-  });
-  document.getElementById('countSacos').textContent = DATA.sacos.length;
-}
-
-function esc(s){ return (s||'').replace(/"/g, '&quot;'); }
-
-// ── Add rows ──
-function addTela(){
-  const maxId = Math.max(0, ...DATA.telas.map(t=>t.id));
-  DATA.telas.push({id:maxId+1, nombre:'', cat:'', sombra:'', rollo:'', pm:0, pc:0});
-  renderTelas(); markDirty();
-  document.getElementById('tbodyTelas').lastChild.querySelector('input').focus();
-}
-function addSaco(){
-  const maxId = Math.max(0, ...DATA.sacos.map(s=>s.id));
-  DATA.sacos.push({id:maxId+1, nombre:'', medidas:'', gm:0, pA:0, pB:0, pC:0});
-  renderSacos(); markDirty();
-  document.getElementById('tbodySacos').lastChild.querySelector('input').focus();
-}
-
-// ── Cargar desde GitHub ──
-async function cargarDesdeGH(){
-  const cfg = getConfig();
-  if(!cfg.token){ switchTab('config'); toast('Configurá tu token de GitHub primero','err'); return; }
-
-  try {
-    toast('Cargando desde GitHub...');
-    const r = await fetch(`https://api.github.com/repos/${cfg.repo}/contents/${cfg.file}`, {
-      headers: { 'Authorization': 'Bearer '+cfg.token, 'Accept': 'application/vnd.github.v3+json' }
-    });
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    const meta = await r.json();
-    GH_SHA = meta.sha;
-
-    const content = atob(meta.content.replace(/\n/g,''));
-    DATA = JSON.parse(content);
-    // Migrar formato viejo
-    DATA.sacos = DATA.sacos.map(s => s.pA !== undefined ? s : {...s, pA:s.p2||0, pB:s.p2||0, pC:s.p2||0});
-
-    ORIGINAL = JSON.parse(JSON.stringify(DATA));
-
-    document.getElementById('inputVersion').value = DATA.version;
-    renderTelas(); renderSacos(); markClean();
-    toast('✅ Cargado v'+DATA.version+' ('+DATA.telas.length+' telas, '+DATA.sacos.length+' sacos)');
-  } catch(e){
-    toast('Error: '+e.message, 'err');
-  }
-}
-
-// ── Diff ──
-function prepararPublicacion(){
-  DATA.version = parseInt(document.getElementById('inputVersion').value) || (ORIGINAL.version + 1);
-  DATA.actualizado = new Date().toISOString().slice(0,10);
-
-  const cambios = [];
-
-  // Telas
-  DATA.telas.forEach(nt => {
-    const o = ORIGINAL.telas.find(x=>x.id===nt.id);
-    if(!o){ cambios.push({t:'add', msg:'+ Tela nueva: '+nt.nombre}); return; }
-    if(o.pm!==nt.pm) cambios.push({t:'mod', msg: nt.nombre+' Master: $'+o.pm.toFixed(3)+' → $'+nt.pm.toFixed(3)});
-    if(o.pc!==nt.pc) cambios.push({t:'mod', msg: nt.nombre+' Conf: $'+o.pc.toFixed(3)+' → $'+nt.pc.toFixed(3)});
-    if(o.nombre!==nt.nombre) cambios.push({t:'mod', msg: 'Tela #'+nt.id+' renombrada: '+o.nombre+' → '+nt.nombre});
-  });
-  ORIGINAL.telas.forEach(o => {
-    if(!DATA.telas.find(x=>x.id===o.id)) cambios.push({t:'del', msg: '- Tela eliminada: '+o.nombre});
-  });
-
-  // Sacos
-  DATA.sacos.forEach(ns => {
-    const o = ORIGINAL.sacos.find(x=>x.id===ns.id);
-    if(!o){ cambios.push({t:'add', msg:'+ Saco nuevo: '+ns.nombre}); return; }
-    ['pA','pB','pC'].forEach(k=>{
-      if(o[k]!==ns[k]) cambios.push({t:'mod', msg: ns.nombre+' Tier '+k.slice(1)+': Q'+o[k].toFixed(2)+' → Q'+ns[k].toFixed(2)});
-    });
-    if(o.nombre!==ns.nombre) cambios.push({t:'mod', msg: 'Saco #'+ns.id+' renombrado: '+o.nombre+' → '+ns.nombre});
-  });
-  ORIGINAL.sacos.forEach(o => {
-    if(!DATA.sacos.find(x=>x.id===o.id)) cambios.push({t:'del', msg: '- Saco eliminado: '+o.nombre});
-  });
-
-  if(!cambios.length){ cambios.push({t:'mod', msg:'Solo cambio de versión: '+ORIGINAL.version+' → '+DATA.version}); }
-
-  const html = cambios.map(c => `<div class="diff-line diff-${c.t}">${c.msg}</div>`).join('');
-  document.getElementById('diffContent').innerHTML = html;
-  document.getElementById('diffModal').classList.remove('hidden');
-}
-function cerrarDiff(){ document.getElementById('diffModal').classList.add('hidden'); }
-
-// ── Publicar (commit a GitHub) ──
-async function publicar(){
-  const cfg = getConfig();
-  cerrarDiff();
-
-  const jsonStr = JSON.stringify(DATA, null, 2);
-  const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
-
-  try {
-    toast('Publicando a GitHub...');
-    const r = await fetch(`https://api.github.com/repos/${cfg.repo}/contents/${cfg.file}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': 'Bearer '+cfg.token,
-        'Accept': 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        message: 'Precios v'+DATA.version+' — '+new Date().toLocaleDateString('es-GT'),
-        content: b64,
-        sha: GH_SHA
-      })
-    });
-
-    if(!r.ok){
-      const err = await r.json();
-      throw new Error(err.message || 'HTTP '+r.status);
-    }
-
-    const result = await r.json();
-    GH_SHA = result.content.sha;
-    ORIGINAL = JSON.parse(JSON.stringify(DATA));
-    markClean();
-    toast('✅ Publicado v'+DATA.version+' — los iPhones se actualizarán al abrir el app');
-  } catch(e){
-    toast('Error: '+e.message, 'err');
-  }
-}
-
-// ── Init ──
-window.addEventListener('load', function(){
-  const cfg = getConfig();
-  document.getElementById('cfgToken').value = cfg.token;
-  document.getElementById('cfgRepo').value = cfg.repo;
-  document.getElementById('cfgFile').value = cfg.file;
-
-  if(cfg.token){ cargarDesdeGH(); }
-  else { switchTab('config'); }
-});
-
-// Warn antes de cerrar con cambios
-window.addEventListener('beforeunload', function(e){
-  if(dirty){ e.preventDefault(); e.returnValue = ''; }
-});
+var DATA={version:1,actualizado:'',telas:[],sacos:[]},ORIGINAL=null,dirty=false,GH_SHA=null,_vB=false;
+function getConfig(){return{token:localStorage.getItem('GH_TOKEN')||'',repo:localStorage.getItem('GH_REPO')||'jochoa0411/pricessrn',file:localStorage.getItem('GH_FILE')||'precios.json'};}
+function guardarConfig(){localStorage.setItem('GH_TOKEN',document.getElementById('cfgToken').value.trim());localStorage.setItem('GH_REPO',document.getElementById('cfgRepo').value.trim());localStorage.setItem('GH_FILE',document.getElementById('cfgFile').value.trim());toast('Guardado');switchTab('editor');cargarDesdeGH();}
+function guardarTokenPrompt(){var t=document.getElementById('promptToken').value.trim();if(!t){toast('Ingresa el token','err');return;}localStorage.setItem('GH_TOKEN',t);document.getElementById('tokenPrompt').classList.add('hidden');document.getElementById('cfgToken').value=t;cargarDesdeGH();}
+var _tt;function toast(m,t){var e=document.getElementById('toast');e.textContent=m;e.className='toast '+(t||'ok')+' show';clearTimeout(_tt);_tt=setTimeout(function(){e.classList.remove('show');},3200);}
+function switchTab(t){document.getElementById('panelConfig').classList.toggle('active',t==='config');document.getElementById('panelEditor').classList.toggle('active',t==='editor');}
+function switchSubTab(b,id){document.querySelectorAll('.tabs .tab').forEach(function(x){x.classList.remove('active');});b.classList.add('active');document.querySelectorAll('#panelEditor>.tab-panel').forEach(function(p){p.classList.remove('active');});document.getElementById(id).classList.add('active');}
+function markDirty(){dirty=true;document.getElementById('statusBadge').textContent='Cambios pendientes';document.getElementById('statusBadge').className='status dirty';document.getElementById('btnPublicar').disabled=false;if(!_vB){_vB=true;DATA.version=(DATA.version||1)+1;document.getElementById('versionDisplay').textContent='v'+DATA.version;}}
+function markClean(){dirty=false;_vB=false;document.getElementById('statusBadge').textContent='Sincronizado';document.getElementById('statusBadge').className='status ok';document.getElementById('btnPublicar').disabled=true;}
+function esc(s){return(s||'').replace(/"/g,'&quot;');}
+function renderTelas(){var tb=document.getElementById('tbodyTelas');tb.innerHTML='';DATA.telas.forEach(function(t,i){var tr=document.createElement('tr');tr.innerHTML='<td class="col-id">'+t.id+'</td><td><input value="'+esc(t.nombre)+'" oninput="DATA.telas['+i+'].nombre=this.value;markDirty();this.classList.add(\'changed\')"></td><td><input value="'+esc(t.cat)+'" oninput="DATA.telas['+i+'].cat=this.value;markDirty();this.classList.add(\'changed\')" style="width:70px"></td><td><input value="'+esc(t.sombra)+'" oninput="DATA.telas['+i+'].sombra=this.value;markDirty();this.classList.add(\'changed\')" style="width:50px"></td><td><input value="'+esc(t.rollo)+'" oninput="DATA.telas['+i+'].rollo=this.value;markDirty();this.classList.add(\'changed\')" style="width:80px"></td><td><input type="number" step="0.001" value="'+t.pm+'" oninput="DATA.telas['+i+'].pm=+this.value;markDirty();this.classList.add(\'changed\')"></td><td><input type="number" step="0.001" value="'+t.pc+'" oninput="DATA.telas['+i+'].pc=+this.value;markDirty();this.classList.add(\'changed\')"></td><td class="col-actions"><button class="del-btn" onclick="DATA.telas.splice('+i+',1);renderTelas();markDirty()">&times;</button></td>';tb.appendChild(tr);});document.getElementById('countTelas').textContent=DATA.telas.length;}
+function renderSacos(){var tb=document.getElementById('tbodySacos');tb.innerHTML='';DATA.sacos.forEach(function(s,i){var tr=document.createElement('tr');tr.innerHTML='<td class="col-id">'+s.id+'</td><td><input value="'+esc(s.nombre)+'" oninput="DATA.sacos['+i+'].nombre=this.value;markDirty();this.classList.add(\'changed\')"></td><td><input value="'+esc(s.medidas)+'" oninput="DATA.sacos['+i+'].medidas=this.value;markDirty();this.classList.add(\'changed\')" style="width:80px"></td><td><input type="number" value="'+s.gm+'" oninput="DATA.sacos['+i+'].gm=+this.value;markDirty();this.classList.add(\'changed\')"></td><td><input type="number" step="0.01" value="'+s.pA+'" oninput="DATA.sacos['+i+'].pA=+this.value;markDirty();this.classList.add(\'changed\')"></td><td><input type="number" step="0.01" value="'+s.pB+'" oninput="DATA.sacos['+i+'].pB=+this.value;markDirty();this.classList.add(\'changed\')"></td><td><input type="number" step="0.01" value="'+s.pC+'" oninput="DATA.sacos['+i+'].pC=+this.value;markDirty();this.classList.add(\'changed\')"></td><td class="col-actions"><button class="del-btn" onclick="DATA.sacos.splice('+i+',1);renderSacos();markDirty()">&times;</button></td>';tb.appendChild(tr);});document.getElementById('countSacos').textContent=DATA.sacos.length;}
+function addTela(){var m=Math.max(0,...DATA.telas.map(function(t){return t.id;}));DATA.telas.push({id:m+1,nombre:'',cat:'',sombra:'',rollo:'',pm:0,pc:0});renderTelas();markDirty();document.getElementById('tbodyTelas').lastChild.querySelector('input').focus();}
+function addSaco(){var m=Math.max(0,...DATA.sacos.map(function(s){return s.id;}));DATA.sacos.push({id:m+1,nombre:'',medidas:'',gm:0,pA:0,pB:0,pC:0});renderSacos();markDirty();document.getElementById('tbodySacos').lastChild.querySelector('input').focus();}
+async function cargarDesdeGH(){var cfg=getConfig();if(!cfg.token){document.getElementById('tokenPrompt').classList.remove('hidden');return;}try{toast('Cargando...');var r=await fetch('https://api.github.com/repos/'+cfg.repo+'/contents/'+cfg.file,{headers:{'Authorization':'Bearer '+cfg.token,'Accept':'application/vnd.github.v3+json'}});if(r.status===401){localStorage.removeItem('GH_TOKEN');document.getElementById('tokenPrompt').classList.remove('hidden');toast('Token invalido','err');return;}if(!r.ok)throw new Error('HTTP '+r.status);var meta=await r.json();GH_SHA=meta.sha;var content=atob(meta.content.replace(/\n/g,''));DATA=JSON.parse(content);DATA.sacos=DATA.sacos.map(function(s){return s.pA!==undefined?s:Object.assign({},s,{pA:s.p2||0,pB:s.p2||0,pC:s.p2||0});});ORIGINAL=JSON.parse(JSON.stringify(DATA));document.getElementById('versionDisplay').textContent='v'+DATA.version;document.getElementById('lastUpdate').textContent=DATA.actualizado?'Actualizado: '+DATA.actualizado:'';renderTelas();renderSacos();markClean();toast('v'+DATA.version+' cargada');}catch(e){toast('Error: '+e.message,'err');}}
+function recargar(){if(dirty){if(!confirm('Tenes cambios sin publicar. Se pierden si recargas.\n\nContinuar?'))return;}cargarDesdeGH();}
+function prepararPublicacion(){DATA.actualizado=new Date().toLocaleString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});var c=[];DATA.telas.forEach(function(nt){var o=ORIGINAL.telas.find(function(x){return x.id===nt.id;});if(!o){c.push({t:'add',msg:'+ '+nt.nombre});return;}if(o.pm!==nt.pm)c.push({t:'mod',msg:nt.nombre+' Master: $'+o.pm.toFixed(3)+' \u2192 $'+nt.pm.toFixed(3)});if(o.pc!==nt.pc)c.push({t:'mod',msg:nt.nombre+' Conf: $'+o.pc.toFixed(3)+' \u2192 $'+nt.pc.toFixed(3)});if(o.nombre!==nt.nombre)c.push({t:'mod',msg:'#'+nt.id+': '+o.nombre+' \u2192 '+nt.nombre});});ORIGINAL.telas.forEach(function(o){if(!DATA.telas.find(function(x){return x.id===o.id;}))c.push({t:'del',msg:'\u2212 '+o.nombre});});DATA.sacos.forEach(function(ns){var o=ORIGINAL.sacos.find(function(x){return x.id===ns.id;});if(!o){c.push({t:'add',msg:'+ '+ns.nombre});return;}['pA','pB','pC'].forEach(function(k){if(o[k]!==ns[k])c.push({t:'mod',msg:ns.nombre+' '+k.slice(1)+': Q'+o[k].toFixed(2)+' \u2192 Q'+ns[k].toFixed(2)});});if(o.nombre!==ns.nombre)c.push({t:'mod',msg:'#'+ns.id+': '+o.nombre+' \u2192 '+ns.nombre});});ORIGINAL.sacos.forEach(function(o){if(!DATA.sacos.find(function(x){return x.id===o.id;}))c.push({t:'del',msg:'\u2212 '+o.nombre});});if(!c.length)c.push({t:'mod',msg:'Version '+ORIGINAL.version+' \u2192 '+DATA.version});document.getElementById('diffContent').innerHTML=c.map(function(x){return'<div class="diff-line diff-'+x.t+'">'+x.msg+'</div>';}).join('');document.getElementById('diffModal').classList.remove('hidden');}
+function cerrarDiff(){document.getElementById('diffModal').classList.add('hidden');}
+async function publicar(){var cfg=getConfig();cerrarDiff();var j=JSON.stringify(DATA,null,2);var b=btoa(unescape(encodeURIComponent(j)));try{toast('Publicando...');var r=await fetch('https://api.github.com/repos/'+cfg.repo+'/contents/'+cfg.file,{method:'PUT',headers:{'Authorization':'Bearer '+cfg.token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify({message:'v'+DATA.version+' - '+DATA.actualizado,content:b,sha:GH_SHA})});if(!r.ok){var e=await r.json();throw new Error(e.message||'HTTP '+r.status);}var res=await r.json();GH_SHA=res.content.sha;ORIGINAL=JSON.parse(JSON.stringify(DATA));markClean();document.getElementById('versionDisplay').textContent='v'+DATA.version;document.getElementById('lastUpdate').textContent='Actualizado: '+DATA.actualizado;toast('v'+DATA.version+' publicada');}catch(e){toast('Error: '+e.message,'err');}}
+function descargarExcel(){if(!DATA.telas.length&&!DATA.sacos.length){toast('No hay datos','err');return;}var wb=XLSX.utils.book_new();var t=[["ID","Nombre","Categoria","Sombra","Rollo","Master $/pie2","Conf $/pie2"]];DATA.telas.forEach(function(x){t.push([x.id,x.nombre,x.cat,x.sombra,x.rollo,x.pm,x.pc]);});var ws1=XLSX.utils.aoa_to_sheet(t);ws1["!cols"]=[{wch:5},{wch:35},{wch:12},{wch:8},{wch:12},{wch:14},{wch:14}];XLSX.utils.book_append_sheet(wb,ws1,"Telas");var s=[["ID","Nombre","Medidas","Peso gm","Precio A","Precio B","Precio C"]];DATA.sacos.forEach(function(x){s.push([x.id,x.nombre,x.medidas,x.gm,x.pA,x.pB,x.pC]);});var ws2=XLSX.utils.aoa_to_sheet(s);ws2["!cols"]=[{wch:5},{wch:35},{wch:12},{wch:10},{wch:10},{wch:10},{wch:10}];XLSX.utils.book_append_sheet(wb,ws2,"Sacos");XLSX.writeFile(wb,"precios_lgm_v"+DATA.version+".xlsx");toast("Excel descargado");}
+window.addEventListener('load',function(){var c=getConfig();document.getElementById('cfgToken').value=c.token;document.getElementById('cfgRepo').value=c.repo;document.getElementById('cfgFile').value=c.file;if(c.token)cargarDesdeGH();else document.getElementById('tokenPrompt').classList.remove('hidden');});
+window.addEventListener('beforeunload',function(e){if(dirty){e.preventDefault();e.returnValue='';}});
 </script>
 </body>
 </html>
