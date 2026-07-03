@@ -1,6 +1,6 @@
 {
-  "version": 26,
-  "actualizado": "03/07/2026, 05:16 p. m.",
+  "version": 27,
+  "actualizado": "03/07/2026, 05:22 p. m.",
   "telas": [
     {
       "id": 1,
@@ -126,27 +126,27 @@
       "nombre": "Afrechero 30x48",
       "medidas": "30x48",
       "gm": 120,
-      "pA": 3.19,
+      "pA": 2.9,
       "pB": 3.19,
-      "pC": 3.19
+      "pC": 3.5
     },
     {
       "id": 4,
       "nombre": "Buff Santiago 28x44",
       "medidas": "28x44",
       "gm": 175,
-      "pA": 4.35,
+      "pA": 3.95,
       "pB": 4.35,
-      "pC": 4.35
+      "pC": 4.75
     },
     {
       "id": 5,
       "nombre": "Buff Quetzal 28x44",
       "medidas": "28x44",
       "gm": 175,
-      "pA": 4.35,
-      "pB": 4.5,
-      "pC": 4.65
+      "pA": 3.95,
+      "pB": 4.35,
+      "pC": 4.75
     },
     {
       "id": 6,
@@ -162,7 +162,7 @@
       "nombre": "Rojo Quetzal 28x44",
       "medidas": "28x44",
       "gm": 110,
-      "pA": 2.86,
+      "pA": 2.7,
       "pB": 2.86,
       "pC": 3.1
     },
@@ -171,18 +171,18 @@
       "nombre": "Buff Liso 28x44",
       "medidas": "28x44",
       "gm": 110,
-      "pA": 2.86,
+      "pA": 2.7,
       "pB": 2.86,
-      "pC": 2.92
+      "pC": 3.1
     },
     {
       "id": 9,
       "nombre": "Blanco Liso 28x44",
       "medidas": "28x44",
       "gm": 110,
-      "pA": 2.81,
-      "pB": 2.81,
-      "pC": 2.81
+      "pA": 2.7,
+      "pB": 2.86,
+      "pC": 3.1
     },
     {
       "id": 10,
