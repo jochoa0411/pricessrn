@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a6b45">
+<title>Cotizador LGM</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow-x: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; }
+header { position: fixed; top: 0; left: 0; right: 0; min-height: 56px; padding-top: max(12px, env(safe-area-inset-top)); padding-bottom: 12px; padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); background: linear-gradient(135deg, #14432a, #1a6b45); color: white; display: flex; align-items: center; justify-content: space-between; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+header h1 { font-size: 18px; font-weight: 700; flex: 1; text-align: center; }
+.toggle-menu { background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 18px; }
+.main { display: flex; height: 100%; padding-top: max(80px, calc(56px + env(safe-area-inset-top))); }
+.sidebar { width: 0; background: white; border-right: 1px solid #e0e0e0; overflow-y: auto; transition: width 0.3s; position: fixed; left: 0; top: max(80px, calc(56px + env(safe-area-inset-top))); bottom: 0; z-index: 50; }
+.sidebar.open { width: 200px; }
+.nav-item { padding: 14px 18px; border-bottom: 1px solid #f0f0f0; cursor: pointer; font-weight: 500; color: #666; font-size: 14px; white-space: nowrap; }
+.nav-item.active { background: #e8f5e9; color: #1a6b45; border-left: 4px solid #1a6b45; padding-left: 14px; }
+.content { flex: 1; padding: 16px; padding-bottom: max(20px, env(safe-area-inset-bottom)); overflow-y: auto; width: 100%; }
+.card { background: white; border-radius: 8px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.card-title { font-weight: 700; margin-bottom: 12px; font-size: 15px; color: #1a6b45; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+label { display: block; font-size: 11px; color: #666; margin-bottom: 4px; font-weight: 600; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.3px; }
+label:first-child { margin-top: 0; }
+input, select { width: 100%; padding: 12px; border: 1px solid #d1d1d6; border-radius: 10px; font-size: 16px; -webkit-appearance: none; background-color: #fff; transition: all 0.2s ease; }
+.btn { padding: 12px 14px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; transition: background 0.2s ease, transform 0.1s ease; }
+.btn:active { transform: scale(0.98); opacity: 0.9; }
+.card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); border: 1px solid #efeff4; }
+.modo-seg { display: flex; background: #eeeeee; border-radius: 10px; padding: 4px; gap: 2px; }
+.tier-group { display: flex; border: 1px solid #d1d1d6; border-radius: 10px; overflow: hidden; }
+input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 0 0 3px rgba(26,107,69,0.08); }
+.field { margin-bottom: 10px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.btn { padding: 10px 14px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; }
+.btn-primary { background: #0066cc; color: white; }
+.btn-success { background: #1a6b45; color: white; }
+.btn-danger { background: #d32f2f; color: white; }
+.btn-warning { background: #d97706; color: white; }
+.btn-ghost { background: #f0f0f0; color: #444; }
+.btn-sm { padding: 6px 10px; font-size: 12px; min-height: auto; }
+.btn-block { width: 100%; }
+.resultado { background: #f0f9f5; border-left: 4px solid #1a6b45; padding: 12px; margin-top: 12px; border-radius: 6px; display: none; }
+.resultado.show { display: block; }
+.resultado-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 12px; border-bottom: 1px solid #e0f0e8; }
+.resultado-row:last-of-type { border-bottom: none; }
+.resultado-row strong { color: #1a6b45; font-size: 13px; text-align: right; }
+.total-box { background: white; border: 2px solid #1a6b45; padding: 12px; margin-top: 10px; border-radius: 6px; text-align: right; }
+.total-box strong { font-size: 19px; color: #1a6b45; }
+.item-card { background: #fafafa; border: 1px solid #e8e8e8; padding: 12px; margin: 8px 0; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.item-info { flex: 1; min-width: 0; }
+.item-info strong { color: #222; display: block; margin-bottom: 3px; font-size: 13px; }
+.item-info small { color: #999; font-size: 11px; }
+.actions { display: flex; gap: 4px; flex-shrink: 0; }
+.seccion { display: none; }
+.seccion.active { display: block; }
+.tabs { display: flex; gap: 0; margin-bottom: 14px; border-bottom: 2px solid #e0e0e0; }
+.tab-btn { flex: 1; padding: 10px 8px; border: none; background: transparent; cursor: pointer; font-weight: 600; color: #999; border-bottom: 3px solid transparent; margin-bottom: -2px; font-size: 13px; }
+.tab-btn.active { color: #1a6b45; border-bottom-color: #1a6b45; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.info-text { font-size: 11px; color: #aaa; margin-top: 4px; margin-bottom: 6px; }
+.warn-box { background: #fef9ec; border-left: 3px solid #d97706; padding: 8px 10px; margin: 8px 0; border-radius: 4px; font-size: 11px; color: #92400e; }
+.preview-box { padding: 10px 12px; background: #f0f9f5; border-radius: 6px; font-size: 12px; color: #444; margin-top: 6px; margin-bottom: 8px; border: 1px solid #c8e6c9; display: none; line-height: 1.6; }
+.cart-wrap { background: white; border-radius: 8px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 2px solid #1a6b45; }
+.cart-item { display: flex; align-items: center; gap: 6px; padding: 10px; background: #fafafa; border-radius: 6px; margin-bottom: 8px; border-left: 4px solid #1a6b45; flex-wrap: wrap; }
+.cart-item.tipo-saco { border-left-color: #0066cc; }
+.cart-item-body { flex: 1; min-width: 150px; }
+.ci-nombre { font-weight: 700; font-size: 13px; color: #222; }
+.ci-detalle { font-size: 11px; color: #777; margin-top: 2px; }
+.ci-cobrado { font-size: 10px; color: #d97706; font-weight: 600; }
+.ci-total { font-weight: 800; font-size: 14px; color: #1a6b45; white-space: nowrap; }
+.tipo-saco .ci-total { color: #0066cc; }
+.cart-footer { border-top: 2px solid #e8f5e9; padding-top: 12px; margin-top: 6px; }
+.cart-grand { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.cart-grand span { font-size: 12px; color: #666; font-weight: 600; text-transform: uppercase; }
+.cart-grand strong { font-size: 22px; font-weight: 900; color: #1a6b45; }
+.cart-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.cart-empty { text-align: center; color: #bbb; padding: 24px 16px; font-size: 13px; }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; padding-top: max(env(safe-area-inset-top), 16px); }
+.modal.hidden { display: none; }
+.modal-box { background: white; border-radius: 12px; padding: 20px; width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.modal-title { font-size: 16px; font-weight: 700; color: #1a6b45; }
+.modal-close { font-size: 26px; cursor: pointer; color: #bbb; line-height: 1; padding: 2px 8px; }
+.modal-btns { display: flex; gap: 8px; margin-top: 18px; }
+.modal-btns .btn { flex: 1; }
+.toast { position: fixed; bottom: max(28px, calc(20px + env(safe-area-inset-bottom))); left: 50%; transform: translateX(-50%) translateY(16px); padding: 12px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 9999; opacity: 0; transition: all 0.25s ease; pointer-events: none; box-shadow: 0 6px 20px rgba(0,0,0,0.2); color: white; max-width: 90vw; text-align: center; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.ok { background: #1a6b45; }
+.toast.err { background: #d32f2f; }
+.badge { display: inline-block; background: #e8f5e9; color: #1a6b45; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.tier-group { display: flex; border: 1.5px solid #ddd; border-radius: 6px; overflow: hidden; }
+.tier-opt { flex: 1; margin: 0; }
+.tier-opt input { display: none; }
+.tier-opt span { display: block; padding: 10px 0; text-align: center; cursor: pointer; font-weight: 700; font-size: 15px; color: #888; border-right: 1.5px solid #ddd; }
+.tier-opt:last-child span { border-right: none; }
+.tier-opt input:checked + span { background: #1a6b45; color: white; }
+.precio-tiers { display: flex; gap: 6px; margin-top: 8px; }
+.precio-tier-badge { flex: 1; text-align: center; padding: 6px 4px; border-radius: 6px; font-size: 12px; border: 1.5px solid #ddd; }
+.precio-tier-badge .t-label { font-size: 10px; font-weight: 700; color: #888; display: block; }
+.precio-tier-badge .t-val { font-weight: 700; color: #1a6b45; font-size: 12px; display: block; margin-top: 2px; }
+.modo-seg { display: flex; background: #e0e0e0; border-radius: 8px; padding: 3px; gap: 2px; }
+.seg-opt { flex: 1; text-align: center; padding: 9px 6px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; color: #555; user-select: none; margin: 0; }
+.seg-opt:has(input:checked) { background: #2e7d32; color: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.18); }
+.seg-opt input { display: none; }
+.modo-desc { font-size: 11px; color: #888; margin-top: 5px; min-height: 14px; }
+.precio-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.precio-card { padding: 10px; border-radius: 8px; border: 2px solid #e0e0e0; background: #fafafa; }
+.precio-card.pc-activo { border-color: #2e7d32; background: #f0f9f2; }
+.pc-label { font-size: 9px; font-weight: 700; color: #aaa; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 2px; }
+.precio-card.pc-activo .pc-label { color: #2e7d32; }
+.pc-price { font-size: 19px; font-weight: 800; color: #333; line-height: 1.1; }
+.precio-card.pc-activo .pc-price { color: #1b5e20; }
+.pc-desc { font-size: 10px; color: #aaa; margin-top: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <button class="toggle-menu" onclick="toggleMenu()">☰</button>
+  <h1>Cotizador LGM</h1>
+  <div style="width: 40px;"></div>
+</header>
+
+<div class="main">
+  <div id="sidebarOverlay" onclick="cerrarMenu()" style="position:fixed;inset:0;z-index:49;display:none;background:rgba(0,0,0,0.3);"></div><div class="sidebar" id="sidebar">
+    <div class="nav-item active" onclick="abrirSeccion('cotizar',this)">🧮 Cotizar</div>
+    <div class="nav-item" onclick="abrirSeccion('telas',this)">📋 Telas</div>
+    <div class="nav-item" onclick="abrirSeccion('sacos',this)">🛍️ Sacos</div>
+    <div class="nav-item" onclick="abrirSeccion('historial',this)">📝 Historial</div>
+  </div>
+
+  <div class="content">
+
+    <!-- ===== COTIZAR ===== -->
+    <div id="cotizar" class="seccion active">
+
+      <div class="card">
+        <div class="card-title">Datos del presupuesto</div>
+        <div class="field"><label>Cliente (opcional)</label><input type="text" id="cotCliente" placeholder="Nombre del cliente"></div>
+        <div class="field"><label>Referencia</label><input type="text" id="cotRef" placeholder="ej: COT-2026-001"></div>
+        <div class="field" style="margin-top:12px;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;font-size:14px;color:#1a6b45;font-weight:700;">
+            <input type="checkbox" id="cotDesglosarIVA" style="width:20px;height:20px;margin:0;-webkit-appearance:checkbox;appearance:checkbox;" onchange="cotCalcTela();cotCalcSaco();">
+            Quitar IVA (precio sin impuesto)
+          </label>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active" onclick="cambiarTab(this,'cot-tela')">📊 Telas</button>
+        <button class="tab-btn" onclick="cambiarTab(this,'cot-saco')">🛍️ Sacos</button>
+      </div>
+
+      <!-- TAB TELA -->
+      <div id="cot-tela" class="tab-content active">
+        <div class="card">
+          <div class="card-title">Ítem de tela</div>
+          <div class="field"><label>Material</label>
+            <select id="cotTelaSelect" onchange="actTelaPreview()"><option value="">Selecciona un material…</option></select>
+          </div>
+          <div class="field">
+            <label>Tipo de rollo</label>
+            <div class="modo-seg">
+              <label class="seg-opt"><input type="radio" name="cotModoTela" value="master" checked onchange="actTelaPreview()">Rollo Master</label>
+              <label class="seg-opt"><input type="radio" name="cotModoTela" value="conf" onchange="actTelaPreview()">Confeccionado</label>
+            </div>
+            <div id="cotModoDesc" class="modo-desc"></div>
+          </div>
+          <div id="cotTelaPreview" class="preview-box" style="background:white;border-color:#e0e0e0;"></div>
+
+          <div class="grid2">
+            <div class="field"><label>Ancho</label><input type="number" id="cotAncho" placeholder="0" min="0" inputmode="decimal" oninput="cotCalcTela()"></div>
+            <div class="field"><label>Unidad</label><select id="cotUAncho" onchange="cotCalcTela()"><option value="ft">ft</option><option value="m">m</option></select></div>
+          </div>
+          <div class="grid2">
+            <div class="field"><label>Largo</label><input type="number" id="cotLargo" placeholder="0" min="0" inputmode="decimal" oninput="cotCalcTela()"></div>
+            <div class="field"><label>Unidad</label><select id="cotULargo" onchange="cotCalcTela()"><option value="ft">ft</option><option value="m">m</option></select></div>
+          </div>
+          <div class="grid3">
+            <div class="field"><label>Cortes</label><input type="number" id="cotCantTela" value="1" min="1" step="1" inputmode="numeric" oninput="cotCalcTela()"></div>
+            <div class="field"><label>TC USD→Q</label><input type="number" id="cotTC" placeholder="7.80" step="0.01" min="0" inputmode="decimal" oninput="cotCalcTela()"></div>
+            <div class="field"><label>Rec/Desc %</label><input type="number" id="cotRecargo" value="0" inputmode="decimal" oninput="cotCalcTela()"></div>
+          </div>
+          <p class="info-text">💡 Positivo = aumento · Negativo = descuento</p>
+          <div class="field"><label>Precio base manual USD/pie² (opcional)</label><input type="number" id="cotPrecioManual" placeholder="Vacío = precio catálogo" step="0.001" min="0" inputmode="decimal" oninput="cotCalcTela()"></div>
+
+          <div id="cotResTela" class="resultado">
+            <div id="warnTela"></div>
+            <div class="resultado-row"><span>Ancho solicitado</span><strong id="rAnchoSol">—</strong></div>
+            <div class="resultado-row"><span>Ancho cobrado (múlt. 6ft)</span><strong id="rAnchoCob">—</strong></div>
+            <div class="resultado-row"><span>Largo por corte</span><strong id="rLargo">—</strong></div>
+            <div class="resultado-row"><span>Área por corte</span><strong id="rAreaCorte">—</strong></div>
+            <div id="rCantFilaTela" class="resultado-row"><span>Cantidad de cortes</span><strong id="rCantTela">—</strong></div>
+            <div class="resultado-row"><span>Área total facturada</span><strong id="rArea">—</strong></div>
+            <div class="resultado-row"><span>Precio/pie²</span><strong id="rPrecio">—</strong></div>
+            <div class="resultado-row"><span>Total USD</span><strong id="rUsd">—</strong></div>
+            <div id="rIvaBoxTela" style="display:none;margin-top:10px;padding:10px;background:#fff8e1;border-radius:6px;border:1px solid #ffe082;font-size:12px;">
+              <div class="resultado-row"><span>Desglose:</span><strong id="rSubTela">—</strong></div>
+              <div class="resultado-row"><span>IVA 12%:</span><strong id="rIvaTela">—</strong></div>
+            </div>
+            <div id="rQBox" class="total-box"><strong>Total Q: <span id="rQ">—</span></strong></div>
+            <p id="rQFalta" class="info-text" style="display:none;color:#d97706;margin-top:8px;">💡 Ingresa el tipo de cambio para ver el total en Q</p>
+          </div>
+          <button class="btn btn-success btn-block" style="margin-top:12px;" onclick="agregarTela()">➕ Agregar al presupuesto</button>
+        </div>
+      </div>
+
+      <!-- TAB SACO -->
+      <div id="cot-saco" class="tab-content">
+        <div class="card">
+          <div class="card-title">Ítem de saco</div>
+          <div class="field"><label>Saco</label>
+            <select id="cotSacoSelect" onchange="actSacoPreview()"><option value="">Selecciona un saco…</option></select>
+          </div>
+          <div id="cotSacoPreview" class="preview-box"></div>
+
+          <div class="field" style="margin-top:10px;">
+            <label>Tipo de cliente</label>
+            <div class="tier-group">
+              <label class="tier-opt"><input type="radio" name="cotTierSaco" value="A" checked onchange="cotCalcSaco()"><span>A</span></label>
+              <label class="tier-opt"><input type="radio" name="cotTierSaco" value="B" onchange="cotCalcSaco()"><span>B</span></label>
+              <label class="tier-opt"><input type="radio" name="cotTierSaco" value="C" onchange="cotCalcSaco()"><span>C</span></label>
+            </div>
+          </div>
+
+          <div class="field"><label>Cantidad</label><input type="number" id="cotCantSaco" placeholder="0" min="0" inputmode="numeric" oninput="cotCalcSaco()"></div>
+          <div class="grid2">
+            <div class="field"><label>Rec/Desc %</label><input type="number" id="cotRecargoSaco" value="0" inputmode="decimal" oninput="cotCalcSaco()"></div>
+            <div class="field"><label>Precio manual Q/u</label><input type="number" id="cotPMSaco" placeholder="Opcional" step="0.01" min="0" inputmode="decimal" oninput="cotCalcSaco()"></div>
+          </div>
+          <p class="info-text">💡 Precio manual reemplaza el precio del tier · Recargo aplica encima</p>
+
+          <div id="cotResSaco" class="resultado">
+            <div class="resultado-row"><span>Precio base (tier <span id="rTierLabel">A</span>)</span><strong id="rPBaseSaco">—</strong></div>
+            <div class="resultado-row"><span>Precio unitario final</span><strong id="rPUnitSaco">—</strong></div>
+            <div class="resultado-row"><span>Cantidad</span><strong id="rCantSaco">—</strong></div>
+            <div id="rIvaBoxSaco" style="display:none;margin-top:10px;padding:10px;background:#fff8e1;border-radius:6px;border:1px solid #ffe082;font-size:12px;">
+              <div class="resultado-row"><span>Desglose:</span><strong id="rSubSaco">---</strong></div>
+              <div class="resultado-row"><span>IVA 12%:</span><strong id="rIvaSaco">---</strong></div>
+            </div>
+            <div class="total-box"><strong>Total: <span id="rTotalSaco">—</span></strong></div>
+          </div>
+          <button class="btn btn-success btn-block" style="margin-top:12px;" onclick="agregarSaco()">➕ Agregar al presupuesto</button>
+        </div>
+      </div>
+
+      <!-- CARRITO -->
+      <div class="cart-wrap">
+        <div class="card-title">
+          📋 Presupuesto
+          <span id="cartBadge" class="badge">0 ítems</span>
+        </div>
+        <div id="cartList"><div class="cart-empty">Sin ítems — agrega telas o sacos arriba.</div></div>
+        <div id="cartFooter" style="display:none">
+          <div class="cart-footer">
+            <div class="cart-grand">
+              <span>Total general</span>
+              <strong id="cartTotal">Q0.00</strong>
+            </div>
+            <div class="cart-btns">
+              <button class="btn btn-success" style="flex:2" onclick="generarPDF()">📤 Compartir</button>
+              <button class="btn btn-primary" style="flex:1" onclick="guardarHistorial()">💾 Guardar</button>
+              <button class="btn btn-ghost btn-sm" onclick="limpiarCarrito()">🗑️</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TELAS ===== -->
+    <div id="telas" class="seccion">
+      <div class="card">
+        <div class="card-title">Listado de Telas</div>
+        <div id="telaList"></div>
+        <button class="btn btn-primary btn-block" style="margin-top:12px;" onclick="abrirModalTela()">➕ Agregar tela</button>
+      </div>
+    </div>
+
+    <!-- ===== SACOS ===== -->
+    <div id="sacos" class="seccion">
+      <div class="card">
+        <div class="card-title">Listado de Sacos</div>
+        <div id="sacoList"></div>
+        <button class="btn btn-primary btn-block" style="margin-top:12px;" onclick="abrirModalSaco()">➕ Agregar saco</button>
+      </div>
+    </div>
+
+    <!-- ===== HISTORIAL ===== -->
+    <div id="historial" class="seccion">
+      <div class="card">
+        <div class="card-title">Historial de Cotizaciones</div>
+        <div id="historialList"></div>
+        <button class="btn btn-danger btn-block" style="margin-top:12px;" onclick="limpiarHistorial()">🗑️ Limpiar historial</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TELA -->
+<div id="modalTela" class="modal hidden" onclick="if(event.target===this)cerrarModalTela()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div id="modalTelaTitle" class="modal-title">➕ Agregar Tela</div>
+      <span class="modal-close" onclick="cerrarModalTela()">×</span>
+    </div>
+    <div class="field"><label>Nombre</label><input type="text" id="tF_nombre" placeholder="ej: Saran Negro 85%"></div>
+    <div class="grid2">
+      <div class="field"><label>Categoría</label><input type="text" id="tF_cat" placeholder="ej: Saran"></div>
+      <div class="field"><label>Sombra</label><input type="text" id="tF_sombra" placeholder="ej: 85%"></div>
+    </div>
+    <div class="field"><label>Rollo</label><input type="text" id="tF_rollo" placeholder="ej: 12'x300'"></div>
+    <div class="grid2">
+      <div class="field"><label>Precio Master ($/pie²)</label><input type="number" id="tF_pm" step="0.001" min="0" inputmode="decimal"></div>
+      <div class="field"><label>Precio Conf. ($/pie²)</label><input type="number" id="tF_pc" step="0.001" min="0" inputmode="decimal"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-success" onclick="guardarTela()">Guardar</button>
+      <button class="btn btn-ghost" onclick="cerrarModalTela()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SACO -->
+<div id="modalSaco" class="modal hidden" onclick="if(event.target===this)cerrarModalSaco()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div id="modalSacoTitle" class="modal-title">➕ Agregar Saco</div>
+      <span class="modal-close" onclick="cerrarModalSaco()">×</span>
+    </div>
+    <div class="field"><label>Nombre</label><input type="text" id="sF_nombre" placeholder="ej: Rocola 36x48"></div>
+    <div class="grid2">
+      <div class="field"><label>Medidas</label><input type="text" id="sF_medidas" placeholder='ej: 36"x48"'></div>
+      <div class="field"><label>Peso (gm)</label><input type="number" id="sF_gm" min="0" inputmode="numeric"></div>
+    </div>
+    <div class="grid3">
+      <div class="field"><label>Precio A (Q/u)</label><input type="number" id="sF_pA" step="0.01" min="0" inputmode="decimal" placeholder="0.00"></div>
+      <div class="field"><label>Precio B (Q/u)</label><input type="number" id="sF_pB" step="0.01" min="0" inputmode="decimal" placeholder="0.00"></div>
+      <div class="field"><label>Precio C (Q/u)</label><input type="number" id="sF_pC" step="0.01" min="0" inputmode="decimal" placeholder="0.00"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-success" onclick="guardarSaco()">Guardar</button>
+      <button class="btn btn-ghost" onclick="cerrarModalSaco()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast ok"></div>
+
+<script>
+const MT = 3.28084;
+
+let TELAS = JSON.parse(localStorage.getItem('TELAS')) || [
+  {id:1,nombre:'Saran Negro 40%',cat:'Saran',sombra:'40%',rollo:"12'x300'",pm:0.080,pc:0.097},
+  {id:2,nombre:'Saran Negro 63%',cat:'Saran',sombra:'63%',rollo:"12'x300'",pm:0.097,pc:0.114},
+  {id:3,nombre:'Saran Negro 73%',cat:'Saran',sombra:'73%',rollo:"12'x300'",pm:0.108,pc:0.125},
+  {id:4,nombre:'Saran Negro 80%',cat:'Saran',sombra:'80%',rollo:"12'x300'",pm:0.118,pc:0.136},
+  {id:5,nombre:'Saran Negro Triple Urdimbre 80%',cat:'Saran',sombra:'80%',rollo:"12'x300'",pm:0.108,pc:0.123},
+  {id:6,nombre:'Saran Verde 80%',cat:'Saran',sombra:'80%',rollo:"12'x300'",pm:0.124,pc:0.141},
+  {id:7,nombre:'Saran Negro 95%',cat:'Saran',sombra:'95%',rollo:"12'x300'",pm:0.161,pc:0.179},
+  {id:8,nombre:'Saran Raschel 80%',cat:'Saran',sombra:'80%',rollo:"20.3x656",pm:0.070,pc:0.070},
+  {id:9,nombre:'Geotex 2400 (verde/negro)',cat:'Geotex',sombra:'',rollo:"12'x300'",pm:0.178,pc:0.199},
+  {id:10,nombre:'Geotex 2200 Negro',cat:'Geotex',sombra:'',rollo:"12'x300'",pm:0.129,pc:0.151},
+  {id:11,nombre:'Geotex 2100 Negro',cat:'Geotex',sombra:'',rollo:"12'x300'",pm:0.046,pc:0.053}
+];
+
+let SACOS = JSON.parse(localStorage.getItem('SACOS')) || [
+  {id:1,nombre:'Super Rocola 48" X 61"',medidas:'48"x61"',gm:298,pA:7.37,pB:7.37,pC:7.37},
+  {id:2,nombre:'Rocola 36"X48"',medidas:'36"x48"',gm:200,pA:4.79,pB:4.79,pC:4.79},
+  {id:3,nombre:'Afrechero 30x48',medidas:'30"x48"',gm:120,pA:3.19,pB:3.19,pC:3.19},
+  {id:4,nombre:'Buff Santiago 28"X44"',medidas:'28"x44"',gm:175,pA:4.35,pB:4.35,pC:4.35},
+  {id:5,nombre:'Buff Quetzal 28x44"',medidas:'28"x44"',gm:175,pA:4.35,pB:4.35,pC:4.35},
+  {id:6,nombre:'Rojo Liso 28"X44"',medidas:'28"x44"',gm:135,pA:3.41,pB:3.41,pC:3.41},
+  {id:7,nombre:'Rojo Quetzal 28x44"',medidas:'28"x44"',gm:110,pA:2.86,pB:2.86,pC:2.86},
+  {id:8,nombre:'Buff Liso 28"X44"',medidas:'28"x44"',gm:110,pA:2.86,pB:2.86,pC:2.86},
+  {id:9,nombre:'Blanco Liso 28x44"',medidas:'28"x44"',gm:110,pA:2.81,pB:2.81,pC:2.81},
+  {id:10,nombre:'Blanco Guisquil 24"x38"',medidas:'24"x38"',gm:74,pA:1.93,pB:1.93,pC:1.93},
+  {id:11,nombre:'Blanco Pajaro Rojo 24"x38"',medidas:'24"x38"',gm:74,pA:1.87,pB:1.87,pC:1.87},
+  {id:12,nombre:'Blanco Premium 22"x38"',medidas:'22"x38"',gm:68,pA:1.54,pB:1.54,pC:1.54},
+  {id:13,nombre:'Azul Tramado Liso 22"x37"',medidas:'22"x37"',gm:68,pA:1.65,pB:1.65,pC:1.65},
+  {id:14,nombre:'Blanco 22"X37"',medidas:'22"x37"',gm:68,pA:1.76,pB:1.76,pC:1.76},
+  {id:15,nombre:'Leno 22"x36"',medidas:'22"x36"',gm:66,pA:2.37,pB:2.37,pC:2.37},
+  {id:16,nombre:'Leno 18"X 31"',medidas:'18"x31"',gm:47,pA:1.71,pB:1.71,pC:1.71},
+  {id:17,nombre:'Multicolor Grande 22"x 25"',medidas:'22"x25"',gm:55,pA:1.65,pB:1.65,pC:1.65},
+  {id:18,nombre:'Multicolor Mediana 18"X21"',medidas:'18"x21"',gm:40,pA:1.21,pB:1.21,pC:1.21},
+  {id:19,nombre:'Multicolor Pequeña 15"X18"',medidas:'15"x18"',gm:32,pA:0.97,pB:0.97,pC:0.97}
+];
+SACOS = SACOS.map(s => s.pA !== undefined ? s : {...s, pA:s.p2, pB:s.p2, pC:s.p2});
+
+let CARRITO = JSON.parse(localStorage.getItem('CARRITO')||'[]');
+let _editTelaId = null;
+let _editSacoId = null;
+
+function saveTelas(){ localStorage.setItem('TELAS', JSON.stringify(TELAS)); }
+function saveSacos(){ localStorage.setItem('SACOS', JSON.stringify(SACOS)); }
+function saveCarrito(){ localStorage.setItem('CARRITO', JSON.stringify(CARRITO)); }
+
+let _toastTimer;
+function toast(msg, tipo='ok'){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + tipo + ' show';
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(()=> el.classList.remove('show'), 2800);
+}
+
+function toggleMenu(){var sb=document.getElementById('sidebar');var ov=document.getElementById('sidebarOverlay');sb.classList.toggle('open');ov.style.display=sb.classList.contains('open')?'block':'none';}function cerrarMenu(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').style.display='none';}
+
+function abrirSeccion(sec, el){
+  document.querySelectorAll('.seccion').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(sec).classList.add('active');
+  el.classList.add('active');
+  document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').style.display='none';
+  if(sec==='telas') refrescarTelas();
+  else if(sec==='sacos') refrescarSacos();
+  else if(sec==='historial') refrescarHistorial();
+}
+
+function cambiarTab(btn, tabId){
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+}
+
+function init(){ 
+  loadSelects(); 
+  renderCarrito();
+  // Formateadores táctiles para iOS
+  ['cotTC', 'cotPrecioManual', 'cotPMSaco'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) {
+      el.addEventListener('blur', (e) => {
+        if(e.target.value && !isNaN(e.target.value)) {
+          e.target.value = parseFloat(e.target.value).toFixed(2);
+        }
+      });
+    }
+  });
+}
+
+function loadSelects(){
+  const tS = document.getElementById('cotTelaSelect');
+  const sv = tS.value;
+  tS.innerHTML = '<option value="">Selecciona un material…</option>';
+  TELAS.forEach(t => tS.innerHTML += `<option value="${t.id}">${t.nombre}</option>`);
+  if(sv) tS.value = sv;
+
+  const sS = document.getElementById('cotSacoSelect');
+  const sv2 = sS.value;
+  sS.innerHTML = '<option value="">Selecciona un saco…</option>';
+  SACOS.forEach(s => sS.innerHTML += `<option value="${s.id}">${s.nombre}</option>`);
+  if(sv2) sS.value = sv2;
+}
+
+function actTelaPreview(){
+  const id = document.getElementById('cotTelaSelect').value;
+  const box = document.getElementById('cotTelaPreview');
+  const modoDesc = document.getElementById('cotModoDesc');
+  if(!id){ box.style.display='none'; if(modoDesc) modoDesc.textContent=''; cotCalcTela(); return; }
+  const t = TELAS.find(x=>x.id==id);
+  const modo = document.querySelector('input[name="cotModoTela"]:checked').value;
+  if(modoDesc) modoDesc.textContent = modo==='master' ? 'Sin ojetes ni rebete' : 'Con ojetes y rebete';
+  box.style.display = 'block';
+  box.innerHTML = `<strong>${t.nombre}</strong> · ${t.cat}${t.sombra?' · '+t.sombra:''} · Rollo: ${t.rollo}
+    <div class="precio-cards">
+      <div class="precio-card ${modo==='master'?'pc-activo':''}">
+        <div class="pc-label">Rollo Master</div>
+        <div class="pc-price">$${t.pm.toFixed(3)}</div>
+        <div class="pc-desc">por pie² · sin ojetes ni rebete</div>
+      </div>
+      <div class="precio-card ${modo==='conf'?'pc-activo':''}">
+        <div class="pc-label">Confeccionado</div>
+        <div class="pc-price">$${t.pc.toFixed(3)}</div>
+        <div class="pc-desc">por pie² · con ojetes y rebete</div>
+      </div>
+    </div>`;
+  cotCalcTela();
+}
+
+function actSacoPreview(){
+  const id = document.getElementById('cotSacoSelect').value;
+  const box = document.getElementById('cotSacoPreview');
+  if(!id){ box.style.display='none'; cotCalcSaco(); return; }
+  const s = SACOS.find(x=>x.id==id);
+  box.style.display = 'block';
+  box.innerHTML = `<strong>${s.nombre}</strong> · ${s.medidas} · ${s.gm} gm
+    <div class="precio-tiers">
+      <div class="precio-tier-badge"><span class="t-label">A</span><span class="t-val">Q${s.pA.toFixed(2)}</span></div>
+      <div class="precio-tier-badge"><span class="t-label">B</span><span class="t-val">Q${s.pB.toFixed(2)}</span></div>
+      <div class="precio-tier-badge"><span class="t-label">C</span><span class="t-val">Q${s.pC.toFixed(2)}</span></div>
+    </div>`;
+  cotCalcSaco();
+}
+
+function cotCalcTela(){
+  const id = document.getElementById('cotTelaSelect').value;
+  const res = document.getElementById('cotResTela');
+  if(!id){ res.classList.remove('show'); return; }
+  const t = TELAS.find(x=>x.id==id);
+  const a  = parseFloat(document.getElementById('cotAncho').value)||0;
+  const l  = parseFloat(document.getElementById('cotLargo').value)||0;
+  const ua = document.getElementById('cotUAncho').value;
+  const ul = document.getElementById('cotULargo').value;
+  const tc = parseFloat(document.getElementById('cotTC').value);
+  const r  = parseFloat(document.getElementById('cotRecargo').value)||0;
+  const pm = parseFloat(document.getElementById('cotPrecioManual').value);
+  const cant = Math.max(1, parseInt(document.getElementById('cotCantTela').value)||1);
+
+  if(!a || !l){ res.classList.remove('show'); return; }
+
+  const aFt = ua==='m' ? a*MT : a;
+  const lFt = ul==='m' ? l*MT : l;
+  const aC  = Math.ceil(aFt/6)*6 || 6;
+  const arCorte = aC * lFt;
+  const ar  = arCorte * cant;
+
+  const modo = document.querySelector('input[name="cotModoTela"]:checked').value;
+  const catalogPrice = modo === 'master' ? t.pm : t.pc;
+  const base = (typeof pm === 'number' && !isNaN(pm) && pm > 0) ? pm : catalogPrice;
+  const p = base * (1 + r/100);
+  const tu = ar * p;
+
+  const fmtA = (ft,u) => u==='m' ? (ft/MT).toFixed(2)+' m' : ft.toFixed(0)+' ft';
+
+  document.getElementById('rAnchoSol').textContent  = ua==='m' ? a.toFixed(2)+' m' : aFt.toFixed(1)+' ft';
+  document.getElementById('rAnchoCob').textContent  = ua==='m' ? `${(aC/MT).toFixed(2)} m (${aC.toFixed(0)} ft)` : `${aC.toFixed(0)} ft`;
+  document.getElementById('rLargo').textContent     = ul==='m' ? `${(lFt/MT).toFixed(2)} m (${lFt.toFixed(1)} ft)` : `${lFt.toFixed(1)} ft`;
+  document.getElementById('rAreaCorte').textContent = arCorte.toFixed(1)+' pie²';
+  document.getElementById('rCantFilaTela').style.display = cant > 1 ? 'flex' : 'none';
+  document.getElementById('rCantTela').textContent  = cant+' cortes';
+  document.getElementById('rArea').textContent      = ar.toFixed(1)+' pie²'+(cant>1?' (total)':'');
+  document.getElementById('rPrecio').textContent    = '$'+p.toFixed(3)+'/pie²';
+  document.getElementById('rUsd').textContent       = '$'+tu.toFixed(2);
+
+  const tcValido = !isNaN(tc) && tc > 0;
+  document.getElementById('rQBox').style.display   = tcValido ? 'block' : 'none';
+  document.getElementById('rQFalta').style.display = tcValido ? 'none' : 'block';
+  if(tcValido){
+    var tq = tu*tc;
+    var quitarIVA = document.getElementById('cotDesglosarIVA').checked;
+    var ivaBox = document.getElementById('rIvaBoxTela');
+    if(quitarIVA){
+      var pSinIva = p / 1.12;
+      var tuSinIva = ar * pSinIva;
+      var tqSinIva = tuSinIva * tc;
+      document.getElementById('rPrecio').textContent = '$'+pSinIva.toFixed(3)+'/pie2 (sin IVA)';
+      document.getElementById('rUsd').textContent = '$'+tuSinIva.toFixed(2);
+      document.getElementById('rQ').textContent = 'Q'+tqSinIva.toFixed(2);
+      document.getElementById('rSubTela').textContent = 'Q'+tqSinIva.toFixed(2)+' (sin IVA)';
+      document.getElementById('rIvaTela').textContent = 'Q0.00 (removido)';
+      ivaBox.style.display = 'block';
+    } else {
+      var subUsd = tu / 1.12;
+      var ivaUsd = tu - subUsd;
+      var sub = tq / 1.12;
+      var iva = tq - sub;
+      document.getElementById('rPrecio').textContent = '$'+p.toFixed(3)+'/pie2';
+      document.getElementById('rUsd').textContent = '$'+tu.toFixed(2);
+      document.getElementById('rQ').textContent = 'Q'+tq.toFixed(2);
+      document.getElementById('rSubTela').textContent = 'Q'+sub.toFixed(2)+' + IVA Q'+iva.toFixed(2)+' = Q'+tq.toFixed(2);
+      document.getElementById('rIvaTela').textContent = 'Q'+iva.toFixed(2);
+      ivaBox.style.display = 'block';
+    }
+  }
+
+  const warn = document.getElementById('warnTela');
+  const desperdicio = aC - aFt;
+  if(desperdicio > 0.05){
+    warn.innerHTML = `<div class="warn-box">⚠️ Ancho ${ua==='m'?a.toFixed(2)+' m':aFt.toFixed(1)+' ft'} → cobrado ${fmtA(aC,ua)} (múltiplo de 6 ft). ${cant>1?cant+' cortes × ':''}${desperdicio.toFixed(1)} ft desperdicio c/u.</div>`;
+  } else { warn.innerHTML = ''; }
+
+  res.classList.add('show');
+}
+
+function cotCalcSaco(){
+  const id = document.getElementById('cotSacoSelect').value;
+  const res = document.getElementById('cotResSaco');
+  if(!id){ res.classList.remove('show'); return; }
+  const s    = SACOS.find(x=>x.id==id);
+  const tier = document.querySelector('input[name="cotTierSaco"]:checked').value;
+  const c    = parseFloat(document.getElementById('cotCantSaco').value)||0;
+  const r    = parseFloat(document.getElementById('cotRecargoSaco').value)||0;
+  const pm   = parseFloat(document.getElementById('cotPMSaco').value);
+
+  if(!c){ res.classList.remove('show'); return; }
+
+  const tierPrice = s['p'+tier];
+  const base = (!isNaN(pm) && pm > 0) ? pm : tierPrice;
+  const p = base * (1 + r/100);
+  const total = c*p;
+
+  document.getElementById('rTierLabel').textContent  = tier;
+  document.getElementById('rPBaseSaco').textContent  = 'Q'+((!isNaN(pm)&&pm>0)?pm:tierPrice).toFixed(2);
+  document.getElementById('rPUnitSaco').textContent  = 'Q'+p.toFixed(2);
+  document.getElementById('rCantSaco').textContent   = c.toFixed(0)+' u';
+  var quitarIVAS = document.getElementById('cotDesglosarIVA').checked;
+  var ivaBoxS = document.getElementById('rIvaBoxSaco');
+  if(total > 0){
+    if(quitarIVAS){
+      var pSinIvaS = p / 1.12;
+      var totalSinIva = c * pSinIvaS;
+      document.getElementById('rPUnitSaco').textContent = 'Q'+pSinIvaS.toFixed(2)+' (sin IVA)';
+      document.getElementById('rTotalSaco').textContent = 'Q'+totalSinIva.toFixed(2);
+      document.getElementById('rSubSaco').textContent = 'Q'+totalSinIva.toFixed(2)+' (sin IVA)';
+      document.getElementById('rIvaSaco').textContent = 'Q0.00 (removido)';
+      ivaBoxS.style.display = 'block';
+    } else {
+      var subS = total / 1.12;
+      var ivaS = total - subS;
+      document.getElementById('rPUnitSaco').textContent = 'Q'+p.toFixed(2);
+      document.getElementById('rTotalSaco').textContent = 'Q'+total.toFixed(2);
+      document.getElementById('rSubSaco').textContent = 'Q'+subS.toFixed(2)+' + IVA Q'+ivaS.toFixed(2)+' = Q'+total.toFixed(2);
+      document.getElementById('rIvaSaco').textContent = 'Q'+ivaS.toFixed(2);
+      ivaBoxS.style.display = 'block';
+    }
+  } else { ivaBoxS.style.display = 'none'; }
+  res.classList.add('show');
+}
+
+function agregarTela(){
+  const id = document.getElementById('cotTelaSelect').value;
+  if(!id || !document.getElementById('cotResTela').classList.contains('show')){
+    toast('Selecciona material y dimensiones primero','err'); return;
+  }
+  const t    = TELAS.find(x=>x.id==id);
+  const a    = parseFloat(document.getElementById('cotAncho').value)||0;
+  const l    = parseFloat(document.getElementById('cotLargo').value)||0;
+  const ua   = document.getElementById('cotUAncho').value;
+  const ul   = document.getElementById('cotULargo').value;
+  const tc   = parseFloat(document.getElementById('cotTC').value);
+  const r    = parseFloat(document.getElementById('cotRecargo').value)||0;
+  const pm   = parseFloat(document.getElementById('cotPrecioManual').value);
+  const cant = Math.max(1, parseInt(document.getElementById('cotCantTela').value)||1);
+
+  const aFt = ua==='m' ? a*MT : a;
+  const lFt = ul==='m' ? l*MT : l;
+  const aC  = Math.ceil(aFt/6)*6 || 6;
+  const arCorte = aC * lFt;
+  const ar  = arCorte * cant;
+
+  const modo = document.querySelector('input[name="cotModoTela"]:checked').value;
+  const catalogPrice = modo === 'master' ? t.pm : t.pc;
+  const base = (typeof pm === 'number' && !isNaN(pm) && pm > 0) ? pm : catalogPrice;
+  const p = base * (1 + r/100);
+  const tu = ar*p;
+  const tcValido = !isNaN(tc) && tc > 0;
+
+  CARRITO.push({
+    uid: Date.now() + Math.random(),
+    tipo: 'tela', telaId: t.id, nombre: t.nombre,
+    ua, ul, aSolFt: aFt, aSolM: a, aCobFt: aC, aCobM: aC/MT, lFt, lM: l,
+    cant, arCorte, ar, p, tu, tc: tcValido ? tc : null,
+    totalQ: tcValido ? tu*tc : null,
+    modo, recargo: r, precioManual: (!isNaN(pm)&&pm>0) ? pm : null
+  });
+  saveCarrito();
+  renderCarrito();
+  toast('✅ Tela agregada al presupuesto');
+}
+
+function agregarSaco(){
+  const id = document.getElementById('cotSacoSelect').value;
+  if(!id || !document.getElementById('cotResSaco').classList.contains('show')){
+    toast('Completa los datos del saco primero','err'); return;
+  }
+  const s    = SACOS.find(x=>x.id==id);
+  const tier = document.querySelector('input[name="cotTierSaco"]:checked').value;
+  const c    = parseFloat(document.getElementById('cotCantSaco').value)||0;
+  const r    = parseFloat(document.getElementById('cotRecargoSaco').value)||0;
+  const pm   = parseFloat(document.getElementById('cotPMSaco').value);
+
+  const tierPrice = s['p'+tier];
+  const base = (!isNaN(pm) && pm > 0) ? pm : tierPrice;
+  const p = base * (1 + r/100);
+
+  CARRITO.push({
+    uid: Date.now() + Math.random(),
+    tipo: 'saco', sacoId: s.id, nombre: s.nombre, medidas: s.medidas,
+    tier, cantidad: c, precioUnit: p, totalQ: c*p,
+    recargo: r, precioManual: (!isNaN(pm) && pm > 0) ? pm : null
+  });
+  saveCarrito();
+  renderCarrito();
+  toast('✅ Saco agregado al presupuesto');
+}
+
+function quitarItem(uid){
+  CARRITO = CARRITO.filter(x=>x.uid!==uid);
+  saveCarrito();
+  renderCarrito();
+}
+
+function editarItemCarrito(uid){
+  const item = CARRITO.find(x=>x.uid===uid);
+  if(!item) return;
+  CARRITO = CARRITO.filter(x=>x.uid!==uid);
+  saveCarrito();
+  renderCarrito();
+
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  tabBtns.forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+
+  if(item.tipo==='tela'){
+    tabBtns[0].classList.add('active');
+    document.getElementById('cot-tela').classList.add('active');
+    document.getElementById('cotTelaSelect').value   = item.telaId;
+    document.getElementById('cotUAncho').value        = item.ua;
+    document.getElementById('cotAncho').value         = item.ua==='m' ? item.aSolM : item.aSolFt;
+    document.getElementById('cotULargo').value        = item.ul;
+    document.getElementById('cotLargo').value         = item.ul==='m' ? item.lM : item.lFt;
+    document.getElementById('cotCantTela').value      = item.cant ?? 1;
+    document.getElementById('cotTC').value            = item.tc ?? '';
+    document.getElementById('cotRecargo').value       = item.recargo ?? 0;
+    document.getElementById('cotPrecioManual').value  = item.precioManual ?? '';
+    const modoRadio = document.querySelector(`input[name="cotModoTela"][value="${item.modo||'conf'}"]`);
+    if(modoRadio) modoRadio.checked = true;
+    actTelaPreview();
+  } else {
+    tabBtns[1].classList.add('active');
+    document.getElementById('cot-saco').classList.add('active');
+    document.getElementById('cotSacoSelect').value  = item.sacoId;
+    document.getElementById('cotCantSaco').value    = item.cantidad;
+    document.getElementById('cotRecargoSaco').value = item.recargo ?? 0;
+    document.getElementById('cotPMSaco').value      = item.precioManual ?? '';
+    const tierRadio = document.querySelector(`input[name="cotTierSaco"][value="${item.tier||'A'}"]`);
+    if(tierRadio) tierRadio.checked = true;
+    actSacoPreview();
+  }
+  document.querySelector('.content').scrollTo({top:0, behavior:'smooth'});
+  toast('✏️ Ítem cargado — modifica y vuelve a agregar');
+}
+
+function limpiarCarrito(){
+  if(!CARRITO.length) return;
+  if(!confirm('¿Limpiar todo el presupuesto?')) return;
+  CARRITO = [];
+  saveCarrito();
+  renderCarrito();
+}
+
+function renderCarrito(){
+  const list   = document.getElementById('cartList');
+  const footer = document.getElementById('cartFooter');
+  const badge  = document.getElementById('cartBadge');
+  const total  = document.getElementById('cartTotal');
+
+  badge.textContent = CARRITO.length + (CARRITO.length===1?' ítem':' ítems');
+
+  if(!CARRITO.length){
+    list.innerHTML = '<div class="cart-empty">Sin ítems — agrega telas o sacos arriba.</div>';
+    footer.style.display = 'none';
+    return;
+  }
+
+  let html = '';
+  let gran = 0;
+  let granIncompleto = false;
+
+  CARRITO.forEach(item => {
+    if(item.totalQ !== null) gran += item.totalQ;
+    else granIncompleto = true;
+
+    if(item.tipo==='tela'){
+      const solLabel = item.ua==='m' ? item.aSolM.toFixed(2)+' m' : item.aSolFt.toFixed(1)+' ft';
+      const cobLabel = item.ua==='m' ? `${item.aCobM.toFixed(2)} m (${item.aCobFt.toFixed(0)} ft)` : `${item.aCobFt.toFixed(0)} ft`;
+      const lLabel   = item.ul==='m' ? `${item.lM.toFixed(2)} m` : `${item.lFt.toFixed(1)} ft`;
+      const difiere  = Math.abs(item.aCobFt - item.aSolFt) > 0.05;
+      const tcLabel  = item.tc ? ` · TC ${item.tc}` : '';
+      const qLabel   = item.totalQ !== null ? 'Q'+item.totalQ.toFixed(2) : '$'+item.tu.toFixed(2)+' USD';
+      const cantLabel = item.cant > 1 ? `<strong>${item.cant}×</strong> ` : '';
+      html += `<div class="cart-item">
+        <div class="cart-item-body">
+          <div class="ci-nombre">📊 ${cantLabel}${item.nombre}</div>
+          <div class="ci-detalle">${solLabel} × ${lLabel}${item.cant>1?' c/u':''} → ${item.ar.toFixed(1)} pie² · $${item.p.toFixed(3)}/pie² (${item.modo==='master'?'Master':'Conf.'})${tcLabel}</div>
+          ${difiere?`<div class="ci-cobrado">⚠️ Cobrado: ${cobLabel}</div>`:''}
+        </div>
+        <div class="ci-total">${qLabel}</div>
+        <button class="btn btn-warning btn-sm" onclick="editarItemCarrito(${item.uid})">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="quitarItem(${item.uid})">✕</button>
+      </div>`;
+    } else {
+      html += `<div class="cart-item tipo-saco">
+        <div class="cart-item-body">
+          <div class="ci-nombre">🛍️ ${item.nombre}</div>
+          <div class="ci-detalle">${item.medidas} · ${item.cantidad} u · <strong>Tier ${item.tier}</strong> · Q${item.precioUnit.toFixed(2)}/u</div>
+        </div>
+        <div class="ci-total">Q${item.totalQ.toFixed(2)}</div>
+        <button class="btn btn-warning btn-sm" onclick="editarItemCarrito(${item.uid})">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="quitarItem(${item.uid})">✕</button>
+      </div>`;
+    }
+  });
+
+  list.innerHTML = html;
+  total.textContent = 'Q' + gran.toFixed(2) + (granIncompleto ? ' + USD pendiente' : '');
+  footer.style.display = 'block';
+}
+
+// ── Compartir presupuesto (iOS share sheet) ───────────────────
+function generarPDF(){
+  if(!CARRITO.length){ toast('El presupuesto está vacío','err'); return; }
+
+  const cliente = document.getElementById('cotCliente').value.trim() || 'Sin nombre';
+  const ref     = document.getElementById('cotRef').value.trim() || ('COT-'+Date.now().toString().slice(-6));
+  const fecha   = new Date().toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const gran    = CARRITO.reduce((s,i)=> s + (i.totalQ ?? 0), 0);
+  const haySinTC = CARRITO.some(i => i.tipo==='tela' && i.tc === null);
+
+  let txt = `COTIZACIÓN ${ref}\nLa Gran Montaña S.A.\nFecha: ${fecha}\nCliente: ${cliente}\n`;
+  txt += '━━━━━━━━━━━━━━━━━━━━\n';
+
+  CARRITO.forEach((item,idx)=>{
+    if(item.tipo==='tela'){
+      const solLabel = item.ua==='m' ? item.aSolM.toFixed(2)+' m' : item.aSolFt.toFixed(1)+' ft';
+      const cobLabel = item.ua==='m' ? `${item.aCobM.toFixed(2)} m (${item.aCobFt.toFixed(0)} ft)` : `${item.aCobFt.toFixed(0)} ft`;
+      const lLabel   = item.ul==='m' ? `${item.lM.toFixed(2)} m` : `${item.lFt.toFixed(1)} ft`;
+      const difiere  = Math.abs(item.aCobFt - item.aSolFt) > 0.05;
+      txt += `\n${idx+1}. ${item.cant>1?item.cant+'× ':''}${item.nombre} (${item.modo==='master'?'Master':'Confeccionado'})\n`;
+      txt += `   Solicitado: ${solLabel} × ${lLabel}\n`;
+      if(difiere) txt += `   ⚠️ Cobrado: ${cobLabel} × ${lLabel} (múltiplo 6ft)\n`;
+      txt += `   Área: ${item.ar.toFixed(1)} pie² · $${item.p.toFixed(3)}/pie²\n`;
+      txt += `   Total: $${item.tu.toFixed(2)} USD`;
+      if(item.totalQ !== null) txt += ` = Q${item.totalQ.toFixed(2)} (TC ${item.tc})`;
+      txt += '\n';
+    } else {
+      txt += `\n${idx+1}. ${item.nombre} (${item.medidas})\n`;
+      txt += `   ${item.cantidad} u × Q${item.precioUnit.toFixed(2)} (Tier ${item.tier})\n`;
+      txt += `   Total: Q${item.totalQ.toFixed(2)}\n`;
+    }
+  });
+
+  txt += '\n━━━━━━━━━━━━━━━━━━━━\n';
+  txt += `TOTAL GENERAL: Q${gran.toFixed(2)}${haySinTC?' (*items USD sin TC no incluidos)':''}\n`;
+  txt += '\n⚠️ Anchos cobrados = múltiplo de 6 pies superior al solicitado.\nPalín, Escuintla · Guatemala';
+
+  if(navigator.share){
+    navigator.share({ title: `Cotización ${ref}`, text: txt }).catch(()=>{});
+  } else {
+    navigator.clipboard?.writeText(txt);
+    toast('📋 Copiado al portapapeles');
+  }
+}
+
+function guardarHistorial(){
+  if(!CARRITO.length){ toast('El presupuesto está vacío','err'); return; }
+  const h = JSON.parse(localStorage.getItem('cotizaciones')||'[]');
+  const cliente = document.getElementById('cotCliente').value.trim()||'Sin cliente';
+  const ref     = document.getElementById('cotRef').value.trim()||('COT-'+Date.now().toString().slice(-6));
+  const gran    = CARRITO.reduce((s,i)=>s+(i.totalQ??0),0);
+  h.push({ ref, cliente, fecha:new Date().toLocaleString('es-GT'), items:CARRITO.length, total:gran.toFixed(2) });
+  localStorage.setItem('cotizaciones', JSON.stringify(h));
+  toast('✅ Guardado en historial');
+}
+
+function refrescarHistorial(){
+  const h = JSON.parse(localStorage.getItem('cotizaciones')||'[]');
+  if(!h.length){
+    document.getElementById('historialList').innerHTML='<p style="color:#bbb;padding:20px;text-align:center">No hay cotizaciones guardadas.</p>';
+    return;
+  }
+  let html='';
+  [...h].reverse().forEach(c=>{
+    html+=`<div class="item-card">
+      <div class="item-info">
+        <strong>${c.cliente}</strong>
+        <small>${c.ref} · ${c.fecha}</small><br>
+        <small>${c.items} ítem${c.items!==1?'s':''}</small>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <strong style="color:#1a6b45;font-size:15px">Q${c.total}</strong>
+      </div>
+    </div>`;
+  });
+  document.getElementById('historialList').innerHTML=html;
+}
+
+function limpiarHistorial(){
+  if(!confirm('¿Borrar todo el historial?')) return;
+  localStorage.removeItem('cotizaciones');
+  refrescarHistorial();
+  toast('Historial borrado');
+}
+
+function refrescarTelas(){
+  let html='';
+  TELAS.forEach(t=>{
+    html+=`<div class="item-card">
+      <div class="item-info">
+        <strong>${t.nombre}</strong>
+        <small>${t.cat}${t.sombra?' · '+t.sombra:''} · Rollo: ${t.rollo}</small><br>
+        <small>Master: $${t.pm.toFixed(3)} · Conf: $${t.pc.toFixed(3)}</small>
+      </div>
+      <div class="actions">
+        <button class="btn btn-warning btn-sm" onclick="abrirModalTela(${t.id})">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="eliminarTela(${t.id})">🗑️</button>
+      </div>
+    </div>`;
+  });
+  document.getElementById('telaList').innerHTML = html;
+}
+
+function abrirModalTela(id=null){
+  _editTelaId = id;
+  document.getElementById('modalTelaTitle').textContent = id ? '✏️ Editar Tela' : '➕ Agregar Tela';
+  if(id){
+    const t = TELAS.find(x=>x.id===id);
+    document.getElementById('tF_nombre').value = t.nombre;
+    document.getElementById('tF_cat').value    = t.cat;
+    document.getElementById('tF_sombra').value = t.sombra;
+    document.getElementById('tF_rollo').value  = t.rollo;
+    document.getElementById('tF_pm').value     = t.pm;
+    document.getElementById('tF_pc').value     = t.pc;
+  } else {
+    ['tF_nombre','tF_cat','tF_sombra','tF_rollo','tF_pm','tF_pc'].forEach(x=>document.getElementById(x).value='');
+  }
+  document.getElementById('modalTela').classList.remove('hidden');
+}
+
+function cerrarModalTela(){ document.getElementById('modalTela').classList.add('hidden'); }
+
+function guardarTela(){
+  const nombre = document.getElementById('tF_nombre').value.trim();
+  const cat    = document.getElementById('tF_cat').value.trim();
+  const sombra = document.getElementById('tF_sombra').value.trim();
+  const rollo  = document.getElementById('tF_rollo').value.trim();
+  const pm     = parseFloat(document.getElementById('tF_pm').value);
+  const pc     = parseFloat(document.getElementById('tF_pc').value);
+  if(!nombre || isNaN(pm) || isNaN(pc)){ toast('Completa nombre y precios','err'); return; }
+
+  if(_editTelaId){
+    const i = TELAS.findIndex(x=>x.id===_editTelaId);
+    TELAS[i] = {...TELAS[i], nombre, cat, sombra, rollo, pm, pc};
+    toast('✅ Tela actualizada');
+  } else {
+    const id = Math.max(...TELAS.map(x=>x.id),0)+1;
+    TELAS.push({id, nombre, cat, sombra, rollo, pm, pc});
+    toast('✅ Tela agregada');
+  }
+  saveTelas(); loadSelects(); refrescarTelas(); cerrarModalTela();
+}
+
+function eliminarTela(id){
+  if(!confirm('¿Eliminar esta tela?')) return;
+  TELAS = TELAS.filter(t=>t.id!==id);
+  saveTelas(); loadSelects(); refrescarTelas();
+  toast('Tela eliminada');
+}
+
+function refrescarSacos(){
+  let html='';
+  SACOS.forEach(s=>{
+    html+=`<div class="item-card" style="flex-wrap:wrap;gap:8px;">
+      <div class="item-info" style="min-width:0;">
+        <strong>${s.nombre}</strong>
+        <small>${s.medidas} · ${s.gm} gm</small>
+        <div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap;">
+          <span style="background:#e8f5e9;color:#1a6b45;font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;">A Q${s.pA.toFixed(2)}</span>
+          <span style="background:#e3f2fd;color:#0066cc;font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;">B Q${s.pB.toFixed(2)}</span>
+          <span style="background:#fff3e0;color:#d97706;font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;">C Q${s.pC.toFixed(2)}</span>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-warning btn-sm" onclick="abrirModalSaco(${s.id})">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="eliminarSaco(${s.id})">🗑️</button>
+      </div>
+    </div>`;
+  });
+  document.getElementById('sacoList').innerHTML = html;
+}
+
+function abrirModalSaco(id=null){
+  _editSacoId = id;
+  document.getElementById('modalSacoTitle').textContent = id ? '✏️ Editar Saco' : '➕ Agregar Saco';
+  if(id){
+    const s = SACOS.find(x=>x.id===id);
+    document.getElementById('sF_nombre').value  = s.nombre;
+    document.getElementById('sF_medidas').value = s.medidas;
+    document.getElementById('sF_gm').value      = s.gm;
+    document.getElementById('sF_pA').value      = s.pA;
+    document.getElementById('sF_pB').value      = s.pB;
+    document.getElementById('sF_pC').value      = s.pC;
+  } else {
+    ['sF_nombre','sF_medidas','sF_gm','sF_pA','sF_pB','sF_pC'].forEach(x=>document.getElementById(x).value='');
+  }
+  document.getElementById('modalSaco').classList.remove('hidden');
+}
+
+function cerrarModalSaco(){ document.getElementById('modalSaco').classList.add('hidden'); }
+
+function guardarSaco(){
+  const nombre  = document.getElementById('sF_nombre').value.trim();
+  const medidas = document.getElementById('sF_medidas').value.trim();
+  const gm      = parseInt(document.getElementById('sF_gm').value);
+  const pA      = parseFloat(document.getElementById('sF_pA').value);
+  const pB      = parseFloat(document.getElementById('sF_pB').value);
+  const pC      = parseFloat(document.getElementById('sF_pC').value);
+  if(!nombre || !medidas || isNaN(gm) || isNaN(pA) || isNaN(pB) || isNaN(pC)){
+    toast('Completa todos los campos incluidos los 3 precios','err'); return;
+  }
+
+  if(_editSacoId){
+    const i = SACOS.findIndex(x=>x.id===_editSacoId);
+    SACOS[i] = {...SACOS[i], nombre, medidas, gm, pA, pB, pC};
+    toast('✅ Saco actualizado');
+  } else {
+    const id = Math.max(...SACOS.map(x=>x.id),0)+1;
+    SACOS.push({id, nombre, medidas, gm, pA, pB, pC});
+    toast('✅ Saco agregado');
+  }
+  saveSacos(); loadSelects(); refrescarSacos(); cerrarModalSaco();
+}
+
+function eliminarSaco(id){
+  if(!confirm('¿Eliminar este saco?')) return;
+  SACOS = SACOS.filter(s=>s.id!==id);
+  saveSacos(); loadSelects(); refrescarSacos();
+  toast('Saco eliminado');
+}
+
+window.addEventListener('load', init);
+</script>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script></body>
+</html>
