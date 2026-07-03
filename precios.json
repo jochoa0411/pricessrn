@@ -1,6 +1,6 @@
 {
-  "version": 25,
-  "actualizado": "03/07/2026, 04:09 p. m.",
+  "version": 26,
+  "actualizado": "03/07/2026, 05:16 p. m.",
   "telas": [
     {
       "id": 1,
@@ -108,18 +108,18 @@
       "nombre": "Super Rocola 48x61",
       "medidas": "48x61",
       "gm": 298,
-      "pA": 7.37,
-      "pB": 7.99,
-      "pC": 8.5
+      "pA": 6.7,
+      "pB": 7.37,
+      "pC": 7.9
     },
     {
       "id": 2,
       "nombre": "Rocola 36x48",
       "medidas": "36x48",
       "gm": 200,
-      "pA": 4.79,
-      "pB": 4.79,
-      "pC": 4.79
+      "pA": 4.8,
+      "pB": 4.9,
+      "pC": 5
     },
     {
       "id": 3,
