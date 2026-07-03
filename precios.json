@@ -1,6 +1,6 @@
 {
-  "version": 23,
-  "actualizado": "03/07/2026, 03:28 p. m.",
+  "version": 24,
+  "actualizado": "03/07/2026, 04:07 p. m.",
   "telas": [
     {
       "id": 1,
@@ -8,7 +8,7 @@
       "cat": "Saran",
       "sombra": "40%",
       "rollo": "12'x300'",
-      "pm": 0.08,
+      "pm": 0.09,
       "pc": 0.097
     },
     {
