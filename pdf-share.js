@@ -178,7 +178,7 @@ if(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Loca
 
 // -- Sync de precios (GitHub API con Token) --
 var GITHUB_API_URL = 'https://api.github.com/repos/jochoa0411/pricessrn/contents/precios.json';
-var GITHUB_TOKEN = 'TOKEN_REMOVED'; // <--- PEGA TU TOKEN AQUÍ (Ej: 'TOKEN_REMOVED...')
+var GITHUB_TOKEN = 'REMOVED'; // <--- PEGA TU TOKEN AQUÍ (Ej: 'REMOVED...')
 
 async function syncPrecios(manual){
   try {
