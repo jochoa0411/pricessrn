@@ -8,6 +8,8 @@ async function generarPDF(){
   const gran    = CARRITO.reduce((s,i)=> s + (i.totalQ ?? 0), 0);
   var granUSD = CARRITO.reduce(function(s,i){return s+(i.tipo==='tela'?i.tu:0);},0);
   var soloUSD = haySinTC && gran===0 && granUSD>0;
+  var granUSD = CARRITO.reduce(function(s,i){return s+(i.tipo==='tela'?i.tu:0);},0);
+  var soloUSD = haySinTC && gran===0 && granUSD>0;
   const haySinTC = CARRITO.some(i => i.tipo==='tela' && i.tc === null);
 
   let filas = '';
