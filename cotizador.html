@@ -797,7 +797,7 @@ function renderCarrito(){
   });
 
   list.innerHTML = html;
-  total.textContent = 'Q' + gran.toFixed(2) + (granIncompleto ? ' + USD pendiente' : '');
+  if(granIncompleto){ var usdTotal=CARRITO.reduce(function(s,i){return s+(i.tipo==='tela'?i.tu:0);},0); total.textContent='$'+usdTotal.toFixed(2)+' USD'; } else { total.textContent='Q'+gran.toFixed(2); }
   footer.style.display = 'block';
 }
 
