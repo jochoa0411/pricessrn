@@ -82,11 +82,29 @@ async function generarPDF(){
     }).from(cont).outputPdf('datauristring');
 
     // Web: descargar PDF
-    if(typeof Capacitor === 'undefined' || !Capacitor.isNativePlatform()){
-      const link = document.createElement('a');
-      link.href = dataUri;
-      link.download = ref + '.pdf';
-      link.click();
+    // Web: modal con boton volver e imprimir
+    if(typeof Capacitor === 'undefined' || typeof Capacitor.Plugins === 'undefined' || typeof Capacitor.Plugins.Filesystem === 'undefined'){
+      var overlay = document.createElement('div');
+      overlay.id = 'pdfOverlay';
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:white;overflow-y:auto;';
+      var toolbar = document.createElement('div');
+      toolbar.style.cssText = 'display:flex;gap:10px;padding:12px 16px;position:sticky;top:0;background:#1a6b45;z-index:1;';
+      var btnCerrar = document.createElement('button');
+      btnCerrar.innerHTML = '\u2190 Volver';
+      btnCerrar.style.cssText = 'padding:10px 20px;background:rgba(255,255,255,0.2);color:white;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;';
+      btnCerrar.onclick = function(){ document.getElementById('pdfOverlay').remove(); };
+      var btnPrint = document.createElement('button');
+      btnPrint.innerHTML = 'Imprimir';
+      btnPrint.style.cssText = 'padding:10px 20px;background:white;color:#1a6b45;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;';
+      btnPrint.onclick = function(){ window.print(); };
+      toolbar.appendChild(btnCerrar);
+      toolbar.appendChild(btnPrint);
+      overlay.appendChild(toolbar);
+      var pdfBody = document.createElement('div');
+      pdfBody.style.cssText = 'padding:20px;';
+      pdfBody.innerHTML = cont.innerHTML;
+      overlay.appendChild(pdfBody);
+      document.body.appendChild(overlay);
       if(cont.parentNode) cont.parentNode.removeChild(cont);
       return;
     }
