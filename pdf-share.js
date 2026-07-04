@@ -85,8 +85,6 @@ async function generarPDF(){
       jsPDF: {orientation:'p', unit:'mm', format:'a4'}
     }).from(cont).outputPdf('datauristring');
 
-    if(cont.parentNode) cont.parentNode.removeChild(cont);
-
     // Web: abrir ventana de impresion
     if(typeof Capacitor === 'undefined' || typeof Capacitor.Plugins === 'undefined' || typeof Capacitor.Plugins.Filesystem === 'undefined'){
       var w = window.open('','_blank','width=800,height=600');
