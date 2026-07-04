@@ -83,6 +83,16 @@ async function generarPDF(){
     document.body.removeChild(cont);
 
     const base64 = dataUri.split(',')[1];
+    // Web: descargar directo
+    if(typeof Capacitor === 'undefined' || !Capacitor.Plugins || !Capacitor.Plugins.Filesystem){
+      var link = document.createElement('a');
+      link.href = dataUri;
+      link.download = ref.replace(/[^a-zA-Z0-9_-]/g,'_') + '.pdf';
+      link.click();
+      document.body.removeChild(cont);
+      toast('PDF descargado');
+      return;
+    }
     const { Filesystem, Share } = Capacitor.Plugins;
     const fileName = ref.replace(/[^a-zA-Z0-9_-]/g,'_') + '.pdf';
 
