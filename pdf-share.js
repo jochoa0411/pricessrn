@@ -6,10 +6,9 @@ async function generarPDF(){
   const fecha   = new Date().toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'});
   const hora    = new Date().toLocaleTimeString('es-GT',{hour:'2-digit',minute:'2-digit'});
   const gran    = CARRITO.reduce((s,i)=> s + (i.totalQ ?? 0), 0);
-  var granUSD = CARRITO.reduce(function(s,i){return s+(i.tipo==='tela'?i.tu:0);},0);
-    var granUSD = CARRITO.reduce(function(s,i){return s+(i.tipo==='tela'?i.tu:0);},0);
-    const haySinTC = CARRITO.some(i => i.tipo==='tela' && i.tc === null);
-  var soloUSD = haySinTC && gran===0 && granUSD>0;
+  var granUSD   = CARRITO.reduce(function(s,i){return s+(i.tipo==='tela'?i.tu:0);},0);
+  const haySinTC = CARRITO.some(i => i.tipo==='tela' && i.tc === null);
+  var soloUSD   = haySinTC && gran===0 && granUSD>0;
   
   let filas = '';
   CARRITO.forEach((item,idx)=>{
@@ -53,7 +52,6 @@ async function generarPDF(){
     + (function(){
       var qi = document.getElementById('cotDesglosarIVA') && document.getElementById('cotDesglosarIVA').checked;
       var gf = qi ? gran/1.12 : gran;
-      var sub = gf/1.12; var iva = gf - sub;
       if(qi){
         return '<tr style="background:#fff8e1;"><td colspan="6" style="text-align:right;font-size:11px;color:#d97706;font-weight:700;">IVA REMOVIDO - PRECIO SIN IMPUESTO</td><td class="r" style="font-size:12px;">-</td></tr>'
           + '<tr class="tot"><td colspan="6" style="text-align:right">TOTAL SIN IVA'+(haySinTC?' *':'')+'</td><td class="r grand">'+(soloUSD ? '$'+(granUSD/1.12).toFixed(2)+' USD' : 'Q'+gf.toFixed(2))+'</td></tr>';
@@ -83,14 +81,16 @@ async function generarPDF(){
       jsPDF: {orientation:'p', unit:'mm', format:'a4'}
     }).from(cont).outputPdf('datauristring');
 
-    // Web: abrir ventana de impresion
-    if(typeof Capacitor === 'undefined' || typeof Capacitor.Plugins === 'undefined' || typeof Capacitor.Plugins.Filesystem === 'undefined'){
-      var w = window.open('','_blank','width=800,height=600');
-      w.document.write('<html><head><title>'+ref+'</title><style>body{font-family:Arial,sans-serif;padding:30px;font-size:13px;color:#1a1a1a}table{width:100%;border-collapse:collapse}th{background:#1a6b45;color:#fff;padding:9px 11px;font-size:10px;text-transform:uppercase;text-align:left}td{padding:9px 11px;border-bottom:1px solid #eee;vertical-align:top}.r{text-align:right}.hi{font-weight:800;color:#1a6b45;font-size:13px}.tot td{background:#e8f5e9;font-weight:700}.grand{font-size:17px;font-weight:900;color:#1a6b45}.idx{color:#bbb;font-size:11px}.lbl{font-size:10px;font-weight:700;color:#555}.cob{font-size:10px;font-weight:700;color:#d97706}@media print{body{padding:15px}}</style></head><body>'+cont.innerHTML+'<scr'+'ipt>window.onload=function(){window.print()}<\/scr'+'ipt></body></html>');
-      w.document.close();
+    // Web: descargar PDF
+    if(typeof Capacitor === 'undefined' || !Capacitor.isNativePlatform()){
+      const link = document.createElement('a');
+      link.href = dataUri;
+      link.download = ref + '.pdf';
+      link.click();
       if(cont.parentNode) cont.parentNode.removeChild(cont);
       return;
     }
+
     const base64 = dataUri.split(',')[1];
     const { Filesystem, Share } = Capacitor.Plugins;
     const fileName = ref.replace(/[^a-zA-Z0-9_-]/g,'_') + '.pdf';
@@ -100,7 +100,7 @@ async function generarPDF(){
 
     await Share.share({ title: 'Cotizacion '+ref, files: [uriResult.uri] });
   } catch(e) {
-    if(cont.parentNode) if(cont.parentNode) cont.parentNode.removeChild(cont);
+    if(cont.parentNode) cont.parentNode.removeChild(cont);
     if(e && e.message && e.message.toLowerCase().includes('cancel')) return;
     toast('Error: '+(e.message||e), 'err');
   }
@@ -138,7 +138,7 @@ agregarSaco = function(){
   }
 };
 
-// ── Botón ± para recargo/descuento (teclado iOS no tiene signo menos) ──
+// ── Botón ± para recargo/descuento ──
 window.addEventListener('load', function(){
   [['cotRecargo','cotCalcTela'],['cotRecargoSaco','cotCalcSaco']].forEach(function(par){
     const input = document.getElementById(par[0]);
@@ -160,7 +160,7 @@ window.addEventListener('load', function(){
   });
 });
 
-// -- Notificaciones Locales (Personalizadas) --
+// -- Notificaciones Locales --
 async function showLocalNotification(title, body) {
   if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
     const LocalNotifications = window.Capacitor.Plugins.LocalNotifications;
@@ -171,28 +171,34 @@ async function showLocalNotification(title, body) {
           body: body,
           id: 1,
           schedule: { at: new Date(Date.now() + 100) },
-          sound: 'default', // Usa el sonido del sistema
-          actionTypeId: "",
-          extra: null
+          sound: 'default'
         }
       ]
     });
   }
 }
 
-// -- Registro de Notificaciones (Reemplazado por Local) --
 if(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications){
   window.Capacitor.Plugins.LocalNotifications.requestPermissions();
 }
 
-// -- Sync de precios --
-var PRECIOS_URL = 'https://api.github.com/repos/jochoa0411/pricessrn/contents/precios.json';
+// -- Sync de precios (GitHub API con Token) --
+var GITHUB_API_URL = 'https://api.github.com/repos/jochoa0411/pricessrn/contents/precios.json';
+var GITHUB_TOKEN = ''; // <--- PEGA TU TOKEN AQUÍ OTRA VEZ, PERDÓN!
 
 async function syncPrecios(manual){
   try {
-    var r = await fetch(PRECIOS_URL, {headers:{'Accept':'application/vnd.github.v3+json'}});
+    var headers = {'Accept':'application/vnd.github.v3+json'};
+    if(GITHUB_TOKEN) {
+      headers['Authorization'] = 'token ' + GITHUB_TOKEN;
+    }
+
+    var r = await fetch(GITHUB_API_URL + '?t=' + Date.now(), { headers: headers });
     if(!r.ok) throw new Error('HTTP '+r.status);
-    var meta = await r.json(); var data = JSON.parse(atob(meta.content.replace(/\n/g,'')));
+    var jsonResponse = await r.json();
+    var content = decodeURIComponent(escape(atob(jsonResponse.content.replace(/\s/g, ''))));
+    var data = JSON.parse(content);
+
     var vLocal = parseInt(localStorage.getItem('PRECIOS_VERSION')||'0');
     if(data.version > vLocal){
       var cambios = [];
@@ -212,14 +218,10 @@ async function syncPrecios(manual){
       TELAS = data.telas; SACOS = data.sacos;
       saveTelas(); saveSacos(); loadSelects();
       localStorage.setItem('PRECIOS_VERSION', data.version);
-      if(cambios.length > 0){
-        var msg = cambios.join(', ');
-        if(navigator.vibrate) navigator.vibrate([300,100,300]);
-        if(window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.LocalNotifications){
-          Capacitor.Plugins.LocalNotifications.schedule({notifications:[{title:'Precios actualizados v'+data.version,body:msg,id:Math.floor(Math.random()*99999)+1,schedule:{at:new Date(Date.now()+1000)},sound:'default'}]});
-        }
-        toast('v'+data.version+': '+msg);
-      }
+
+      showLocalNotification('Nueva Actualizacion de Precios', 'Los precios se han actualizado a la v' + data.version);
+
+      if(cambios.length > 0){ alert('Precios actualizados (v'+data.version+'):\n\n' + cambios.join('\n')); }
       else { toast('Catalogo actualizado a v'+data.version); }
     } else if(manual){
       toast('Ya tenes la ultima version (v'+vLocal+')');
@@ -239,7 +241,7 @@ window.addEventListener('load', function(){
   header.replaceChild(btn, header.lastElementChild);
 });
 
-setInterval(function(){ syncPrecios(false); }, 10000);
+setInterval(function(){ syncPrecios(false); }, 5000);
 
 if(window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App){
   Capacitor.Plugins.App.addListener('appStateChange', function(state){
