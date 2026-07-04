@@ -80,17 +80,16 @@ async function generarPDF(){
       jsPDF: {orientation:'p', unit:'mm', format:'a4'}
     }).from(cont).outputPdf('datauristring');
 
-    document.body.removeChild(cont);
+    if(cont.parentNode) cont.parentNode.removeChild(cont);
 
     const base64 = dataUri.split(',')[1];
     // Web: descargar directo
     if(typeof Capacitor === 'undefined' || !Capacitor.Plugins || !Capacitor.Plugins.Filesystem){
-      var link = document.createElement('a');
-      link.href = dataUri;
-      link.download = ref.replace(/[^a-zA-Z0-9_-]/g,'_') + '.pdf';
-      link.click();
-      document.body.removeChild(cont);
-      toast('PDF descargado');
+      var w = window.open('','_blank');
+      w.document.write('<html><head><title>Cotizacion '+ref+'</title></head><body>'+cont.innerHTML+'<scr'+'ipt>setTimeout(function(){window.print();},500);</scr'+'ipt></body></html>');
+      w.document.close();
+      if(cont.parentNode) cont.parentNode.removeChild(cont);
+      toast('PDF listo para imprimir');
       return;
     }
     const { Filesystem, Share } = Capacitor.Plugins;
@@ -101,7 +100,7 @@ async function generarPDF(){
 
     await Share.share({ title: 'Cotizacion '+ref, files: [uriResult.uri] });
   } catch(e) {
-    if(cont.parentNode) document.body.removeChild(cont);
+    if(cont.parentNode) if(cont.parentNode) cont.parentNode.removeChild(cont);
     if(e && e.message && e.message.toLowerCase().includes('cancel')) return;
     toast('Error: '+(e.message||e), 'err');
   }
