@@ -6,6 +6,8 @@ async function generarPDF(){
   const fecha   = new Date().toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'});
   const hora    = new Date().toLocaleTimeString('es-GT',{hour:'2-digit',minute:'2-digit'});
   const gran    = CARRITO.reduce((s,i)=> s + (i.totalQ ?? 0), 0);
+  var granUSD = CARRITO.reduce(function(s,i){return s+(i.tipo==='tela'?i.tu:0);},0);
+  var soloUSD = haySinTC && gran===0 && granUSD>0;
   const haySinTC = CARRITO.some(i => i.tipo==='tela' && i.tc === null);
 
   let filas = '';
@@ -53,11 +55,11 @@ async function generarPDF(){
       var sub = gf/1.12; var iva = gf - sub;
       if(qi){
         return '<tr style="background:#fff8e1;"><td colspan="6" style="text-align:right;font-size:11px;color:#d97706;font-weight:700;">IVA REMOVIDO - PRECIO SIN IMPUESTO</td><td class="r" style="font-size:12px;">-</td></tr>'
-          + '<tr class="tot"><td colspan="6" style="text-align:right">TOTAL SIN IVA'+(haySinTC?' *':'')+'</td><td class="r grand">Q'+gf.toFixed(2)+'</td></tr>';
+          + '<tr class="tot"><td colspan="6" style="text-align:right">TOTAL SIN IVA'+(haySinTC?' *':'')+'</td><td class="r grand">'+(soloUSD ? '$'+(granUSD/1.12).toFixed(2)+' USD' : 'Q'+gf.toFixed(2))+'</td></tr>';
       } else {
-        return '<tr style="background:#fff8e1;"><td colspan="6" style="text-align:right;font-size:11px;color:#666;">Subtotal sin IVA</td><td class="r" style="font-size:12px;font-weight:700;">Q'+(gran/1.12).toFixed(2)+'</td></tr>'
-          + '<tr style="background:#fff8e1;"><td colspan="6" style="text-align:right;font-size:11px;color:#666;">IVA 12%</td><td class="r" style="font-size:12px;font-weight:700;">Q'+(gran - gran/1.12).toFixed(2)+'</td></tr>'
-          + '<tr class="tot"><td colspan="6" style="text-align:right">TOTAL CON IVA'+(haySinTC?' *':'')+'</td><td class="r grand">Q'+gran.toFixed(2)+'</td></tr>';
+        return '<tr style="background:#fff8e1;"><td colspan="6" style="text-align:right;font-size:11px;color:#666;">Subtotal sin IVA</td><td class="r" style="font-size:12px;font-weight:700;">'+(soloUSD ? '$'+(granUSD/1.12).toFixed(2) : 'Q'+(gran/1.12).toFixed(2))+'</td></tr>'
+          + '<tr style="background:#fff8e1;"><td colspan="6" style="text-align:right;font-size:11px;color:#666;">IVA 12%</td><td class="r" style="font-size:12px;font-weight:700;">'+(soloUSD ? '$'+(granUSD-granUSD/1.12).toFixed(2) : 'Q'+(gran-gran/1.12).toFixed(2))+'</td></tr>'
+          + '<tr class="tot"><td colspan="6" style="text-align:right">TOTAL CON IVA'+(haySinTC?' *':'')+'</td><td class="r grand">'+(soloUSD ? '$'+granUSD.toFixed(2)+' USD' : 'Q'+gran.toFixed(2))+'</td></tr>';
       }
     })()
     + (haySinTC?'<tr><td colspan="7" style="font-size:9px;color:#d97706">* Items de tela sin tipo de cambio no incluidos en el total Q.</td></tr>':'')
