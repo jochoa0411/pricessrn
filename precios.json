@@ -1,6 +1,6 @@
 {
-  "version": 27,
-  "actualizado": "03/07/2026, 05:22 p. m.",
+  "version": 28,
+  "actualizado": "03/07/2026, 07:32 p. m.",
   "telas": [
     {
       "id": 1,
@@ -273,6 +273,15 @@
       "pA": 0.97,
       "pB": 0.97,
       "pC": 1.1
+    },
+    {
+      "id": 20,
+      "nombre": "Saco de Yute",
+      "medidas": "28x40",
+      "gm": 560,
+      "pA": 15,
+      "pB": 18,
+      "pC": 20
     }
   ]
 }
