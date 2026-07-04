@@ -82,18 +82,15 @@ async function generarPDF(){
 
     if(cont.parentNode) cont.parentNode.removeChild(cont);
 
-    const base64 = dataUri.split(',')[1];
-    // Web: descargar directo
-    if(typeof Capacitor === 'undefined' || !Capacitor.Plugins || !Capacitor.Plugins.Filesystem){
-      var pdfHtml = '<html><head><title>Cotizacion '+ref+'</title><style>body{font-family:Arial,sans-serif;padding:20px;font-size:13px}table{width:100%;border-collapse:collapse}th{background:#1a6b45;color:#fff;padding:8px;text-align:left;font-size:10px}td{padding:8px;border-bottom:1px solid #eee}.r{text-align:right}.hi{font-weight:800;color:#1a6b45}.tot td{background:#e8f5e9;font-weight:700}.grand{font-size:17px;font-weight:900;color:#1a6b45}.idx{color:#bbb}.lbl{font-size:10px;font-weight:700;color:#555}.cob{font-size:10px;font-weight:700;color:#d97706}</style></head><body>'+cont.innerHTML+'</body></html>';
-      var blob = new Blob([pdfHtml],{type:'text/html'});
-      var url = URL.createObjectURL(blob);
-      var w = window.open(url);
-      if(w){ setTimeout(function(){w.print();},800); }
-      else { toast('Desbloquea popups para imprimir','err'); }
+    // Web: abrir ventana de impresion
+    if(typeof Capacitor === 'undefined' || typeof Capacitor.Plugins === 'undefined' || typeof Capacitor.Plugins.Filesystem === 'undefined'){
+      var w = window.open('','_blank','width=800,height=600');
+      w.document.write('<html><head><title>'+ref+'</title><style>body{font-family:Arial,sans-serif;padding:30px;font-size:13px;color:#1a1a1a}table{width:100%;border-collapse:collapse}th{background:#1a6b45;color:#fff;padding:9px 11px;font-size:10px;text-transform:uppercase;text-align:left}td{padding:9px 11px;border-bottom:1px solid #eee;vertical-align:top}.r{text-align:right}.hi{font-weight:800;color:#1a6b45;font-size:13px}.tot td{background:#e8f5e9;font-weight:700}.grand{font-size:17px;font-weight:900;color:#1a6b45}.idx{color:#bbb;font-size:11px}.lbl{font-size:10px;font-weight:700;color:#555}.cob{font-size:10px;font-weight:700;color:#d97706}@media print{body{padding:15px}}</style></head><body>'+cont.innerHTML+'<scr'+'ipt>window.onload=function(){window.print()}<\/scr'+'ipt></body></html>');
+      w.document.close();
       if(cont.parentNode) cont.parentNode.removeChild(cont);
       return;
     }
+    const base64 = dataUri.split(',')[1];
     const { Filesystem, Share } = Capacitor.Plugins;
     const fileName = ref.replace(/[^a-zA-Z0-9_-]/g,'_') + '.pdf';
 
