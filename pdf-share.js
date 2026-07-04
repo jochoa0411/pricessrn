@@ -11,6 +11,7 @@ async function generarPDF(){
   var granUSD = CARRITO.reduce(function(s,i){return s+(i.tipo==='tela'?i.tu:0);},0);
   var soloUSD = haySinTC && gran===0 && granUSD>0;
   const haySinTC = CARRITO.some(i => i.tipo==='tela' && i.tc === null);
+  var soloUSD = haySinTC && gran===0 && granUSD>0;
 
   let filas = '';
   CARRITO.forEach((item,idx)=>{
