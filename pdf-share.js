@@ -85,11 +85,13 @@ async function generarPDF(){
     const base64 = dataUri.split(',')[1];
     // Web: descargar directo
     if(typeof Capacitor === 'undefined' || !Capacitor.Plugins || !Capacitor.Plugins.Filesystem){
-      var w = window.open('','_blank');
-      w.document.write('<html><head><title>Cotizacion '+ref+'</title></head><body>'+cont.innerHTML+'<scr'+'ipt>setTimeout(function(){window.print();},500);</scr'+'ipt></body></html>');
-      w.document.close();
+      var pdfHtml = '<html><head><title>Cotizacion '+ref+'</title><style>body{font-family:Arial,sans-serif;padding:20px;font-size:13px}table{width:100%;border-collapse:collapse}th{background:#1a6b45;color:#fff;padding:8px;text-align:left;font-size:10px}td{padding:8px;border-bottom:1px solid #eee}.r{text-align:right}.hi{font-weight:800;color:#1a6b45}.tot td{background:#e8f5e9;font-weight:700}.grand{font-size:17px;font-weight:900;color:#1a6b45}.idx{color:#bbb}.lbl{font-size:10px;font-weight:700;color:#555}.cob{font-size:10px;font-weight:700;color:#d97706}</style></head><body>'+cont.innerHTML+'</body></html>';
+      var blob = new Blob([pdfHtml],{type:'text/html'});
+      var url = URL.createObjectURL(blob);
+      var w = window.open(url);
+      if(w){ setTimeout(function(){w.print();},800); }
+      else { toast('Desbloquea popups para imprimir','err'); }
       if(cont.parentNode) cont.parentNode.removeChild(cont);
-      toast('PDF listo para imprimir');
       return;
     }
     const { Filesystem, Share } = Capacitor.Plugins;
