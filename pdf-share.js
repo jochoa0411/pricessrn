@@ -51,6 +51,7 @@ async function generarPDF(){
     + '<div style="text-align:right;"><div style="font-size:22px; font-weight:800; color:#1a6b45;">'+ref+'</div><div style="font-size:12px; color:#888; margin-top:6px;">Fecha: '+fecha+'<br>Hora: '+hora+'</div></div></div>'
     + '<div style="background:#f0f9f5; border-left:6px solid #1a6b45; padding:18px; margin-bottom:25px;"><div style="font-size:11px; color:#888; font-weight:700; text-transform:uppercase;">CLIENTE</div><div style="font-size:19px; font-weight:700; color:#1a6b45; margin-top:4px;">'+cliente+'</div></div>'
     + '<div style="background:#fef9ec; border:1px solid #d97706; border-radius:8px; padding:12px; margin-bottom:25px; font-size:12px; color:#92400e;">Los anchos cobrados corresponden al multiplo de 6 pies superior al solicitado. El area de facturacion incluye el desperdicio de corte.</div>'
+    + '<div style="font-size:11px;color:#1a6b45;font-weight:700;margin-bottom:14px;">Cotizacion valida por 15 dias a partir de la fecha de emision.</div>'
     + '<table style="width:100%; border-collapse:collapse; margin-bottom:25px; font-size:13px;"><thead><tr>'
     + '<th style="background:#1a6b45; color:#fff; padding:12px 10px; text-align:left; font-size:11px;">#</th>'
     + '<th style="background:#1a6b45; color:#fff; padding:12px 10px; text-align:left; font-size:11px;">DESCRIPCION</th>'
