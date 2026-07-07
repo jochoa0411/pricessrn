@@ -43,7 +43,7 @@ async function generarPDF(){
 
   const cont = document.createElement('div');
   // Usamos visibilidad en lugar de posicion extrema para que el motor de renderizado lo vea
-  cont.style.cssText = 'position:absolute; top:0; left:0; width:800px; background:white; z-index:-1; pointer-events:none;';
+  cont.style.cssText = 'position:absolute; left:-9999px; top:0; width:800px; background:white;';
 
   cont.innerHTML = '<div style="padding:40px; background:white; font-family:Arial, sans-serif; color:#1a1a1a;">'
     + '<div style="display:flex; justify-content:space-between; align-items:flex-end; padding-bottom:15px; border-bottom:4px solid #1a6b45; margin-bottom:25px;">'
@@ -205,15 +205,10 @@ if(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Loca
 
 // -- Sync de precios (GitHub API con Token) --
 var GITHUB_API_URL = 'https://api.github.com/repos/jochoa0411/pricessrn/contents/precios.json';
-var GITHUB_TOKEN = 'REMOVED'; // <--- PEGA TU TOKEN AQUÍ
 
 async function syncPrecios(manual){
   try {
     var headers = {'Accept':'application/vnd.github.v3+json'};
-    if(GITHUB_TOKEN) {
-      headers['Authorization'] = 'token ' + GITHUB_TOKEN;
-    }
-
     var r = await fetch(GITHUB_API_URL + '?t=' + Date.now(), { headers: headers });
     if(!r.ok) throw new Error('HTTP '+r.status);
     var jsonResponse = await r.json();
