@@ -96,13 +96,28 @@ async function generarPDF(){
       };
 
       if(typeof Capacitor === 'undefined' || !Capacitor.isNativePlatform()){
-        const pdfBlob = await html2pdf().set(opt).from(cont).output('blob');
+        var overlay = document.createElement('div');
+        overlay.id = 'pdfOverlay';
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#f0f0f0;overflow-y:auto;';
+        var tb = document.createElement('div');
+        tb.style.cssText = 'display:flex;gap:10px;padding:12px 16px;position:sticky;top:0;background:#1a6b45;z-index:1;';
+        var bC = document.createElement('button');
+        bC.textContent = String.fromCharCode(8592) + ' Volver';
+        bC.style.cssText = 'padding:10px 20px;background:rgba(255,255,255,0.2);color:white;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;';
+        bC.onclick = function(){ overlay.remove(); };
+        var bP = document.createElement('button');
+        bP.textContent = 'Imprimir / Guardar PDF';
+        bP.style.cssText = 'padding:10px 20px;background:white;color:#1a6b45;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;';
+        bP.onclick = function(){ window.print(); };
+        tb.appendChild(bC); tb.appendChild(bP);
+        overlay.appendChild(tb);
+        var pbody = document.createElement('div');
+        pbody.style.cssText = 'max-width:820px;margin:16px auto;background:white;box-shadow:0 2px 12px rgba(0,0,0,0.15);';
+        pbody.innerHTML = cont.innerHTML;
+        overlay.appendChild(pbody);
+        document.body.appendChild(overlay);
         if(cont.parentNode) cont.parentNode.removeChild(cont);
-
-        const file = new File([pdfBlob], ref + ".pdf", { type: 'application/pdf' });
-        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: 'Cotización ' + ref });
-        } else {
+      } else {
           const url = URL.createObjectURL(pdfBlob);
           const a = document.createElement('a'); a.href = url; a.download = ref + '.pdf'; a.click();
           setTimeout(() => URL.revokeObjectURL(url), 1000);
