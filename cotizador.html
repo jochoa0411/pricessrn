@@ -810,7 +810,7 @@ function renderCarrito(){
 }
 
 // ── Compartir presupuesto (iOS share sheet) ───────────────────
-function generarPDF(){
+function generarPDF_OLD_UNUSED(){
   if(!CARRITO.length){ toast('El presupuesto está vacío','err'); return; }
 
   const cliente = document.getElementById('cotCliente').value.trim() || 'Sin nombre';
