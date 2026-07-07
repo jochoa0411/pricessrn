@@ -114,6 +114,14 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 .pc-price { font-size: 19px; font-weight: 800; color: #333; line-height: 1.1; }
 .precio-card.pc-activo .pc-price { color: #1b5e20; }
 .pc-desc { font-size: 10px; color: #aaa; margin-top: 3px; }
+
+@media print {
+  body { background: white !important; }
+  body > * { display: none !important; }
+  body > #pdfOverlay { display: block !important; position: static !important; overflow: visible !important; background: white !important; }
+  #pdfOverlay > div:first-child { display: none !important; }
+  #pdfOverlay > div:last-child { box-shadow: none !important; max-width: none !important; margin: 0 !important; display: block !important; }
+}
 </style>
 </head>
 <body>
