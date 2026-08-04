@@ -1,145 +1,126 @@
 async function generarPDF(){
-  if(!CARRITO.length){ toast('El presupuesto está vacío','err'); return; }
+  if(!CARRITO.length){ toast('El presupuesto est\u00e1 vac\u00edo','err'); return; }
 
   const cliente = document.getElementById('cotCliente').value.trim() || 'Sin nombre';
   const ref     = document.getElementById('cotRef').value.trim() || ('COT-'+Date.now().toString().slice(-6));
-  const fecha   = new Date().toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const fecha   = new Date().toLocaleDateString('es-GT');
   const hora    = new Date().toLocaleTimeString('es-GT',{hour:'2-digit',minute:'2-digit'});
+
   const gran    = CARRITO.reduce((s,i)=> s + (i.totalQ ?? 0), 0);
-  var granUSD   = CARRITO.reduce(function(s,i){return s+(i.tipo==='tela'?i.tu:0);},0);
+  var granUSD = CARRITO.reduce(function(s,i){return s+(i.tipo==='tela'?i.tu:0);},0);
   const haySinTC = CARRITO.some(i => i.tipo==='tela' && i.tc === null);
-  var soloUSD   = haySinTC && gran===0 && granUSD>0;
-  
+  var soloUSD = haySinTC && gran===0 && granUSD>0;
+
   let filas = '';
-  CARRITO.forEach((item,idx)=>{
-    if(item.tipo==='tela'){
-      const solLabel = item.ua==='m' ? item.aSolM.toFixed(2)+' m' : item.aSolFt.toFixed(1)+' ft';
-      const cobLabel = item.ua==='m' ? (item.aCobM.toFixed(2)+' m ('+item.aCobFt.toFixed(0)+' ft)') : (item.aCobFt.toFixed(0)+' ft');
-      const lLabel   = item.ul==='m' ? (item.lM.toFixed(2)+' m') : (item.lFt.toFixed(1)+' ft');
-      const difiere  = Math.abs(item.aCobFt - item.aSolFt) > 0.05;
-      const qStr     = item.totalQ !== null ? 'Q'+item.totalQ.toFixed(2) : '—';
+  CARRITO.forEach((item, idx) => {
+    if(item.tipo === 'tela'){
       filas += '<tr>'
-        + '<td style="padding:10px; border-bottom:1px solid #eee;">'+(idx+1)+'</td>'
-        + '<td style="padding:10px; border-bottom:1px solid #eee;"><strong>'+item.nombre+'</strong><br><small>'+(item.modo==='master'?'Rollo Master':'Confeccionado')+(item.tc?' · TC '+item.tc:'')+'</small></td>'
-        + '<td style="padding:10px; border-bottom:1px solid #eee;"><span style="color:#666; font-size:11px;">Solicitado:</span> '+solLabel+' x '+lLabel+(item.cant>1?' x <strong>'+item.cant+' cortes</strong>':'')
-        + (difiere?'<br><span style="color:#d97706; font-size:11px;">Cobrado: '+cobLabel+' x '+lLabel+'</span>':'')+'</td>'
-        + '<td style="padding:10px; border-bottom:1px solid #eee; text-align:right;">'+item.ar.toFixed(1)+' pie2</td>'
-        + '<td style="padding:10px; border-bottom:1px solid #eee; text-align:right;">$'+item.p.toFixed(3)+'</td>'
-        + '<td style="padding:10px; border-bottom:1px solid #eee; text-align:right;">$'+item.tu.toFixed(2)+'</td>'
-        + '<td style="padding:10px; border-bottom:1px solid #eee; text-align:right; font-weight:bold; color:#1a6b45; font-size:13px;">'+qStr+'</td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;color:#bbb;font-size:10px;">'+(idx+1)+'</td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;"><strong style="color:#1a6b45;">'+(item.cant>1?item.cant+'\u00d7 ':'')+item.nombre+'</strong><br><small style="color:#888;">'+(item.esMaster?'Rollo Master':'Confeccionado')+(item.rec?' \u00b7 Rec/Desc '+item.rec+'%':'')+'</small></td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;font-size:11px;"><span style="font-weight:700;color:#555;">Solicitado:</span> '+item.dims+(item.dimsCobradas?'<br><span style="font-weight:700;color:#d97706;">Cobrado: '+item.dimsCobradas+'</span>':'')+'</td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">'+item.area.toFixed(1)+' pie\u00b2</td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">$'+item.precio.toFixed(3)+'</td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">$'+item.tu.toFixed(2)+'</td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;font-weight:700;">'+(item.totalQ!==null?'Q'+item.totalQ.toFixed(2):'\u2014')+'</td>'
         + '</tr>';
     } else {
       filas += '<tr>'
-        + '<td style="padding:10px; border-bottom:1px solid #eee;">'+(idx+1)+'</td>'
-        + '<td style="padding:10px; border-bottom:1px solid #eee;"><strong>'+item.nombre+'</strong><br><small>'+item.medidas+'</small></td>'
-        + '<td style="padding:10px; border-bottom:1px solid #eee;">'+item.cantidad+' unidades<br><small>Tier '+(item.tier||'-')+'</small></td>'
-        + '<td style="padding:10px; border-bottom:1px solid #eee; text-align:right;">-</td>'
-        + '<td style="padding:10px; border-bottom:1px solid #eee; text-align:right;">Q'+item.precioUnit.toFixed(2)+'/u</td>'
-        + '<td style="padding:10px; border-bottom:1px solid #eee; text-align:right;">-</td>'
-        + '<td style="padding:10px; border-bottom:1px solid #eee; text-align:right; font-weight:bold; color:#1a6b45; font-size:13px;">Q'+item.totalQ.toFixed(2)+'</td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;color:#bbb;font-size:10px;">'+(idx+1)+'</td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;"><strong style="color:#1a6b45;">'+item.nombre+'</strong><br><small style="color:#888;">Saco \u00b7 Tier '+item.tier+(item.rec?' \u00b7 Rec/Desc '+item.rec+'%':'')+'</small></td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;font-size:11px;">'+item.cant+' unidades</td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">\u2014</td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">Q'+item.precio.toFixed(2)+'</td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">\u2014</td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;font-weight:700;">Q'+item.totalQ.toFixed(2)+'</td>'
         + '</tr>';
     }
   });
 
-  const cont = document.createElement('div');
-  // Usamos visibilidad en lugar de posicion extrema para que el motor de renderizado lo vea
-  cont.style.cssText = 'position:absolute; left:-9999px; top:0; width:800px; background:white;';
+  var qi = document.getElementById('cotDesglosarIVA') && document.getElementById('cotDesglosarIVA').checked;
+  var gf = qi ? gran/1.12 : gran;
+  var labelIva = qi ? 'SIN IVA' : 'CON IVA';
+  var totalHtml = '<tr style="background:#e8f5e9;font-weight:700;"><td colspan="6" style="padding:16px 8px;text-align:right;font-size:14px;">TOTAL '+labelIva+(haySinTC?' *':'')+'</td>'
+    + '<td style="padding:16px 8px;text-align:right;font-size:20px;color:#1a6b45;font-weight:900;">'+(soloUSD ? '$'+granUSD.toFixed(2)+' USD' : 'Q'+gf.toFixed(2))+'</td></tr>'
+    + (haySinTC?'<tr><td colspan="7" style="font-size:10px;color:#d97706;padding-top:10px;">* Items de tela sin tipo de cambio no incluidos en el total Q.</td></tr>':'');
 
-  cont.innerHTML = '<div style="padding:40px; background:white; font-family:Arial, sans-serif; color:#1a1a1a;">'
-    + '<div style="display:flex; justify-content:space-between; align-items:flex-end; padding-bottom:15px; border-bottom:4px solid #1a6b45; margin-bottom:25px;">'
-    + '<div style="font-size:35px; font-weight:900; color:#1a6b45;">LGM<small style="display:block; font-size:13px; font-weight:400; color:#888; margin-top:5px;">La Gran Montana - Cotizacion comercial</small></div>'
-    + '<div style="text-align:right;"><div style="font-size:22px; font-weight:800; color:#1a6b45;">'+ref+'</div><div style="font-size:12px; color:#888; margin-top:6px;">Fecha: '+fecha+'<br>Hora: '+hora+'</div></div></div>'
-    + '<div style="background:#f0f9f5; border-left:6px solid #1a6b45; padding:18px; margin-bottom:25px;"><div style="font-size:11px; color:#888; font-weight:700; text-transform:uppercase;">CLIENTE</div><div style="font-size:19px; font-weight:700; color:#1a6b45; margin-top:4px;">'+cliente+'</div></div>'
-    + '<div style="background:#fef9ec; border:1px solid #d97706; border-radius:8px; padding:12px; margin-bottom:25px; font-size:12px; color:#92400e;">Los anchos cobrados corresponden al multiplo de 6 pies superior al solicitado. El area de facturacion incluye el desperdicio de corte.</div>'
-    + '<div style="font-size:11px;color:#1a6b45;font-weight:700;margin-bottom:14px;">Cotizacion valida por 15 dias a partir de la fecha de emision.</div>'
-    + '<table style="width:100%; border-collapse:collapse; margin-bottom:25px; font-size:13px;"><thead><tr>'
-    + '<th style="background:#1a6b45; color:#fff; padding:12px 10px; text-align:left; font-size:11px;">#</th>'
-    + '<th style="background:#1a6b45; color:#fff; padding:12px 10px; text-align:left; font-size:11px;">DESCRIPCION</th>'
-    + '<th style="background:#1a6b45; color:#fff; padding:12px 10px; text-align:left; font-size:11px;">DIMENSIONES</th>'
-    + '<th style="background:#1a6b45; color:#fff; padding:12px 10px; text-align:right; font-size:11px;">AREA</th>'
-    + '<th style="background:#1a6b45; color:#fff; padding:12px 10px; text-align:right; font-size:11px;">PRECIO</th>'
-    + '<th style="background:#1a6b45; color:#fff; padding:12px 10px; text-align:right; font-size:11px;">USD</th>'
-    + '<th style="background:#1a6b45; color:#fff; padding:12px 10px; text-align:right; font-size:11px;">TOTAL Q</th>'
-    + '</tr></thead>'
-    + '<tbody>'+filas
-    + (function(){
-      var qi = document.getElementById('cotDesglosarIVA') && document.getElementById('cotDesglosarIVA').checked;
-      var gf = qi ? gran/1.12 : gran;
-      var labelIva = qi ? 'SIN IVA' : 'CON IVA';
-      return '<tr style="background:#e8f5e9; font-weight:700;"><td colspan="6" style="padding:18px 10px; text-align:right; font-size:15px;">TOTAL '+labelIva+(haySinTC?' *':'')+'</td>'
-           + '<td style="padding:18px 10px; text-align:right; font-size:22px; color:#1a6b45; font-weight:900;">'+(soloUSD ? '$'+granUSD.toFixed(2)+' USD' : 'Q'+gran.toFixed(2))+'</td></tr>';
-    })()
-    + (haySinTC?'<tr><td colspan="7" style="font-size:11px; color:#d97706; padding-top:12px;">* Items de tela sin tipo de cambio no incluidos en el total Q.</td></tr>':'')
-    + '</tbody></table>'
-    + '<div style="margin-top:50px; font-size:12px; color:#bbb; border-top:1px solid #eee; padding-top:20px;">LGM - La Gran Montana - Palin, Escuintla, Guatemala</div>'
+  var pdfHtml = '<div style="padding:36px;background:white;font-family:Arial,sans-serif;color:#1a1a1a;">'
+    + '<div style="display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:14px;border-bottom:4px solid #1a6b45;margin-bottom:22px;">'
+    + '<div style="font-size:32px;font-weight:900;color:#1a6b45;">LGM<small style="display:block;font-size:12px;font-weight:400;color:#888;margin-top:4px;">La Gran Monta\u00f1a \u00b7 Cotizaci\u00f3n comercial</small></div>'
+    + '<div style="text-align:right;"><div style="font-size:20px;font-weight:800;color:#1a6b45;">'+ref+'</div><div style="font-size:11px;color:#888;margin-top:5px;">Fecha: '+fecha+'<br>Hora: '+hora+'</div></div></div>'
+    + '<div style="background:#f0f9f5;border-left:5px solid #1a6b45;padding:14px;margin-bottom:20px;"><div style="font-size:10px;color:#888;font-weight:700;text-transform:uppercase;">CLIENTE</div><div style="font-size:17px;font-weight:700;color:#1a6b45;margin-top:3px;">'+cliente+'</div></div>'
+    + '<div style="background:#fef9ec;border:1px solid #d97706;border-radius:7px;padding:10px;margin-bottom:14px;font-size:11px;color:#92400e;">Los anchos cobrados corresponden al m\u00faltiplo de 6 pies superior al solicitado. El \u00e1rea de facturaci\u00f3n incluye el desperdicio de corte.</div>'
+    + '<div style="font-size:11px;color:#1a6b45;font-weight:700;margin-bottom:14px;">Cotizaci\u00f3n v\u00e1lida por 15 d\u00edas a partir de la fecha de emisi\u00f3n.</div>'
+    + '<table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:12px;"><thead><tr>'
+    + '<th style="background:#1a6b45;color:#fff;padding:10px 8px;text-align:left;font-size:10px;">#</th>'
+    + '<th style="background:#1a6b45;color:#fff;padding:10px 8px;text-align:left;font-size:10px;">DESCRIPCION</th>'
+    + '<th style="background:#1a6b45;color:#fff;padding:10px 8px;text-align:left;font-size:10px;">DIMENSIONES</th>'
+    + '<th style="background:#1a6b45;color:#fff;padding:10px 8px;text-align:right;font-size:10px;">AREA</th>'
+    + '<th style="background:#1a6b45;color:#fff;padding:10px 8px;text-align:right;font-size:10px;">PRECIO</th>'
+    + '<th style="background:#1a6b45;color:#fff;padding:10px 8px;text-align:right;font-size:10px;">USD</th>'
+    + '<th style="background:#1a6b45;color:#fff;padding:10px 8px;text-align:right;font-size:10px;">TOTAL Q</th>'
+    + '</tr></thead><tbody>'+filas+totalHtml+'</tbody></table>'
+    + '<div style="margin-top:40px;font-size:11px;color:#bbb;border-top:1px solid #eee;padding-top:16px;">LGM \u00b7 La Gran Monta\u00f1a \u00b7 Pal\u00edn, Escuintla, Guatemala</div>'
     + '</div>';
 
-  document.body.appendChild(cont);
-  toast('Preparando documento...');
+  // ===== WEB: overlay + print nativo =====
+  if(typeof Capacitor === 'undefined' || !Capacitor.isNativePlatform || !Capacitor.isNativePlatform()){
+    var overlay = document.createElement('div');
+    overlay.id = 'pdfOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#e8e8e8;overflow-y:auto;';
+    var tb = document.createElement('div');
+    tb.style.cssText = 'display:flex;gap:10px;padding:12px 16px;position:sticky;top:0;background:#1a6b45;z-index:1;';
+    var bC = document.createElement('button');
+    bC.textContent = '\u2190 Volver';
+    bC.style.cssText = 'padding:10px 20px;background:rgba(255,255,255,0.2);color:white;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;';
+    bC.onclick = function(){ overlay.remove(); };
+    var bP = document.createElement('button');
+    bP.textContent = 'Imprimir / Guardar PDF';
+    bP.style.cssText = 'padding:10px 20px;background:white;color:#1a6b45;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;';
+    bP.onclick = function(){ window.print(); };
+    tb.appendChild(bC); tb.appendChild(bP);
+    overlay.appendChild(tb);
+    var pbody = document.createElement('div');
+    pbody.style.cssText = 'max-width:820px;margin:16px auto;background:white;box-shadow:0 2px 12px rgba(0,0,0,0.15);';
+    pbody.innerHTML = pdfHtml;
+    overlay.appendChild(pbody);
+    document.body.appendChild(overlay);
+    return;
+  }
 
-  // Damos un tiempo al navegador para que renderice el HTML oculto
-  setTimeout(async () => {
+  // ===== APP NATIVA: html2pdf + share sheet =====
+  var cont = document.createElement('div');
+  cont.style.cssText = 'position:absolute;left:-9999px;top:0;width:800px;background:white;';
+  cont.innerHTML = pdfHtml;
+  document.body.appendChild(cont);
+
+  toast('Generando PDF...');
+  setTimeout(async function(){
     try {
-      const opt = {
-        margin: 10,
+      var opt = {
+        margin: 8,
         filename: ref + '.pdf',
-        image: {type:'jpeg', quality:0.98},
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          letterRendering: true,
-          width: 800,
-          scrollY: 0,
-          windowWidth: 800
-        },
+        image: {type:'jpeg', quality:0.95},
+        html2canvas: {scale:2, useCORS:true, width:800, windowWidth:800},
         jsPDF: {orientation:'p', unit:'mm', format:'a4'}
       };
+      var dataUri = await html2pdf().set(opt).from(cont).outputPdf('datauristring');
+      if(cont.parentNode) cont.parentNode.removeChild(cont);
 
-      if(typeof Capacitor === 'undefined' || !Capacitor.isNativePlatform()){
-        var overlay = document.createElement('div');
-        overlay.id = 'pdfOverlay';
-        overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#f0f0f0;overflow-y:auto;';
-        var tb = document.createElement('div');
-        tb.style.cssText = 'display:flex;gap:10px;padding:12px 16px;position:sticky;top:0;background:#1a6b45;z-index:1;';
-        var bC = document.createElement('button');
-        bC.textContent = String.fromCharCode(8592) + ' Volver';
-        bC.style.cssText = 'padding:10px 20px;background:rgba(255,255,255,0.2);color:white;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;';
-        bC.onclick = function(){ overlay.remove(); };
-        var bP = document.createElement('button');
-        bP.textContent = 'Imprimir / Guardar PDF';
-        bP.style.cssText = 'padding:10px 20px;background:white;color:#1a6b45;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;';
-        bP.onclick = function(){ window.print(); };
-        tb.appendChild(bC); tb.appendChild(bP);
-        overlay.appendChild(tb);
-        var pbody = document.createElement('div');
-        pbody.style.cssText = 'max-width:820px;margin:16px auto;background:white;box-shadow:0 2px 12px rgba(0,0,0,0.15);';
-        pbody.innerHTML = cont.innerHTML;
-        overlay.appendChild(pbody);
-        document.body.appendChild(overlay);
-        if(cont.parentNode) cont.parentNode.removeChild(cont);
-      } else {
-          const url = URL.createObjectURL(pdfBlob);
-          const a = document.createElement('a'); a.href = url; a.download = ref + '.pdf'; a.click();
-          setTimeout(() => URL.revokeObjectURL(url), 1000);
-        }
-      } else {
-        const dataUri = await html2pdf().set(opt).from(cont).outputPdf('datauristring');
-        if(cont.parentNode) cont.parentNode.removeChild(cont);
+      var base64 = dataUri.split(',')[1];
+      var FS = Capacitor.Plugins.Filesystem;
+      var SH = Capacitor.Plugins.Share;
+      var fileName = ref.replace(/[^a-zA-Z0-9_-]/g,'_') + '.pdf';
 
-        const base64 = dataUri.split(',')[1];
-        const { Filesystem, Share } = Capacitor.Plugins;
-        const fileName = ref.replace(/[^a-zA-Z0-9_-]/g,'_') + '.pdf';
-
-        await Filesystem.writeFile({ path: fileName, data: base64, directory: 'CACHE' });
-        const uriResult = await Filesystem.getUri({ path: fileName, directory: 'CACHE' });
-        await Share.share({ title: 'Cotización '+ref, files: [uriResult.uri] });
-      }
+      await FS.writeFile({ path: fileName, data: base64, directory: 'CACHE' });
+      var uriResult = await FS.getUri({ path: fileName, directory: 'CACHE' });
+      await SH.share({ title: 'Cotizaci\u00f3n '+ref, files: [uriResult.uri] });
     } catch(e) {
       if(cont.parentNode) cont.parentNode.removeChild(cont);
+      if(e && e.name === 'AbortError') return;
       toast('Error al generar PDF', 'err');
       console.error(e);
     }
-  }, 500); // 500ms de espera para el renderizado
+  }, 400);
 }
 
 // ── Limpiar inputs después de agregar al presupuesto ──
