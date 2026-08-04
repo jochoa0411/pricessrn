@@ -14,24 +14,30 @@ async function generarPDF(){
   let filas = '';
   CARRITO.forEach((item, idx) => {
     if(item.tipo === 'tela'){
+      var dimsSol = (item.lFt||item.lM||0).toFixed ? (item.ul==='ft'? item.lFt.toFixed(1)+' ft' : item.lM.toFixed(1)+' m') : '';
+      var anchoSol = item.ua==='ft' ? (item.aSolFt||0).toFixed(1)+' ft' : (item.aSolM||0).toFixed(1)+' m';
+      var largoSol = item.ul==='ft' ? (item.lFt||0).toFixed(1)+' ft' : (item.lM||0).toFixed(1)+' m';
+      var dimsTxt = anchoSol + ' x ' + largoSol + (item.cant>1?' (x'+item.cant+' cortes)':'');
+      var anchoCob = item.ua==='ft' ? (item.aCobFt||0).toFixed(1)+' ft' : (item.aCobM||0).toFixed(1)+' m';
+      var dimsCob = (item.aCobFt && Math.abs(item.aCobFt - item.aSolFt) > 0.01) ? anchoCob+' x '+largoSol : null;
       filas += '<tr>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;color:#bbb;font-size:10px;">'+(idx+1)+'</td>'
-        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;"><strong style="color:#1a6b45;">'+(item.cant>1?item.cant+'\u00d7 ':'')+item.nombre+'</strong><br><small style="color:#888;">'+(item.esMaster?'Rollo Master':'Confeccionado')+(item.rec?' \u00b7 Rec/Desc '+item.rec+'%':'')+'</small></td>'
-        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;font-size:11px;"><span style="font-weight:700;color:#555;">Solicitado:</span> '+item.dims+(item.dimsCobradas?'<br><span style="font-weight:700;color:#d97706;">Cobrado: '+item.dimsCobradas+'</span>':'')+'</td>'
-        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">'+item.area.toFixed(1)+' pie\u00b2</td>'
-        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">$'+item.precio.toFixed(3)+'</td>'
-        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">$'+item.tu.toFixed(2)+'</td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;"><strong style="color:#1a6b45;">'+(item.cant>1?item.cant+'\u00d7 ':'')+item.nombre+'</strong><br><small style="color:#888;">'+(item.modo==='master'?'Rollo Master':'Confeccionado')+(item.recargo?' \u00b7 Rec/Desc '+item.recargo+'%':'')+'</small></td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;font-size:11px;"><span style="font-weight:700;color:#555;">Solicitado:</span> '+dimsTxt+(dimsCob?'<br><span style="font-weight:700;color:#d97706;">Cobrado: '+dimsCob+'</span>':'')+'</td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">'+(item.ar||0).toFixed(1)+' pie\u00b2</td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">$'+(item.p||0).toFixed(3)+'</td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">$'+(item.tu||0).toFixed(2)+'</td>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;font-weight:700;">'+(item.totalQ!==null?'Q'+item.totalQ.toFixed(2):'\u2014')+'</td>'
         + '</tr>';
     } else {
       filas += '<tr>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;color:#bbb;font-size:10px;">'+(idx+1)+'</td>'
-        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;"><strong style="color:#1a6b45;">'+item.nombre+'</strong><br><small style="color:#888;">Saco \u00b7 Tier '+item.tier+(item.rec?' \u00b7 Rec/Desc '+item.rec+'%':'')+'</small></td>'
-        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;font-size:11px;">'+item.cant+' unidades</td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;"><strong style="color:#1a6b45;">'+item.nombre+'</strong><br><small style="color:#888;">Saco \u00b7 Tier '+item.tier+(item.recargo?' \u00b7 Rec/Desc '+item.recargo+'%':'')+'</small></td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;font-size:11px;">'+(item.medidas||'')+' \u00b7 '+item.cantidad+' unidades</td>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">\u2014</td>'
-        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">Q'+item.precio.toFixed(2)+'</td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">Q'+(item.precioUnit||0).toFixed(2)+'</td>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">\u2014</td>'
-        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;font-weight:700;">Q'+item.totalQ.toFixed(2)+'</td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;font-weight:700;">Q'+(item.totalQ||0).toFixed(2)+'</td>'
         + '</tr>';
     }
   });
