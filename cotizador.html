@@ -149,6 +149,8 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
         <div class="card-title">Datos del presupuesto</div>
         <div class="field"><label>Cliente (opcional)</label><input type="text" id="cotCliente" placeholder="Nombre del cliente"></div>
         <div class="field"><label>Referencia</label><input type="text" id="cotRef" placeholder="ej: COT-2026-001"></div>
+        <div class="field"><label>Tu correo (para recibir la cotización real) *</label><input type="email" id="cotVendedorCorreo" placeholder="tucorreo@lgm.com.gt"></div>
+        <div class="field"><label>Correo del cliente (opcional, copia)</label><input type="email" id="cotClienteCorreo" placeholder="cliente@empresa.com"></div>
         <div class="field" style="margin-top:12px;">
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;font-size:14px;color:#1a6b45;font-weight:700;">
             <input type="checkbox" id="cotDesglosarIVA" style="width:20px;height:20px;margin:0;-webkit-appearance:checkbox;appearance:checkbox;" onchange="cotCalcTela();cotCalcSaco();">
@@ -269,7 +271,10 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
               <strong id="cartTotal">Q0.00</strong>
             </div>
             <div class="cart-btns">
-              <button class="btn btn-success" style="flex:2" onclick="generarPDF()">📤 Compartir</button>
+              <button class="btn btn-success" style="flex:2" onclick="generarCotizacionReal()" id="btnCotReal">✅ Generar cotización real</button>
+            </div>
+            <div class="cart-btns" style="margin-top:6px;">
+              <button class="btn btn-ghost" style="flex:2" onclick="generarPDF()">📤 Vista previa local</button>
               <button class="btn btn-primary" style="flex:1" onclick="guardarHistorial()">💾 Guardar</button>
               <button class="btn btn-ghost btn-sm" onclick="limpiarCarrito()">🗑️</button>
             </div>
@@ -1032,5 +1037,5 @@ function eliminarSaco(id){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js"></script></body>
 </html>
