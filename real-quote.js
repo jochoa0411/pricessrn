@@ -7,7 +7,8 @@
 // entrega es el correo.
 //
 // El dispositivo NO necesita Tailscale: COT_API_BASE es un relay público angosto
-// (Tailscale Funnel, certificado real) que solo expone esta única ruta — el resto
+// (Tailscale Funnel, certificado real) que solo expone las rutas que este
+// cotizador necesita (crear cotización real + buscador de NIT) — el resto
 // del ERP (login, datos de otras empresas) sigue privado en el servidor real.
 // La API key es pública (vive en este repo) — el servidor la limita con
 // rate-limit estricto; si se filtra o se abusa, se rota desde el .env del
@@ -16,6 +17,36 @@ var COT_API_BASE = 'https://mac-mini-de-jose.tail2b51ca.ts.net';
 var COT_API_KEY  = 'd866cc818c2333d59cc866fb254104632015258f7f7d36f8dd3b687f1c23072b';
 
 function _emailValido(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||'').trim()); }
+
+// ── Buscador de NIT (SAT/Digifact) — igual al del sistema web ──
+async function consultarNit(){
+  var nitEl = document.getElementById('cotNit');
+  var nit = (nitEl.value || '').trim();
+  if (!nit) { toast('Ingresa un NIT para consultar', 'err'); nitEl.focus(); return; }
+
+  var btn = document.getElementById('btnConsultarNit');
+  var textoOriginal = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Buscando...';
+
+  try {
+    var r = await fetch(COT_API_BASE + '/api/util/nit/' + encodeURIComponent(nit), {
+      headers: { 'X-Api-Key': COT_API_KEY },
+    });
+    var data = await r.json().catch(function(){ return {}; });
+    if (!r.ok) {
+      toast(r.status === 404 ? 'NIT no encontrado en el registro de la SAT' : (data.error || 'No se pudo consultar el NIT'), 'err');
+      return;
+    }
+    document.getElementById('cotCliente').value = data.nombre || '';
+    toast('✅ NIT encontrado: ' + data.nombre);
+  } catch (e) {
+    toast('Sin conexión al sistema — revisa tu conexión a internet', 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = textoOriginal;
+  }
+}
 
 function _construirItemsCotizacionReal(){
   var hasSaco = CARRITO.some(function(i){ return i.tipo === 'saco'; });
@@ -173,6 +204,7 @@ async function generarCotizacionReal(){
   if (armado.error) { toast(armado.error, 'err'); return; }
 
   var cliente = document.getElementById('cotCliente').value.trim();
+  var clienteNit = document.getElementById('cotNit').value.trim();
   var btn = document.getElementById('btnCotReal');
   var textoOriginal = btn.textContent;
   btn.disabled = true;
@@ -181,6 +213,7 @@ async function generarCotizacionReal(){
   var conIva = !document.getElementById('cotDesglosarIVA').checked;
   var payload = {
     cliente: cliente,
+    cliente_nit: clienteNit,
     vendedor_nombre: '',
     vendedor_correo: vendedorCorreo,
     cliente_correo: clienteCorreo,

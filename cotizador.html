@@ -147,6 +147,13 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 
       <div class="card">
         <div class="card-title">Datos del presupuesto</div>
+        <div class="field">
+          <label>NIT del cliente (opcional)</label>
+          <div style="display:flex;gap:6px;align-items:stretch">
+            <input type="text" id="cotNit" placeholder="Ej: 12345678-9" style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();consultarNit();}">
+            <button type="button" class="btn btn-primary" id="btnConsultarNit" onclick="consultarNit()" style="white-space:nowrap;flex-shrink:0">🔍 Buscar</button>
+          </div>
+        </div>
         <div class="field"><label>Cliente (opcional)</label><input type="text" id="cotCliente" placeholder="Nombre del cliente"></div>
         <div class="field"><label>Referencia</label><input type="text" id="cotRef" placeholder="ej: COT-2026-001"></div>
         <div class="field" style="margin-top:12px;">
