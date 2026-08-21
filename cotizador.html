@@ -360,6 +360,20 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
   </div>
 </div>
 
+<!-- MODAL CONFIRMACION COTIZACION REAL -->
+<div id="modalCotReal" class="modal hidden" onclick="if(event.target===this)cerrarModalCotReal()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div id="mcrTitle" class="modal-title">✅ Cotización enviada</div>
+      <span class="modal-close" onclick="cerrarModalCotReal()">×</span>
+    </div>
+    <div id="mcrBody" style="font-size:14px;line-height:1.9;color:#333;"></div>
+    <div class="modal-btns">
+      <button class="btn btn-success btn-block" onclick="cerrarModalCotReal()">Entendido</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast ok"></div>
 
 <script>

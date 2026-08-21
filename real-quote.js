@@ -55,7 +55,53 @@ function _construirItemsCotizacionReal(){
     };
   });
 
-  return { moneda: moneda, items: items };
+  var total = items.reduce(function(s, it){ return s + it.cantidad * it.precio_unitario; }, 0);
+  return { moneda: moneda, items: items, total: total };
+}
+
+// ── Confirmación persistente (no desaparece sola como el toast) ──
+function cerrarModalCotReal(){ document.getElementById('modalCotReal').classList.add('hidden'); }
+
+function _mostrarConfirmacionCotReal(estado, info){
+  var titleEl = document.getElementById('mcrTitle');
+  var bodyEl  = document.getElementById('mcrBody');
+
+  if (estado === 'ok'){
+    titleEl.textContent = '✅ Cotización enviada';
+    bodyEl.innerHTML =
+        '<p><strong>Folio:</strong> ' + info.no_cotizacion + '</p>'
+      + '<p><strong>Enviada a:</strong> ' + info.vendedorCorreo + '</p>'
+      + (info.clienteCorreo ? '<p><strong>Copia a:</strong> ' + info.clienteCorreo + '</p>' : '')
+      + '<p style="margin-top:10px;padding:10px;background:#f0f9f5;border-radius:6px;color:#1a6b45;font-weight:700;">Revisa tu correo — debería llegar en segundos. Queda también en la pestaña Historial.</p>';
+  } else if (estado === 'creada_sin_correo'){
+    titleEl.textContent = '⚠️ Cotización creada, correo falló';
+    bodyEl.innerHTML =
+        '<p><strong>Folio:</strong> ' + info.no_cotizacion + ' (ya quedó guardada en el sistema)</p>'
+      + '<p style="margin-top:8px;padding:10px;background:#fef9ec;border-radius:6px;color:#92400e;">' + (info.aviso || 'No se pudo enviar el correo automáticamente. Avisa a soporte con este folio para que te la reenvíen.') + '</p>';
+  } else {
+    titleEl.textContent = '❌ No se generó la cotización';
+    bodyEl.innerHTML = '<p style="color:#d32f2f">' + (info.error || 'Error desconocido') + '</p>'
+      + '<p style="margin-top:8px;font-size:12px;color:#888;">El presupuesto no se perdió — corrige e intenta de nuevo.</p>';
+  }
+  document.getElementById('modalCotReal').classList.remove('hidden');
+}
+
+// ── Registro permanente en Historial — para poder verificar después "¿se envió?" ──
+function _registrarEnvioRealHistorial(data, armado, cliente, vendedorCorreo, clienteCorreo){
+  var h = JSON.parse(localStorage.getItem('cotizaciones')||'[]');
+  var entry = {
+    ref: data.no_cotizacion,
+    real: true,
+    emailEnviado: data.email_enviado !== false,
+    enviadoA: vendedorCorreo,
+    clienteCorreo: clienteCorreo || '',
+    cliente: cliente || 'Sin cliente',
+    fecha: new Date().toLocaleString('es-GT'),
+    items: JSON.parse(JSON.stringify(CARRITO)),
+  };
+  if (armado.moneda === 'GTQ') entry.totalQ = armado.total; else entry.totalUSD = armado.total;
+  h.push(entry);
+  localStorage.setItem('cotizaciones', JSON.stringify(h));
 }
 
 async function generarCotizacionReal(){
@@ -78,6 +124,7 @@ async function generarCotizacionReal(){
   var armado = _construirItemsCotizacionReal();
   if (armado.error) { toast(armado.error, 'err'); return; }
 
+  var cliente = document.getElementById('cotCliente').value.trim();
   var btn = document.getElementById('btnCotReal');
   var textoOriginal = btn.textContent;
   btn.disabled = true;
@@ -85,7 +132,7 @@ async function generarCotizacionReal(){
 
   var conIva = !document.getElementById('cotDesglosarIVA').checked;
   var payload = {
-    cliente: document.getElementById('cotCliente').value.trim(),
+    cliente: cliente,
     vendedor_nombre: '',
     vendedor_correo: vendedorCorreo,
     cliente_correo: clienteCorreo,
@@ -102,18 +149,57 @@ async function generarCotizacionReal(){
     });
     var data = await r.json().catch(function(){ return {}; });
     if (!r.ok || !data.ok) {
-      toast(data.error || 'No se pudo generar la cotización real', 'err');
+      _mostrarConfirmacionCotReal('error', { error: data.error || 'No se pudo generar la cotización real' });
       return;
     }
+
+    // La cotización YA quedó guardada en el sistema en este punto (con o sin correo) —
+    // se registra en el historial local y se limpia el carrito para no volver a mandarla
+    // por error con un segundo click (crearía un folio duplicado).
+    _registrarEnvioRealHistorial(data, armado, cliente, vendedorCorreo, clienteCorreo);
+    CARRITO = [];
+    saveCarrito();
+    renderCarrito();
+
     if (data.email_enviado === false) {
-      toast('Cotización ' + data.no_cotizacion + ' generada, pero el correo falló — avisa a soporte', 'err');
+      _mostrarConfirmacionCotReal('creada_sin_correo', { no_cotizacion: data.no_cotizacion, aviso: data.aviso });
     } else {
-      toast('✅ ' + data.no_cotizacion + ' enviada a ' + vendedorCorreo);
+      _mostrarConfirmacionCotReal('ok', { no_cotizacion: data.no_cotizacion, vendedorCorreo: vendedorCorreo, clienteCorreo: clienteCorreo });
     }
   } catch (e) {
-    toast('Sin conexión al sistema — ¿Tailscale conectado?', 'err');
+    _mostrarConfirmacionCotReal('error', { error: 'Sin conexión al sistema — ¿Tailscale conectado? Si estás conectado, puede que el navegador no confíe en el certificado del servidor: abre https://100.86.2.32:3000 una vez y acepta la advertencia.' });
   } finally {
     btn.disabled = false;
     btn.textContent = textoOriginal;
   }
 }
+
+// ── Historial: distinguir cotizaciones reales (enviadas al sistema) de borradores locales ──
+refrescarHistorial = function(){
+  var h = JSON.parse(localStorage.getItem('cotizaciones')||'[]');
+  var el = document.getElementById('historialList');
+  if(!h.length){ el.innerHTML = '<p style="color:#bbb;padding:20px;text-align:center">No hay cotizaciones guardadas.</p>'; return; }
+  var html = '';
+  for(var i = h.length - 1; i >= 0; i--){
+    var c = h[i];
+    var nItems = c.items ? c.items.length : (c.items===0?0:'?');
+    var totalLabel = (c.totalQ && c.totalQ > 0) ? 'Q'+Number(c.totalQ).toFixed(2) : (c.totalUSD ? '$'+Number(c.totalUSD).toFixed(2)+' USD' : 'Q'+(c.total||'0'));
+    var badge = '';
+    if (c.real) {
+      badge = c.emailEnviado
+        ? '<div style="margin-top:4px;font-size:11px;font-weight:700;color:#1a6b45;">✅ REAL · enviada a ' + c.enviadoA + '</div>'
+        : '<div style="margin-top:4px;font-size:11px;font-weight:700;color:#d97706;">⚠️ REAL · creada pero correo falló</div>';
+    }
+    html += '<div class="item-card" style="flex-wrap:wrap;">'
+      + '<div class="item-info"><strong>' + (c.ref||'') + ' - ' + c.cliente + '</strong>'
+      + '<small>' + c.fecha + ' - ' + nItems + ' item(s)</small>'
+      + badge
+      + '</div>'
+      + '<div style="text-align:right;margin-right:8px;"><strong style="color:#1a6b45;font-size:15px">' + totalLabel + '</strong></div>'
+      + '<div class="actions">'
+      + (c.items ? '<button class="btn btn-warning btn-sm" onclick="duplicarCot('+i+')">Duplicar</button>' : '')
+      + '<button class="btn btn-danger btn-sm" onclick="eliminarCot('+i+')">X</button>'
+      + '</div></div>';
+  }
+  el.innerHTML = html;
+};
