@@ -39,17 +39,36 @@ function _construirItemsCotizacionReal(){
 
   var items = CARRITO.map(function(item){
     if (item.tipo === 'tela') {
-      var precio = moneda === 'GTQ' ? (item.p * item.tc) : item.p;
+      // Medida SOLICITADA (la que el vendedor tecleó), no la redondeada a múltiplo de
+      // 6ft que se usa internamente para calcular precio — eso es lo que no debe ver
+      // el cliente; la medida pedida sí, porque es literalmente lo que va a recibir.
+      var anchoLabel = item.ua === 'm' ? item.aSolM.toFixed(2) + 'm' : item.aSolFt.toFixed(1) + 'ft';
+      var largoLabel = item.ul === 'm' ? item.lM.toFixed(2) + 'm' : item.lFt.toFixed(1) + 'ft';
+      var medida = anchoLabel + ' x ' + largoLabel;
+      var modoLabel = item.modo === 'master' ? 'Master' : 'Confeccionado';
+      var precioSqft = moneda === 'GTQ' ? (item.p * item.tc) : item.p;
+
+      if (item.modo === 'master') {
+        // Rollo Master: material crudo, se vende por área continua.
+        return {
+          descripcion: item.nombre + ' — ' + medida + ' — ' + modoLabel,
+          unidad: 'pie²',
+          cantidad: item.ar,
+          precio_unitario: precioSqft,
+        };
+      }
+      // Confeccionado: pieza terminada (con ojetes/rebete) — se cotiza por unidad,
+      // no por área; el precio unitario es el total de UNA pieza de esa medida.
       return {
-        descripcion: (item.cant > 1 ? item.cant + '× ' : '') + item.nombre + ' (' + (item.modo === 'master' ? 'Rollo Master' : 'Confeccionado') + ')',
-        unidad: 'pie²',
-        cantidad: item.ar,
-        precio_unitario: precio,
+        descripcion: item.nombre + ' — ' + medida + ' — ' + modoLabel,
+        unidad: 'UNIDAD',
+        cantidad: item.cant,
+        precio_unitario: item.arCorte * precioSqft,
       };
     }
     return {
       descripcion: item.nombre + (item.medidas ? ' (' + item.medidas + ')' : ''),
-      unidad: 'unidad',
+      unidad: 'UNIDAD',
       cantidad: item.cantidad,
       precio_unitario: item.precioUnit,
     };
@@ -121,6 +140,24 @@ async function generarCotizacionReal(){
     return;
   }
 
+  var formaEntrega  = document.getElementById('cotFormaEntrega').value.trim();
+  var lugarEntrega  = document.getElementById('cotLugarEntrega').value.trim();
+  var tiempoEntrega = document.getElementById('cotTiempoEntrega').value.trim();
+  var formaPago     = document.getElementById('cotFormaPago').value.trim();
+  var entregaCampos = [
+    ['cotFormaEntrega', formaEntrega, 'la forma de entrega'],
+    ['cotLugarEntrega', lugarEntrega, 'el lugar de entrega'],
+    ['cotTiempoEntrega', tiempoEntrega, 'el tiempo de entrega'],
+    ['cotFormaPago', formaPago, 'la forma de pago'],
+  ];
+  for (var fi = 0; fi < entregaCampos.length; fi++) {
+    if (!entregaCampos[fi][1]) {
+      toast('Completa ' + entregaCampos[fi][2] + ' — lo necesita la cotización real', 'err');
+      document.getElementById(entregaCampos[fi][0]).focus();
+      return;
+    }
+  }
+
   var armado = _construirItemsCotizacionReal();
   if (armado.error) { toast(armado.error, 'err'); return; }
 
@@ -139,6 +176,10 @@ async function generarCotizacionReal(){
     moneda: armado.moneda,
     con_iva: conIva,
     items: armado.items,
+    forma_entrega: formaEntrega,
+    lugar_entrega: lugarEntrega,
+    tiempo_entrega: tiempoEntrega,
+    forma_pago: formaPago,
   };
 
   try {

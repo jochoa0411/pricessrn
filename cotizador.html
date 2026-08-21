@@ -159,6 +159,14 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
         </div>
       </div>
 
+      <div class="card">
+        <div class="card-title">Entrega y pago (para la cotización real)</div>
+        <div class="field"><label>Forma de entrega *</label><input type="text" id="cotFormaEntrega" placeholder="Ej: Terrestre, Marítima, Aérea"></div>
+        <div class="field"><label>Lugar de entrega *</label><input type="text" id="cotLugarEntrega" placeholder="Dirección o bodega de entrega"></div>
+        <div class="field"><label>Tiempo de entrega *</label><input type="text" id="cotTiempoEntrega" placeholder="Ej: 3 días hábiles después de la OC"></div>
+        <div class="field"><label>Forma de pago *</label><input type="text" id="cotFormaPago" placeholder="Ej: Contado, Crédito 30 días"></div>
+      </div>
+
       <div class="tabs">
         <button class="tab-btn active" onclick="cambiarTab(this,'cot-tela')">📊 Telas</button>
         <button class="tab-btn" onclick="cambiarTab(this,'cot-saco')">🛍️ Sacos</button>
