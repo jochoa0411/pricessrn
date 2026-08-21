@@ -149,22 +149,12 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
         <div class="card-title">Datos del presupuesto</div>
         <div class="field"><label>Cliente (opcional)</label><input type="text" id="cotCliente" placeholder="Nombre del cliente"></div>
         <div class="field"><label>Referencia</label><input type="text" id="cotRef" placeholder="ej: COT-2026-001"></div>
-        <div class="field"><label>Tu correo (para recibir la cotización real) *</label><input type="email" id="cotVendedorCorreo" placeholder="tucorreo@lgm.com.gt"></div>
-        <div class="field"><label>Correo del cliente (opcional, copia)</label><input type="email" id="cotClienteCorreo" placeholder="cliente@empresa.com"></div>
         <div class="field" style="margin-top:12px;">
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;font-size:14px;color:#1a6b45;font-weight:700;">
             <input type="checkbox" id="cotDesglosarIVA" style="width:20px;height:20px;margin:0;-webkit-appearance:checkbox;appearance:checkbox;" onchange="cotCalcTela();cotCalcSaco();">
             Quitar IVA (precio sin impuesto)
           </label>
         </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Entrega y pago (para la cotización real)</div>
-        <div class="field"><label>Forma de entrega *</label><input type="text" id="cotFormaEntrega" placeholder="Ej: Terrestre, Marítima, Aérea"></div>
-        <div class="field"><label>Lugar de entrega *</label><input type="text" id="cotLugarEntrega" placeholder="Dirección o bodega de entrega"></div>
-        <div class="field"><label>Tiempo de entrega *</label><input type="text" id="cotTiempoEntrega" placeholder="Ej: 3 días hábiles después de la OC"></div>
-        <div class="field"><label>Forma de pago *</label><input type="text" id="cotFormaPago" placeholder="Ej: Contado, Crédito 30 días"></div>
       </div>
 
       <div class="tabs">
@@ -279,7 +269,7 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
               <strong id="cartTotal">Q0.00</strong>
             </div>
             <div class="cart-btns">
-              <button class="btn btn-success" style="flex:2" onclick="generarCotizacionReal()" id="btnCotReal">✅ Generar cotización real</button>
+              <button class="btn btn-success" style="flex:2" onclick="abrirModalEnviarReal()">✅ Generar cotización real</button>
             </div>
             <div class="cart-btns" style="margin-top:6px;">
               <button class="btn btn-ghost" style="flex:2" onclick="generarPDF()">📤 Vista previa local</button>
@@ -364,6 +354,25 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
     <div class="modal-btns">
       <button class="btn btn-success" onclick="guardarSaco()">Guardar</button>
       <button class="btn btn-ghost" onclick="cerrarModalSaco()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DATOS PARA COTIZACION REAL (entrega, pago, correos) -->
+<div id="modalEnviarReal" class="modal hidden" onclick="if(event.target===this)cerrarModalEnviarReal()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">✅ Generar cotización real</div>
+      <span class="modal-close" onclick="cerrarModalEnviarReal()">×</span>
+    </div>
+    <div class="field"><label>Tu correo (para recibir la cotización) *</label><input type="email" id="merVendedorCorreo" placeholder="tucorreo@lgm.com.gt"></div>
+    <div class="field"><label>Correo del cliente (opcional, copia)</label><input type="email" id="merClienteCorreo" placeholder="cliente@empresa.com"></div>
+    <div class="field"><label>Forma de entrega *</label><input type="text" id="merFormaEntrega" placeholder="Ej: Terrestre, Marítima, Aérea"></div>
+    <div class="field"><label>Lugar de entrega *</label><input type="text" id="merLugarEntrega" placeholder="Dirección o bodega de entrega"></div>
+    <div class="field"><label>Tiempo de entrega *</label><input type="text" id="merTiempoEntrega" placeholder="Ej: 3 días hábiles después de la OC"></div>
+    <div class="field"><label>Forma de pago *</label><input type="text" id="merFormaPago" placeholder="Ej: Contado, Crédito 30 días"></div>
+    <div class="modal-btns">
+      <button class="btn btn-success btn-block" id="btnCotReal" onclick="generarCotizacionReal()">Enviar cotización real</button>
     </div>
   </div>
 </div>

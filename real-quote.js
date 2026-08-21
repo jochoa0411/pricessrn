@@ -78,6 +78,14 @@ function _construirItemsCotizacionReal(){
   return { moneda: moneda, items: items, total: total };
 }
 
+// ── Modal de datos para la cotización real (correo, entrega, pago) — se abre
+// solo al hacer click en "Generar cotización real", no queda fijo en pantalla ──
+function abrirModalEnviarReal(){
+  if (!CARRITO.length) { toast('El presupuesto está vacío', 'err'); return; }
+  document.getElementById('modalEnviarReal').classList.remove('hidden');
+}
+function cerrarModalEnviarReal(){ document.getElementById('modalEnviarReal').classList.add('hidden'); }
+
 // ── Confirmación persistente (no desaparece sola como el toast) ──
 function cerrarModalCotReal(){ document.getElementById('modalCotReal').classList.add('hidden'); }
 
@@ -126,13 +134,13 @@ function _registrarEnvioRealHistorial(data, armado, cliente, vendedorCorreo, cli
 async function generarCotizacionReal(){
   if (!CARRITO.length) { toast('El presupuesto está vacío', 'err'); return; }
 
-  var vendedorCorreo = (document.getElementById('cotVendedorCorreo').value || '').trim();
+  var vendedorCorreo = (document.getElementById('merVendedorCorreo').value || '').trim();
   if (!_emailValido(vendedorCorreo)) {
     toast('Ingresa tu correo — ahí llega la cotización real', 'err');
-    document.getElementById('cotVendedorCorreo').focus();
+    document.getElementById('merVendedorCorreo').focus();
     return;
   }
-  var clienteCorreoEl = document.getElementById('cotClienteCorreo');
+  var clienteCorreoEl = document.getElementById('merClienteCorreo');
   var clienteCorreo = (clienteCorreoEl.value || '').trim();
   if (clienteCorreo && !_emailValido(clienteCorreo)) {
     toast('El correo del cliente no es válido', 'err');
@@ -140,15 +148,15 @@ async function generarCotizacionReal(){
     return;
   }
 
-  var formaEntrega  = document.getElementById('cotFormaEntrega').value.trim();
-  var lugarEntrega  = document.getElementById('cotLugarEntrega').value.trim();
-  var tiempoEntrega = document.getElementById('cotTiempoEntrega').value.trim();
-  var formaPago     = document.getElementById('cotFormaPago').value.trim();
+  var formaEntrega  = document.getElementById('merFormaEntrega').value.trim();
+  var lugarEntrega  = document.getElementById('merLugarEntrega').value.trim();
+  var tiempoEntrega = document.getElementById('merTiempoEntrega').value.trim();
+  var formaPago     = document.getElementById('merFormaPago').value.trim();
   var entregaCampos = [
-    ['cotFormaEntrega', formaEntrega, 'la forma de entrega'],
-    ['cotLugarEntrega', lugarEntrega, 'el lugar de entrega'],
-    ['cotTiempoEntrega', tiempoEntrega, 'el tiempo de entrega'],
-    ['cotFormaPago', formaPago, 'la forma de pago'],
+    ['merFormaEntrega', formaEntrega, 'la forma de entrega'],
+    ['merLugarEntrega', lugarEntrega, 'el lugar de entrega'],
+    ['merTiempoEntrega', tiempoEntrega, 'el tiempo de entrega'],
+    ['merFormaPago', formaPago, 'la forma de pago'],
   ];
   for (var fi = 0; fi < entregaCampos.length; fi++) {
     if (!entregaCampos[fi][1]) {
@@ -190,6 +198,7 @@ async function generarCotizacionReal(){
     });
     var data = await r.json().catch(function(){ return {}; });
     if (!r.ok || !data.ok) {
+      cerrarModalEnviarReal();
       _mostrarConfirmacionCotReal('error', { error: data.error || 'No se pudo generar la cotización real' });
       return;
     }
@@ -201,6 +210,7 @@ async function generarCotizacionReal(){
     CARRITO = [];
     saveCarrito();
     renderCarrito();
+    cerrarModalEnviarReal();
 
     if (data.email_enviado === false) {
       _mostrarConfirmacionCotReal('creada_sin_correo', { no_cotizacion: data.no_cotizacion, aviso: data.aviso });
@@ -208,6 +218,7 @@ async function generarCotizacionReal(){
       _mostrarConfirmacionCotReal('ok', { no_cotizacion: data.no_cotizacion, vendedorCorreo: vendedorCorreo, clienteCorreo: clienteCorreo });
     }
   } catch (e) {
+    cerrarModalEnviarReal();
     _mostrarConfirmacionCotReal('error', { error: 'Sin conexión al sistema — ¿Tailscale conectado? Si estás conectado, puede que el navegador no confíe en el certificado del servidor: abre https://100.86.2.32:3000 una vez y acepta la advertencia.' });
   } finally {
     btn.disabled = false;
