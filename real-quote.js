@@ -6,11 +6,13 @@
 // plantilla que el resto del sistema. El navegador nunca ve el PDF: la
 // entrega es el correo.
 //
-// Requiere estar conectado a la red Tailscale de LGM (el servidor no tiene
-// dominio público). La API key es pública (vive en este repo) — el servidor
-// la limita con rate-limit estricto; si se filtra o se abusa, se rota desde
-// el .env del servidor sin tocar este archivo.
-var COT_API_BASE = 'https://100.86.2.32:3000';
+// El dispositivo NO necesita Tailscale: COT_API_BASE es un relay público angosto
+// (Tailscale Funnel, certificado real) que solo expone esta única ruta — el resto
+// del ERP (login, datos de otras empresas) sigue privado en el servidor real.
+// La API key es pública (vive en este repo) — el servidor la limita con
+// rate-limit estricto; si se filtra o se abusa, se rota desde el .env del
+// servidor sin tocar este archivo.
+var COT_API_BASE = 'https://mac-mini-de-jose.tail2b51ca.ts.net';
 var COT_API_KEY  = 'd866cc818c2333d59cc866fb254104632015258f7f7d36f8dd3b687f1c23072b';
 
 function _emailValido(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||'').trim()); }
@@ -219,7 +221,7 @@ async function generarCotizacionReal(){
     }
   } catch (e) {
     cerrarModalEnviarReal();
-    _mostrarConfirmacionCotReal('error', { error: 'Sin conexión al sistema — ¿Tailscale conectado? Si estás conectado, puede que el navegador no confíe en el certificado del servidor: abre https://100.86.2.32:3000 una vez y acepta la advertencia.' });
+    _mostrarConfirmacionCotReal('error', { error: 'Sin conexión al sistema — revisa tu conexión a internet e intenta de nuevo.' });
   } finally {
     btn.disabled = false;
     btn.textContent = textoOriginal;
