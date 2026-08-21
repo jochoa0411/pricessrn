@@ -154,6 +154,7 @@ async function generarCotizacionReal(){
   var lugarEntrega  = document.getElementById('merLugarEntrega').value.trim();
   var tiempoEntrega = document.getElementById('merTiempoEntrega').value.trim();
   var formaPago     = document.getElementById('merFormaPago').value.trim();
+  var comentarios   = document.getElementById('merComentarios').value.trim();
   var entregaCampos = [
     ['merFormaEntrega', formaEntrega, 'la forma de entrega'],
     ['merLugarEntrega', lugarEntrega, 'el lugar de entrega'],
@@ -190,6 +191,7 @@ async function generarCotizacionReal(){
     lugar_entrega: lugarEntrega,
     tiempo_entrega: tiempoEntrega,
     forma_pago: formaPago,
+    comentarios_adicionales: comentarios,
   };
 
   try {
