@@ -115,6 +115,12 @@ function _construirItemsCotizacionReal(){
 // solo al hacer click en "Generar cotización real", no queda fijo en pantalla ──
 function abrirModalEnviarReal(){
   if (!CARRITO.length) { toast('El presupuesto está vacío', 'err'); return; }
+  var clienteEl = document.getElementById('cotCliente');
+  if (!clienteEl.value.trim()) {
+    toast('Ingresa el nombre del cliente — no podemos cotizarle a nadie', 'err');
+    clienteEl.focus();
+    return;
+  }
   document.getElementById('modalEnviarReal').classList.remove('hidden');
 }
 function cerrarModalEnviarReal(){ document.getElementById('modalEnviarReal').classList.add('hidden'); }
@@ -200,10 +206,16 @@ async function generarCotizacionReal(){
     }
   }
 
+  var cliente = document.getElementById('cotCliente').value.trim();
+  if (!cliente) {
+    toast('Ingresa el nombre del cliente — no podemos cotizarle a nadie', 'err');
+    document.getElementById('cotCliente').focus();
+    return;
+  }
+
   var armado = _construirItemsCotizacionReal();
   if (armado.error) { toast(armado.error, 'err'); return; }
 
-  var cliente = document.getElementById('cotCliente').value.trim();
   var clienteNit = document.getElementById('cotNit').value.trim();
   var btn = document.getElementById('btnCotReal');
   var textoOriginal = btn.textContent;
