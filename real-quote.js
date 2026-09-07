@@ -40,6 +40,17 @@ function _guardarSesion(sesion){ localStorage.setItem(COT_SESSION_KEY, JSON.stri
 function _mostrarLogin(){
   document.getElementById('loginGate').classList.remove('hidden');
   document.getElementById('appShell').classList.add('hidden');
+  var passEl = document.getElementById('loginPassword');
+  var toggleBtn = document.getElementById('btnTogglePass');
+  if (passEl) passEl.type = 'password';
+  if (toggleBtn) toggleBtn.textContent = '👁️';
+}
+
+function _toggleLoginPass(){
+  var passEl = document.getElementById('loginPassword');
+  var toggleBtn = document.getElementById('btnTogglePass');
+  if (passEl.type === 'password') { passEl.type = 'text'; toggleBtn.textContent = '🙈'; }
+  else { passEl.type = 'password'; toggleBtn.textContent = '👁️'; }
 }
 function _mostrarApp(sesion){
   document.getElementById('loginGate').classList.add('hidden');
