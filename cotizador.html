@@ -104,6 +104,9 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 .login-btn:active { transform: scale(0.98); box-shadow: 0 6px 14px rgba(26,107,69,0.3); }
 .login-btn:disabled { opacity: 0.6; cursor: default; }
 .login-foot { margin-top: 18px; font-size: 11.5px; color: #a6ada8; }
+.login-link-btn { display: block; width: 100%; margin-top: 12px; background: none; border: none; color: #1a6b45; font-weight: 700; font-size: 13px; cursor: pointer; padding: 6px; }
+.login-link-btn:disabled { opacity: 0.5; cursor: default; }
+#loginStepCreds.hidden, #loginStepRecover1.hidden, #loginStepRecover2.hidden { display: none; }
 .modal-box { background: white; border-radius: 12px; padding: 20px; width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto; }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .modal-title { font-size: 16px; font-weight: 700; color: #1a6b45; }
@@ -155,26 +158,80 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
   <div class="login-card">
     <div class="login-logo">🧮</div>
     <h1 class="login-title">Cotizador LGM</h1>
-    <p class="login-subtitle">Ingresa con tu usuario del sistema</p>
 
-    <div class="login-field">
-      <label>Usuario</label>
-      <div class="login-input-wrap">
-        <span class="login-input-icon">👤</span>
-        <input type="text" id="loginUsername" placeholder="tu.usuario" autocapitalize="off" autocorrect="off" autocomplete="username" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('loginPassword').focus();}">
+    <!-- PASO: LOGIN -->
+    <div id="loginStepCreds">
+      <p class="login-subtitle">Ingresa con tu usuario del sistema</p>
+
+      <div class="login-field">
+        <label>Usuario</label>
+        <div class="login-input-wrap">
+          <span class="login-input-icon">👤</span>
+          <input type="text" id="loginUsername" placeholder="tu.usuario" autocapitalize="off" autocorrect="off" autocomplete="username" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('loginPassword').focus();}">
+        </div>
       </div>
+
+      <div class="login-field">
+        <label>Contraseña</label>
+        <div class="login-input-wrap">
+          <span class="login-input-icon">🔒</span>
+          <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter'){event.preventDefault();iniciarSesionCotizador();}">
+          <button type="button" class="login-toggle-pass" id="btnTogglePass" onclick="_toggleLoginPass()" aria-label="Mostrar contraseña">👁️</button>
+        </div>
+      </div>
+
+      <button class="login-btn" id="btnLogin" onclick="iniciarSesionCotizador()">Ingresar</button>
+      <button type="button" class="login-link-btn" onclick="_mostrarRecuperarPaso1()">¿Olvidaste tu contraseña?</button>
     </div>
 
-    <div class="login-field">
-      <label>Contraseña</label>
-      <div class="login-input-wrap">
-        <span class="login-input-icon">🔒</span>
-        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter'){event.preventDefault();iniciarSesionCotizador();}">
-        <button type="button" class="login-toggle-pass" id="btnTogglePass" onclick="_toggleLoginPass()" aria-label="Mostrar contraseña">👁️</button>
+    <!-- PASO: RECUPERAR — pedir usuario/correo -->
+    <div id="loginStepRecover1" class="hidden">
+      <p class="login-subtitle">Ingresa tu usuario o correo del sistema. Si tu cuenta puede usar el cotizador, te llegará un código de 6 dígitos.</p>
+
+      <div class="login-field">
+        <label>Usuario o correo</label>
+        <div class="login-input-wrap">
+          <span class="login-input-icon">👤</span>
+          <input type="text" id="recoverUsername" placeholder="tu.usuario" autocapitalize="off" autocorrect="off" onkeydown="if(event.key==='Enter'){event.preventDefault();solicitarCodigoRecuperacion();}">
+        </div>
       </div>
+
+      <button class="login-btn" id="btnRecoverStep1" onclick="solicitarCodigoRecuperacion()">Enviar código</button>
+      <button type="button" class="login-link-btn" onclick="_mostrarLoginForm()">← Volver a ingresar</button>
     </div>
 
-    <button class="login-btn" id="btnLogin" onclick="iniciarSesionCotizador()">Ingresar</button>
+    <!-- PASO: RECUPERAR — código + nueva contraseña -->
+    <div id="loginStepRecover2" class="hidden">
+      <p class="login-subtitle">Ingresa el código que enviamos a tu correo y tu nueva contraseña.</p>
+
+      <div class="login-field">
+        <label>Código de recuperación</label>
+        <div class="login-input-wrap">
+          <span class="login-input-icon">🔢</span>
+          <input type="text" id="recoverCode" placeholder="123456" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
+        </div>
+      </div>
+
+      <div class="login-field">
+        <label>Nueva contraseña</label>
+        <div class="login-input-wrap">
+          <span class="login-input-icon">🔒</span>
+          <input type="password" id="recoverPassword" placeholder="••••••••" autocomplete="new-password">
+        </div>
+      </div>
+
+      <div class="login-field">
+        <label>Confirmar contraseña</label>
+        <div class="login-input-wrap">
+          <span class="login-input-icon">🔒</span>
+          <input type="password" id="recoverPassword2" placeholder="••••••••" autocomplete="new-password" onkeydown="if(event.key==='Enter'){event.preventDefault();restablecerConCodigo();}">
+        </div>
+      </div>
+
+      <button class="login-btn" id="btnRecoverStep2" onclick="restablecerConCodigo()">Restablecer contraseña</button>
+      <button type="button" class="login-link-btn" id="btnReenviarCodigo" onclick="solicitarCodigoRecuperacion()">¿No te llegó? Reenviar código</button>
+      <button type="button" class="login-link-btn" onclick="_mostrarLoginForm()">← Volver a ingresar</button>
+    </div>
 
     <p class="login-foot">🔒 Usa tu usuario y contraseña del sistema LGM</p>
   </div>

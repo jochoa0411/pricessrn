@@ -44,6 +44,89 @@ function _mostrarLogin(){
   var toggleBtn = document.getElementById('btnTogglePass');
   if (passEl) passEl.type = 'password';
   if (toggleBtn) toggleBtn.textContent = '👁️';
+  _mostrarLoginForm();
+}
+
+// ── Recuperar contraseña con código (dentro de la misma tarjeta de login) ──
+var _recoverIdentifier = '';
+
+function _mostrarLoginForm(){
+  document.getElementById('loginStepCreds').classList.remove('hidden');
+  document.getElementById('loginStepRecover1').classList.add('hidden');
+  document.getElementById('loginStepRecover2').classList.add('hidden');
+}
+function _mostrarRecuperarPaso1(){
+  document.getElementById('loginStepCreds').classList.add('hidden');
+  document.getElementById('loginStepRecover1').classList.remove('hidden');
+  document.getElementById('loginStepRecover2').classList.add('hidden');
+}
+function _mostrarRecuperarPaso2(){
+  document.getElementById('loginStepCreds').classList.add('hidden');
+  document.getElementById('loginStepRecover1').classList.add('hidden');
+  document.getElementById('loginStepRecover2').classList.remove('hidden');
+}
+
+async function solicitarCodigoRecuperacion(){
+  var userEl = document.getElementById('recoverUsername');
+  var input = (userEl.value || '').trim();
+  if (!input) { toast('Ingresa tu usuario o correo', 'err'); return; }
+  _recoverIdentifier = input;
+
+  var btns = [document.getElementById('btnRecoverStep1'), document.getElementById('btnReenviarCodigo')].filter(Boolean);
+  btns.forEach(function(b){ b.disabled = true; });
+
+  try {
+    var r = await fetch(COT_API_BASE + '/api/ventas/cotizaciones-publicas/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Api-Key': COT_API_KEY },
+      body: JSON.stringify({ username: input }),
+    });
+    await r.json().catch(function(){ return {}; });
+    toast('Si tu cuenta puede usar el cotizador, revisa tu correo — te llegará un código.');
+    _mostrarRecuperarPaso2();
+  } catch (e) {
+    toast('Sin conexión al sistema — revisa tu conexión a internet', 'err');
+  } finally {
+    btns.forEach(function(b){ b.disabled = false; });
+  }
+}
+
+async function restablecerConCodigo(){
+  var code = (document.getElementById('recoverCode').value || '').trim();
+  var pass = (document.getElementById('recoverPassword').value || '').trim();
+  var pass2 = (document.getElementById('recoverPassword2').value || '').trim();
+  if (!code) { toast('Ingresa el código de recuperación', 'err'); return; }
+  if (!pass || pass.length < 8) { toast('La contraseña debe tener al menos 8 caracteres', 'err'); return; }
+  if (pass !== pass2) { toast('Las contraseñas no coinciden', 'err'); return; }
+
+  var btn = document.getElementById('btnRecoverStep2');
+  var textoOriginal = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Restableciendo...';
+
+  try {
+    var r = await fetch(COT_API_BASE + '/api/ventas/cotizaciones-publicas/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Api-Key': COT_API_KEY },
+      body: JSON.stringify({ username: _recoverIdentifier, code: code, password: pass }),
+    });
+    var data = await r.json().catch(function(){ return {}; });
+    if (!r.ok) {
+      toast(data.error || 'No se pudo restablecer la contraseña', 'err');
+      return;
+    }
+    toast('✅ Contraseña actualizada — ya puedes ingresar');
+    document.getElementById('recoverCode').value = '';
+    document.getElementById('recoverPassword').value = '';
+    document.getElementById('recoverPassword2').value = '';
+    document.getElementById('recoverUsername').value = '';
+    _mostrarLoginForm();
+  } catch (e) {
+    toast('Sin conexión al sistema — revisa tu conexión a internet', 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = textoOriginal;
+  }
 }
 
 function _toggleLoginPass(){
