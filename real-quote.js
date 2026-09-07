@@ -18,6 +18,92 @@ var COT_API_KEY  = 'd866cc818c2333d59cc866fb254104632015258f7f7d36f8dd3b687f1c23
 
 function _emailValido(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||'').trim()); }
 
+// ── Sesión del vendedor (login real del ERP) ───────────────────────────────
+// Reemplaza el campo "Tu correo" de texto libre: la identidad de quien cotiza
+// ahora viene de sus credenciales reales del sistema, verificadas por el
+// servidor (POST /login emite un token acotado — solo sirve para estas rutas,
+// ver middleware/cotizadorMovilAuth.js en el backend). La sesión se cierra
+// sola tras 20 min sin actividad; el token además expira solo a las 8h como
+// respaldo del lado servidor.
+var COT_SESSION_KEY = 'cotSesion';
+var IDLE_MS = 20 * 60 * 1000;
+var _idleTimer = null;
+
+function _cargarSesion(){
+  try {
+    var raw = localStorage.getItem(COT_SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+function _guardarSesion(sesion){ localStorage.setItem(COT_SESSION_KEY, JSON.stringify(sesion)); }
+
+function _mostrarLogin(){
+  document.getElementById('loginGate').classList.remove('hidden');
+  document.getElementById('appShell').classList.add('hidden');
+}
+function _mostrarApp(sesion){
+  document.getElementById('loginGate').classList.add('hidden');
+  document.getElementById('appShell').classList.remove('hidden');
+  var navNombre = document.getElementById('navSesionNombre');
+  if (navNombre) navNombre.textContent = sesion.nombre || '';
+  _reiniciarVigilanciaInactividad();
+}
+
+function _cerrarSesion(mensaje){
+  localStorage.removeItem(COT_SESSION_KEY);
+  if (_idleTimer) { clearTimeout(_idleTimer); _idleTimer = null; }
+  _mostrarLogin();
+  if (mensaje) toast(mensaje, 'err');
+}
+function cerrarSesionManual(){ _cerrarSesion(); }
+
+function _reiniciarVigilanciaInactividad(){
+  if (_idleTimer) clearTimeout(_idleTimer);
+  _idleTimer = setTimeout(function(){
+    _cerrarSesion('Tu sesión expiró por inactividad — inicia sesión de nuevo.');
+  }, IDLE_MS);
+}
+['click', 'keydown', 'touchstart'].forEach(function(ev){
+  document.addEventListener(ev, function(){
+    if (_idleTimer) _reiniciarVigilanciaInactividad();
+  }, { passive: true });
+});
+
+async function iniciarSesionCotizador(){
+  var userEl = document.getElementById('loginUsername');
+  var passEl = document.getElementById('loginPassword');
+  var username = (userEl.value || '').trim();
+  var password = (passEl.value || '').trim();
+  if (!username || !password) { toast('Ingresa usuario y contraseña', 'err'); return; }
+
+  var btn = document.getElementById('btnLogin');
+  var textoOriginal = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Ingresando...';
+
+  try {
+    var r = await fetch(COT_API_BASE + '/api/ventas/cotizaciones-publicas/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Api-Key': COT_API_KEY },
+      body: JSON.stringify({ username: username, password: password }),
+    });
+    var data = await r.json().catch(function(){ return {}; });
+    if (!r.ok) {
+      toast(data.error || 'No se pudo iniciar sesión', 'err');
+      return;
+    }
+    var sesion = { token: data.token, nombre: data.nombre, correo: data.correo };
+    _guardarSesion(sesion);
+    passEl.value = '';
+    _mostrarApp(sesion);
+  } catch (e) {
+    toast('Sin conexión al sistema — revisa tu conexión a internet', 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = textoOriginal;
+  }
+}
+
 // ── Buscador de NIT (SAT/Digifact) — igual al del sistema web ──
 async function consultarNit(){
   var nitEl = document.getElementById('cotNit');
@@ -115,12 +201,20 @@ function _construirItemsCotizacionReal(){
 // solo al hacer click en "Generar cotización real", no queda fijo en pantalla ──
 function abrirModalEnviarReal(){
   if (!CARRITO.length) { toast('El presupuesto está vacío', 'err'); return; }
+  var sesion = _cargarSesion();
+  if (!sesion || !sesion.token) {
+    toast('Inicia sesión para generar la cotización real', 'err');
+    _mostrarLogin();
+    return;
+  }
   var clienteEl = document.getElementById('cotCliente');
   if (!clienteEl.value.trim()) {
     toast('Ingresa el nombre del cliente — no podemos cotizarle a nadie', 'err');
     clienteEl.focus();
     return;
   }
+  var display = document.getElementById('merVendedorCorreoDisplay');
+  if (display) display.textContent = sesion.correo || '(sin correo configurado)';
   document.getElementById('modalEnviarReal').classList.remove('hidden');
 }
 function cerrarModalEnviarReal(){ document.getElementById('modalEnviarReal').classList.add('hidden'); }
@@ -173,12 +267,15 @@ function _registrarEnvioRealHistorial(data, armado, cliente, vendedorCorreo, cli
 async function generarCotizacionReal(){
   if (!CARRITO.length) { toast('El presupuesto está vacío', 'err'); return; }
 
-  var vendedorCorreo = (document.getElementById('merVendedorCorreo').value || '').trim();
-  if (!_emailValido(vendedorCorreo)) {
-    toast('Ingresa tu correo — ahí llega la cotización real', 'err');
-    document.getElementById('merVendedorCorreo').focus();
+  var sesion = _cargarSesion();
+  if (!sesion || !sesion.token) {
+    cerrarModalEnviarReal();
+    toast('Inicia sesión para generar la cotización real', 'err');
+    _mostrarLogin();
     return;
   }
+  var vendedorCorreo = sesion.correo || '';
+
   var clienteCorreoEl = document.getElementById('merClienteCorreo');
   var clienteCorreo = (clienteCorreoEl.value || '').trim();
   if (clienteCorreo && !_emailValido(clienteCorreo)) {
@@ -226,8 +323,6 @@ async function generarCotizacionReal(){
   var payload = {
     cliente: cliente,
     cliente_nit: clienteNit,
-    vendedor_nombre: '',
-    vendedor_correo: vendedorCorreo,
     cliente_correo: clienteCorreo,
     moneda: armado.moneda,
     con_iva: conIva,
@@ -242,10 +337,19 @@ async function generarCotizacionReal(){
   try {
     var r = await fetch(COT_API_BASE + '/api/ventas/cotizaciones-publicas', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Api-Key': COT_API_KEY },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Api-Key': COT_API_KEY,
+        'Authorization': 'Bearer ' + sesion.token,
+      },
       body: JSON.stringify(payload),
     });
     var data = await r.json().catch(function(){ return {}; });
+    if (r.status === 401) {
+      cerrarModalEnviarReal();
+      _cerrarSesion('Tu sesión expiró — inicia sesión de nuevo. El presupuesto no se perdió.');
+      return;
+    }
     if (!r.ok || !data.ok) {
       cerrarModalEnviarReal();
       _mostrarConfirmacionCotReal('error', { error: data.error || 'No se pudo generar la cotización real' });
@@ -304,3 +408,9 @@ refrescarHistorial = function(){
   }
   el.innerHTML = html;
 };
+
+// ── Arranque: si ya hay sesión guardada entra directo, si no muestra el login ──
+window.addEventListener('load', function(){
+  var sesion = _cargarSesion();
+  if (sesion && sesion.token) { _mostrarApp(sesion); } else { _mostrarLogin(); }
+});

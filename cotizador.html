@@ -80,6 +80,7 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 .cart-empty { text-align: center; color: #bbb; padding: 24px 16px; font-size: 13px; }
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; padding-top: max(env(safe-area-inset-top), 16px); }
 .modal.hidden { display: none; }
+#appShell.hidden { display: none; }
 .modal-box { background: white; border-radius: 12px; padding: 20px; width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto; }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .modal-title { font-size: 16px; font-weight: 700; color: #1a6b45; }
@@ -126,6 +127,18 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 </head>
 <body>
 
+<!-- LOGIN — bloquea el cotizador hasta iniciar sesión con el usuario real del sistema -->
+<div id="loginGate" class="modal" style="background:linear-gradient(135deg,#14432a,#1a6b45);">
+  <div class="modal-box" style="text-align:center;">
+    <div class="card-title" style="justify-content:center;font-size:20px;margin-bottom:18px;">🧮 Cotizador LGM</div>
+    <div class="field" style="text-align:left;"><label>Usuario</label><input type="text" id="loginUsername" placeholder="tu.usuario" autocapitalize="off" autocorrect="off" autocomplete="username"></div>
+    <div class="field" style="text-align:left;"><label>Contraseña</label><input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter'){event.preventDefault();iniciarSesionCotizador();}"></div>
+    <button class="btn btn-success btn-block" id="btnLogin" onclick="iniciarSesionCotizador()" style="margin-top:6px;">Ingresar</button>
+    <p style="margin-top:14px;font-size:12px;color:#888;">Usa tu usuario y contraseña del sistema LGM.</p>
+  </div>
+</div>
+
+<div id="appShell" class="hidden">
 <header>
   <button class="toggle-menu" onclick="toggleMenu()">☰</button>
   <h1>Cotizador LGM</h1>
@@ -138,6 +151,7 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
     <div class="nav-item" onclick="abrirSeccion('telas',this)">📋 Telas</div>
     <div class="nav-item" onclick="abrirSeccion('sacos',this)">🛍️ Sacos</div>
     <div class="nav-item" onclick="abrirSeccion('historial',this)">📝 Historial</div>
+    <div class="nav-item" onclick="cerrarSesionManual()" style="color:#d32f2f;">👤 <span id="navSesionNombre"></span> · Salir</div>
   </div>
 
   <div class="content">
@@ -316,6 +330,7 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
     </div>
   </div>
 </div>
+</div>
 
 <!-- MODAL TELA -->
 <div id="modalTela" class="modal hidden" onclick="if(event.target===this)cerrarModalTela()">
@@ -372,7 +387,7 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
       <div class="modal-title">✅ Generar cotización real</div>
       <span class="modal-close" onclick="cerrarModalEnviarReal()">×</span>
     </div>
-    <div class="field"><label>Tu correo (para recibir la cotización) *</label><input type="email" id="merVendedorCorreo" placeholder="tucorreo@lgm.com.gt"></div>
+    <div class="field"><label>Se enviará a</label><div id="merVendedorCorreoDisplay" style="padding:12px;background:#f4f4f5;border-radius:10px;font-weight:600;color:#1a6b45;"></div></div>
     <div class="field"><label>Correo del cliente (opcional, copia)</label><input type="email" id="merClienteCorreo" placeholder="cliente@empresa.com"></div>
     <div class="field"><label>Forma de entrega *</label><input type="text" id="merFormaEntrega" placeholder="Ej: Terrestre, Marítima, Aérea"></div>
     <div class="field"><label>Lugar de entrega *</label><input type="text" id="merLugarEntrega" placeholder="Dirección o bodega de entrega"></div>
