@@ -29,6 +29,10 @@ var COT_SESSION_KEY = 'cotSesion';
 var IDLE_MS = 20 * 60 * 1000;
 var _idleTimer = null;
 
+// Iconos del ojo (mostrar / ocultar contraseña) — SVG en vez de emoji.
+var _EYE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
+var _EYE_OFF_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.7 5.1A11 11 0 0 1 12 5c6.5 0 10 7 10 7a13.4 13.4 0 0 1-1.7 2.4M6.6 6.6A13.4 13.4 0 0 0 2 12s3.5 7 10 7a11 11 0 0 0 5.4-1.4"/><path d="M3 3l18 18M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+
 function _cargarSesion(){
   try {
     var raw = localStorage.getItem(COT_SESSION_KEY);
@@ -43,7 +47,7 @@ function _mostrarLogin(){
   var passEl = document.getElementById('loginPassword');
   var toggleBtn = document.getElementById('btnTogglePass');
   if (passEl) passEl.type = 'password';
-  if (toggleBtn) toggleBtn.textContent = '👁️';
+  if (toggleBtn) { toggleBtn.innerHTML = _EYE_SVG; toggleBtn.setAttribute('aria-label', 'Mostrar contraseña'); }
   _mostrarLoginForm();
 }
 
@@ -132,8 +136,8 @@ async function restablecerConCodigo(){
 function _toggleLoginPass(){
   var passEl = document.getElementById('loginPassword');
   var toggleBtn = document.getElementById('btnTogglePass');
-  if (passEl.type === 'password') { passEl.type = 'text'; toggleBtn.textContent = '🙈'; }
-  else { passEl.type = 'password'; toggleBtn.textContent = '👁️'; }
+  if (passEl.type === 'password') { passEl.type = 'text'; toggleBtn.innerHTML = _EYE_OFF_SVG; toggleBtn.setAttribute('aria-label', 'Ocultar contraseña'); }
+  else { passEl.type = 'password'; toggleBtn.innerHTML = _EYE_SVG; toggleBtn.setAttribute('aria-label', 'Mostrar contraseña'); }
 }
 function _mostrarApp(sesion){
   document.getElementById('loginGate').classList.add('hidden');
