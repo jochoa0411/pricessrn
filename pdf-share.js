@@ -242,7 +242,7 @@ async function syncPrecios(manual){
 
       showLocalNotification('Nueva Actualizacion de Precios', 'Los precios se han actualizado a la v' + data.version);
 
-      if(cambios.length > 0){ alert('Precios actualizados (v'+data.version+'):\n\n' + cambios.join('\n')); }
+      if(cambios.length > 0 && typeof _mostrarCambiosPrecios === 'function'){ _mostrarCambiosPrecios(data.version, cambios); }
       else { toast('Catalogo actualizado a v'+data.version); }
     } else if(manual){
       toast('Ya tenes la ultima version (v'+vLocal+')');

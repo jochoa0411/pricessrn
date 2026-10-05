@@ -538,9 +538,72 @@ function _construirItemsCotizacionReal(){
   return { moneda: moneda, items: items, total: total };
 }
 
+// ── Precios: aviso de actualización + ítems del presupuesto armados con precios anteriores ──
+function cerrarModalPrecios(){ document.getElementById('modalPrecios').classList.add('hidden'); }
+
+// Precio unitario que el catálogo vigente daría hoy a un ítem del presupuesto (null si no aplica:
+// precio manual, o el producto ya no está en la lista).
+function _precioVigenteItem(item){
+  if (item.precioManual) return null;
+  var r = (item.recargo || 0) / 100;
+  if (item.tipo === 'tela') {
+    var t = TELAS.find(function(x){ return x.id === item.telaId; });
+    return t ? (item.modo === 'master' ? t.pm : t.pc) * (1 + r) : null;
+  }
+  var s = SACOS.find(function(x){ return x.id === item.sacoId; });
+  return s ? s['p' + (item.tier || 'A')] * (1 + r) : null;
+}
+function _itemsPreciosAnteriores(){
+  return CARRITO.filter(function(i){
+    var v = _precioVigenteItem(i);
+    var actual = i.tipo === 'tela' ? i.p : i.precioUnit;
+    return v !== null && Math.abs(v - actual) > 1e-9;
+  });
+}
+function _actualizarPreciosCarrito(){
+  var n = 0;
+  CARRITO.forEach(function(i){
+    var v = _precioVigenteItem(i);
+    if (v === null) return;
+    if (i.tipo === 'tela') {
+      if (Math.abs(v - i.p) < 1e-9) return;
+      i.p = v; i.tu = i.ar * v; i.totalQ = i.tc ? i.tu * i.tc : null; n++;
+    } else {
+      if (Math.abs(v - i.precioUnit) < 1e-9) return;
+      i.precioUnit = v; i.totalQ = i.cantidad * v; n++;
+    }
+  });
+  saveCarrito(); renderCarrito();
+  return n;
+}
+function _actualizarPreciosYRevisar(){
+  var n = _actualizarPreciosCarrito();
+  toast(n + (n === 1 ? ' ítem actualizado' : ' ítems actualizados') + ' a los precios vigentes');
+  if (!document.getElementById('modalEnviarReal').classList.contains('hidden')) _renderResumenEnvio();
+  cerrarModalPrecios();
+}
+
+// Reemplaza al alert() nativo: lista legible de lo que cambió y, si el presupuesto tiene ítems
+// calculados con precios anteriores, ofrece actualizarlos.
+function _mostrarCambiosPrecios(version, cambios){
+  document.getElementById('mpTitle').textContent = 'Precios actualizados · v' + version;
+  var viejos = _itemsPreciosAnteriores();
+  var html = '<p style="margin-bottom:8px">Se actualizó la lista de precios. Cambios:</p><div class="mp-lista">'
+    + cambios.map(function(c){ return '<div class="mp-row">' + _esc(c.replace(' > ', ' → ')) + '</div>'; }).join('') + '</div>';
+  if (viejos.length) {
+    html += '<div class="res-warn" style="margin-top:10px"><strong>' + _ic('warn') + ' ' + viejos.length + (viejos.length === 1 ? ' ítem de tu presupuesto' : ' ítems de tu presupuesto')
+      + ' fue calculado con precios anteriores.</strong><br>Puedes actualizarlos ahora o conservarlos tal como están.</div>';
+  }
+  document.getElementById('mpBody').innerHTML = html;
+  document.getElementById('mpBtns').innerHTML = viejos.length
+    ? '<button class="btn btn-ghost btn-block" onclick="cerrarModalPrecios()">Conservar</button><button class="btn btn-success btn-block" onclick="_actualizarPreciosYRevisar()">Actualizar presupuesto</button>'
+    : '<button class="btn btn-success btn-block" onclick="cerrarModalPrecios()">Entendido</button>';
+  document.getElementById('modalPrecios').classList.remove('hidden');
+}
+
 // ── Modal de datos para la cotización real (correo, entrega, pago) — se abre
 // solo al hacer click en "Generar cotización real", no queda fijo en pantalla ──
-var _ignorarPendiente = false, _ignorarViejos = false;
+var _ignorarPendiente = false, _ignorarViejos = false, _ignorarPreciosAnt = false;
 var _HORAS_VIEJO = 12;
 
 // Cálculos que el vendedor tecleó pero NO agregó al presupuesto. Es el caso que causó
@@ -578,7 +641,8 @@ function _estadoEnvio(){
   var armado = _construirItemsCotizacionReal();
   var pend = _ignorarPendiente ? [] : _calculosPendientes();
   var viejos = _ignorarViejos ? [] : CARRITO.filter(function(i){ return _edadItemMs(i) > _HORAS_VIEJO * 3600000; });
-  return { armado: armado, pend: pend, viejos: viejos, bloqueo: !!(armado.error || pend.length || viejos.length) };
+  var preciosAnt = _ignorarPreciosAnt ? [] : _itemsPreciosAnteriores();
+  return { armado: armado, pend: pend, viejos: viejos, preciosAnt: preciosAnt, bloqueo: !!(armado.error || pend.length || viejos.length || preciosAnt.length) };
 }
 
 function _renderResumenEnvio(){
@@ -602,6 +666,12 @@ function _renderResumenEnvio(){
       + 'Pueden ser de una cotización anterior. Confírmalo antes de enviar.'
       + '<div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn btn-ghost btn-sm" onclick="_ignorarViejos=true;_renderResumenEnvio()">Sí, son de esta cotización</button>'
       + '<button type="button" class="btn btn-danger btn-sm" onclick="_quitarViejos()">Quitar los viejos</button></div></div>';
+  }
+  if (est.preciosAnt.length) {
+    html += '<div class="res-warn"><strong>' + _ic('warn') + ' ' + est.preciosAnt.length + (est.preciosAnt.length === 1 ? ' ítem usa' : ' ítems usan') + ' precios anteriores a la lista vigente.</strong><br>'
+      + 'Actualízalos para cotizar con la lista de hoy, o confirma que es intencional.'
+      + '<div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn btn-success btn-sm" onclick="_actualizarPreciosYRevisar()">' + _ic('refresh') + ' Actualizar a precios vigentes</button>'
+      + '<button type="button" class="btn btn-ghost btn-sm" onclick="_ignorarPreciosAnt=true;_renderResumenEnvio()">Conservar precios anteriores</button></div></div>';
   }
   if (est.armado.error) {
     html += '<div class="res-warn err"><strong>No se puede enviar todavía:</strong><br>' + _esc(est.armado.error) + '</div>';
@@ -676,7 +746,7 @@ function abrirModalEnviarReal(){
   }
   var display = document.getElementById('merVendedorCorreoDisplay');
   if (display) display.textContent = sesion.correo || '(sin correo configurado)';
-  _ignorarPendiente = false; _ignorarViejos = false;
+  _ignorarPendiente = false; _ignorarViejos = false; _ignorarPreciosAnt = false;
   _prellenarModalEnvio();
   _renderResumenEnvio();
   document.getElementById('modalEnviarReal').classList.remove('hidden');
@@ -772,6 +842,7 @@ async function generarCotizacionReal(){
     cliente: cliente,
     cliente_nit: clienteNit,
     cod_cliente: (_clienteSel && _clienteSel.nombre === cliente && _clienteSel.codigo) || undefined,
+    precios_version: parseInt(localStorage.getItem('PRECIOS_VERSION') || '0', 10) || undefined,
     cliente_correo: clienteCorreo,
     moneda: armado.moneda,
     con_iva: conIva,
@@ -864,7 +935,7 @@ function renderMisCotizaciones(){
     var editada = new Date(c.updated_at) - new Date(c.created_at) > 60000;
     return '<div class="item-card" style="flex-wrap:wrap">'
       + '<div class="item-info"><strong>' + _esc(c.no_cotizacion) + ' — ' + _esc(c.cliente) + '</strong>'
-      + '<small>' + _fechaCorta(c.created_at) + ' · ' + c.total_items + ' ítem(s)' + (editada ? ' · editada ' + _fechaCorta(c.updated_at) : '') + '</small>'
+      + '<small>' + _fechaCorta(c.created_at) + ' · ' + c.total_items + ' ítem(s)' + (c.precios_version ? ' · precios v' + c.precios_version : '') + (editada ? ' · editada ' + _fechaCorta(c.updated_at) : '') + '</small>'
       + '<div style="margin-top:4px"><span class="pill ' + pill[1] + '">' + _esc(pill[0]) + '</span>' + (c.vendida ? ' <span class="pill ok">Vendida</span>' : '') + '</div></div>'
       + '<div style="text-align:right"><strong style="color:#1a6b45;font-size:15px">' + _fmtMoneda(c.total, c.moneda) + '</strong></div>'
       + '<div style="width:100%;display:flex;gap:6px;justify-content:flex-end">'

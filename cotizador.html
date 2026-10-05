@@ -217,6 +217,9 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 .cart-item-body { min-width: 110px; }
 .cart-item .btn-sm { padding: 6px 9px; min-height: 34px; flex-shrink: 0; }
 .cart-item .ic svg { width: 16px; height: 16px; }
+.mp-lista { max-height:42vh; overflow-y:auto; border:1px solid #e5e7eb; border-radius:8px; }
+.mp-row { padding:8px 10px; border-bottom:1px solid #eee; font-size:12px; }
+.mp-row:last-child { border-bottom:none; }
 </style>
 </head>
 <body>
@@ -566,6 +569,20 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
     <div class="field"><label>Se enviará a</label><div id="mreVendedor" style="padding:12px;background:#f4f4f5;border-radius:10px;font-weight:600;color:#1a6b45;"></div></div>
     <div class="field"><label>Copia al cliente (opcional)</label><input type="email" id="mreClienteCorreo" placeholder="cliente@empresa.com"></div>
     <div class="modal-btns"><button class="btn btn-success btn-block" id="btnMreEnviar" onclick="confirmarReenvio()"><span class="ic" data-ic="mail"></span> Reenviar</button></div>
+  </div>
+</div>
+
+<!-- AVISO DE PRECIOS ACTUALIZADOS -->
+<div id="modalPrecios" class="modal hidden" onclick="if(event.target===this)cerrarModalPrecios()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div id="mpTitle" class="modal-title">Precios actualizados</div>
+      <span class="modal-close" onclick="cerrarModalPrecios()">×</span>
+    </div>
+    <div id="mpBody" style="font-size:13px;line-height:1.5"></div>
+    <div class="modal-btns" id="mpBtns">
+      <button class="btn btn-success btn-block" onclick="cerrarModalPrecios()">Entendido</button>
+    </div>
   </div>
 </div>
 
@@ -1137,5 +1154,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261009"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261010"></script></body>
 </html>
