@@ -190,6 +190,21 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 .med-grid input { width:100%; }
 .med-foot { display:flex; justify-content:space-between; align-items:center; margin-top:8px; gap:8px; }
 .med-lt { font-weight:700; font-size:14px; color:#1a6b45; }
+
+.ic { display:inline-flex; vertical-align:-3px; }
+.ic svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.ic.f svg { fill:currentColor; stroke:none; }
+.modal.sheet { align-items:flex-end; padding:0; }
+.modal.sheet .modal-box { border-radius:16px 16px 0 0; max-width:520px; padding-bottom:max(env(safe-area-inset-bottom),16px); }
+.act-item { display:flex; align-items:center; gap:14px; width:100%; min-height:50px; padding:0 6px; background:none; border:none; border-bottom:1px solid #eee; font-size:16px; font-weight:600; color:#222; cursor:pointer; text-align:left; }
+.act-item .ic svg { width:20px; height:20px; }
+.act-item:active { background:#f0f0f0; }
+.act-item.danger { color:#d32f2f; }
+.act-sep { height:8px; }
+.kebab-m { width:44px; min-height:40px; background:#f0f0f0; color:#444; border:none; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
+.kebab-m .ic svg { width:20px; height:20px; }
+.cli-pie { padding:8px 12px; font-size:11px; color:#666; display:flex; justify-content:space-between; align-items:center; gap:8px; background:#f7f7f7; position:sticky; bottom:0; }
+.cli-pie button { background:none; border:none; color:#1a6b45; font-weight:700; font-size:12px; cursor:pointer; padding:6px; }
 </style>
 </head>
 <body>
@@ -470,7 +485,7 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
     <!-- ===== HISTORIAL ===== -->
     <div id="historial" class="seccion">
       <div class="card">
-        <div class="card-title">Mis cotizaciones <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="cargarMisCotizaciones(true)">🔄 Actualizar</button></div>
+        <div class="card-title">Mis cotizaciones <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="cargarMisCotizaciones(true)"><span class="ic" data-ic="refresh"></span> Actualizar</button></div>
         <input type="search" id="misCotFiltro" placeholder="Buscar por cliente o folio…" oninput="renderMisCotizaciones()" style="margin-bottom:6px">
         <div id="misCotList"><p class="muted">Cargando…</p></div>
       </div>
@@ -566,7 +581,7 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
     <div class="field"><label>NIT</label><input type="text" id="medNit"></div>
     <div class="field"><label>Correo del cliente (copia al reenviar)</label><input type="email" id="medClienteCorreo"></div>
     <div class="field"><label>Ítems</label><div id="medItems"></div>
-      <button type="button" class="btn btn-ghost btn-sm" id="medAddLinea" onclick="medAgregarLinea()" style="margin-top:6px">➕ Agregar línea</button>
+      <button type="button" class="btn btn-ghost btn-sm" id="medAddLinea" onclick="medAgregarLinea()" style="margin-top:6px"><span class="ic" data-ic="plus"></span> Agregar línea</button>
     </div>
     <label class="chk"><input type="checkbox" id="medConIva" onchange="medRecalcular()"> Los precios incluyen IVA 12%</label>
     <div class="total-box" style="margin-top:8px"><strong>Total: <span id="medTotal">—</span></strong></div>
@@ -576,10 +591,21 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
     <div class="field"><label>Forma de pago</label><input type="text" id="medFormaPago"></div>
     <div class="field"><label>Comentarios adicionales</label><textarea id="medComentarios" rows="2" style="width:100%;padding:12px;border:1px solid #d1d1d6;border-radius:10px;font-size:16px;font-family:inherit;resize:vertical"></textarea></div>
     <div class="modal-btns" style="flex-direction:column">
-      <button class="btn btn-success btn-block" id="btnMedGuardarEnviar" onclick="guardarEdicion(true)">💾 Guardar y reenviar</button>
+      <button class="btn btn-success btn-block" id="btnMedGuardarEnviar" onclick="guardarEdicion(true)"><span class="ic" data-ic="mail"></span> Guardar y reenviar</button>
       <button class="btn btn-primary btn-block" id="btnMedGuardar" onclick="guardarEdicion(false)">Guardar sin enviar</button>
-      <button class="btn btn-success btn-block hidden" id="btnMedReenviar" onclick="reenviarDesdeEditor()">📧 Reenviar tal como está</button>
+      <button class="btn btn-success btn-block hidden" id="btnMedReenviar" onclick="reenviarDesdeEditor()"><span class="ic" data-ic="mail"></span> Reenviar tal como está</button>
     </div>
+  </div>
+</div>
+
+<!-- HOJA DE ACCIONES (kebab) DE UNA COTIZACION -->
+<div id="modalAcciones" class="modal sheet hidden" onclick="if(event.target===this)cerrarAcciones()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="accTitle">Acciones</div>
+      <span class="modal-close" onclick="cerrarAcciones()">×</span>
+    </div>
+    <div id="accList"></div>
   </div>
 </div>
 
@@ -587,12 +613,12 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 <div id="modalReenviar" class="modal hidden" onclick="if(event.target===this)cerrarModalReenviar()">
   <div class="modal-box" onclick="event.stopPropagation()">
     <div class="modal-header">
-      <div class="modal-title" id="mreTitle">Reenviar cotización</div>
+      <div class="modal-title" id="mreTitle">Enviar por correo</div>
       <span class="modal-close" onclick="cerrarModalReenviar()">×</span>
     </div>
     <div class="field"><label>Se enviará a</label><div id="mreVendedor" style="padding:12px;background:#f4f4f5;border-radius:10px;font-weight:600;color:#1a6b45;"></div></div>
     <div class="field"><label>Copia al cliente (opcional)</label><input type="email" id="mreClienteCorreo" placeholder="cliente@empresa.com"></div>
-    <div class="modal-btns"><button class="btn btn-success btn-block" id="btnMreEnviar" onclick="confirmarReenvio()">📧 Reenviar</button></div>
+    <div class="modal-btns"><button class="btn btn-success btn-block" id="btnMreEnviar" onclick="confirmarReenvio()"><span class="ic" data-ic="mail"></span> Reenviar</button></div>
   </div>
 </div>
 
@@ -1304,5 +1330,5 @@ function eliminarSaco(id){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261005"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261006"></script></body>
 </html>

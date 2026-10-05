@@ -146,6 +146,8 @@ function _mostrarApp(sesion){
   if (navNombre) navNombre.textContent = sesion.nombre || '';
   _reiniciarVigilanciaInactividad();
   _renderRecientes();
+  _cliCargarLocal();
+  sincronizarClientes(false);
 }
 
 function _cerrarSesion(mensaje){
@@ -202,6 +204,35 @@ async function iniciarSesionCotizador(){
     btn.textContent = textoOriginal;
   }
 }
+
+// ── Iconos SVG (trazo, sin emojis) ─────────────────────────────────────────
+var _IC = {
+  edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+  eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
+  print: '<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>',
+  mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/>',
+  copy: '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  sold: '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
+  trash: '<path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',
+  more: '<circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/>',
+  refresh: '<path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  warn: '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+};
+function _ic(name, size){
+  var st = size ? ' style="width:' + size + 'px;height:' + size + 'px"' : '';
+  return '<span class="ic' + (name === 'more' ? ' f' : '') + '"' + st + '><svg viewBox="0 0 24 24"' + (size ? ' width="' + size + '" height="' + size + '"' : '') + '>' + (_IC[name] || '') + '</svg></span>';
+}
+function _hidratarIconos(){
+  document.querySelectorAll('[data-ic]').forEach(function(el){
+    if (el.dataset.done) return;
+    el.outerHTML = _ic(el.dataset.ic);
+  });
+}
+document.addEventListener('DOMContentLoaded', _hidratarIconos);
 
 // ── Utilidades ─────────────────────────────────────────────────────────────
 function _esc(v){
@@ -265,14 +296,13 @@ function _recordarTerminos(t){
 // ── Cliente: recientes + búsqueda en los clientes de la empresa del vendedor ──
 var _clienteSel = null;   // { codigo, nombre, nit, correo } del cliente elegido de la lista
 var _sugItems = [];
-var _cliTimer = null, _cliSeq = 0;
 
 function _renderRecientes(){
   var box = document.getElementById('cliRecientes');
   if (!box) return;
   var rec = _lsGet('cotClientesRecientes', []).slice(0, 5);
   box.innerHTML = rec.length
-    ? rec.map(function(c, i){ return '<button type="button" class="chip" onclick="elegirReciente(' + i + ')">🕘 ' + _esc(c.nombre) + '</button>'; }).join('')
+    ? rec.map(function(c, i){ return '<button type="button" class="chip" onclick="elegirReciente(' + i + ')">' + _ic('clock', 13) + ' ' + _esc(c.nombre) + '</button>'; }).join('')
     : '';
 }
 function elegirReciente(i){
@@ -284,28 +314,87 @@ function _aplicarCliente(c){
   document.getElementById('cotCliente').value = c.nombre;
   document.getElementById('cotNit').value = c.nit || '';
   document.getElementById('cliSug').classList.add('hidden');
-  toast('✅ Cliente: ' + c.nombre);
+  toast('Cliente: ' + c.nombre);
 }
 
-function _pintarSug(rec, srv, estado){
+// ── Catálogo de clientes en caché local ──────────────────────────────────────
+// Se descarga completo UNA vez (y se refresca como máximo cada 12 h, o a mano) y la
+// búsqueda corre en el teléfono: cero consultas por tecla. El servidor responde
+// {unchanged:true} si el hash no cambió, así que refrescar casi no cuesta datos.
+var CLI_TTL_MS = 12 * 3600 * 1000;
+var _cliCache = null;      // { ts, hash, lista: [[codigo, nombre, nit, email], ...] }
+var _cliIdx = [];          // textos normalizados, paralelos a _cliCache.lista
+var _cliSyncing = false;
+
+function _norm(t){ return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+function _cliIndexar(){
+  _cliIdx = _cliCache ? _cliCache.lista.map(function(c){ return _norm(c[1] + ' ' + c[2] + ' ' + c[0]); }) : [];
+}
+function _cliCargarLocal(){
+  _cliCache = _lsGet('cotClientesCache', null);
+  if (_cliCache && !Array.isArray(_cliCache.lista)) _cliCache = null;
+  _cliIndexar();
+}
+async function sincronizarClientes(forzar){
+  if (_cliSyncing) return;
+  if (!_cliCache) _cliCargarLocal();
+  if (!forzar && _cliCache && Date.now() - _cliCache.ts < CLI_TTL_MS) return;
+  _cliSyncing = true;
+  try {
+    var r = await _api('/clientes/todos' + (_cliCache && _cliCache.hash ? '?hash=' + _cliCache.hash : ''));
+    if (!r.ok) { if (forzar) toast(r.data.error || 'No se pudo actualizar los clientes', 'err'); return; }
+    if (r.data.unchanged && _cliCache) { _cliCache.ts = Date.now(); }
+    else { _cliCache = { ts: Date.now(), hash: r.data.hash, lista: r.data.clientes || [] }; _cliIndexar(); }
+    _lsSet('cotClientesCache', _cliCache);
+    if (forzar) toast('Clientes actualizados (' + _cliCache.lista.length + ')');
+  } catch (e) {
+    if (forzar && !e.handled) toast('Sin conexión — se usa la lista guardada en el teléfono', 'err');
+  } finally {
+    _cliSyncing = false;
+    var el = document.getElementById('cotCliente');
+    if (el && document.activeElement === el) buscarClientes();
+  }
+}
+function forzarSyncClientes(ev){
+  if (ev) ev.stopPropagation();
+  sincronizarClientes(true);
+}
+
+function _buscarLocal(q){
+  var toks = _norm(q).split(/\s+/).filter(Boolean);
+  if (!toks.length || !_cliCache) return [];
+  var ini = [], resto = [];
+  for (var i = 0; i < _cliIdx.length && ini.length + resto.length < 120; i++) {
+    var h = _cliIdx[i];
+    if (toks.every(function(t){ return h.indexOf(t) >= 0; })) (h.indexOf(toks[0]) === 0 ? ini : resto).push(_cliCache.lista[i]);
+  }
+  return ini.concat(resto).slice(0, 15);
+}
+function _haceCuantoCorto(ts){
+  var m = Math.floor((Date.now() - ts) / 60000);
+  if (m < 2) return 'ahora'; if (m < 60) return m + ' min'; var h = Math.floor(m / 60);
+  return h < 24 ? h + ' h' : Math.floor(h / 24) + ' d';
+}
+
+function _pintarSug(rec, srv){
   var box = document.getElementById('cliSug');
   var vistos = {};
   _sugItems = [];
   rec.forEach(function(c){ vistos[c.nombre.toLowerCase()] = 1; _sugItems.push({ c: c, rec: true }); });
   (srv || []).forEach(function(c){
-    if (vistos[String(c.nombre).toLowerCase()]) return;
-    _sugItems.push({ c: { codigo: c.codigo, nombre: c.nombre, nit: c.nit || '', correo: c.email || '' }, rec: false });
+    if (vistos[String(c[1]).toLowerCase()]) return;
+    _sugItems.push({ c: { codigo: c[0] || null, nombre: c[1], nit: c[2] || '', correo: c[3] || '' }, rec: false });
   });
   var html = _sugItems.map(function(it, i){
     var c = it.c;
     return '<div class="sug-item" onclick="elegirSug(' + i + ')"><span class="sug-tag' + (it.rec ? ' rec' : '') + '">' + (it.rec ? 'Reciente' : 'Cliente') + '</span>'
       + '<strong>' + _esc(c.nombre) + '</strong><small>' + (c.nit ? 'NIT ' + _esc(c.nit) : 'Sin NIT') + (c.correo ? ' · ' + _esc(c.correo) : '') + '</small></div>';
   }).join('');
-  if (estado === 'cargando') html += '<div class="sug-vacio">Buscando en tus clientes…</div>';
-  else if (estado === 'error') html += '<div class="sug-vacio">No se pudo buscar ahora — puedes escribir el nombre a mano.</div>';
-  else if (!_sugItems.length) html += '<div class="sug-vacio">Sin coincidencias — se usará el nombre que escribas.</div>';
+  if (!_sugItems.length) html += '<div class="sug-vacio">' + (_cliCache ? 'Sin coincidencias — se usará el nombre que escribas.' : (_cliSyncing ? 'Descargando catálogo de clientes…' : 'Catálogo aún no descargado. Toca Actualizar con internet.')) + '</div>';
+  html += '<div class="cli-pie"><span>' + (_cliCache ? _cliCache.lista.length + ' clientes guardados · act. hace ' + _haceCuantoCorto(_cliCache.ts) : 'Sin catálogo local') + '</span>'
+    + '<button type="button" onclick="forzarSyncClientes(event)">' + _ic('refresh', 14) + ' ' + (_cliSyncing ? 'Actualizando…' : 'Actualizar') + '</button></div>';
   box.innerHTML = html;
-  box.classList.toggle('hidden', !html);
+  box.classList.remove('hidden');
 }
 function elegirSug(i){ if (_sugItems[i]) _aplicarCliente(_sugItems[i].c); }
 
@@ -313,26 +402,15 @@ function buscarClientes(){
   var el = document.getElementById('cotCliente');
   var q = el.value.trim();
   if (_clienteSel && q !== _clienteSel.nombre) _clienteSel = null;
-  clearTimeout(_cliTimer);
+  if (!_cliCache) _cliCargarLocal();
   var rec = _lsGet('cotClientesRecientes', []).filter(function(x){
-    return !q || (x.nombre + ' ' + x.nit).toLowerCase().indexOf(q.toLowerCase()) >= 0;
+    return !q || _norm(x.nombre + ' ' + x.nit).indexOf(_norm(q)) >= 0;
   }).slice(0, 4);
   if (q.length < 2) {
-    if (!q && rec.length) _pintarSug(rec, [], 'ok'); else document.getElementById('cliSug').classList.add('hidden');
+    if (!q && rec.length) _pintarSug(rec, []); else document.getElementById('cliSug').classList.add('hidden');
     return;
   }
-  _pintarSug(rec, [], 'cargando');
-  _cliTimer = setTimeout(async function(){
-    var seq = ++_cliSeq;
-    try {
-      var r = await _api('/clientes?q=' + encodeURIComponent(q));
-      if (seq !== _cliSeq) return;
-      _pintarSug(rec, r.ok ? r.data : [], r.ok ? 'ok' : 'error');
-    } catch (e) {
-      if (seq !== _cliSeq || e.handled) return;
-      _pintarSug(rec, [], 'error');
-    }
-  }, 250);
+  _pintarSug(rec, _buscarLocal(q));
 }
 document.addEventListener('click', function(ev){
   if (!ev.target.closest || ev.target.closest('#cotCliente') || ev.target.closest('#cliSug')) return;
@@ -488,13 +566,13 @@ function _renderResumenEnvio(){
     + '<div style="font-size:13px;margin-bottom:6px"><strong>Cliente:</strong> ' + _esc(cliente) + (nit ? ' · NIT ' + _esc(nit) : '') + '</div>';
 
   est.pend.forEach(function(p){
-    html += '<div class="res-warn"><strong>⚠️ Tienes un cálculo SIN agregar al presupuesto:</strong><br>' + _esc(p.desc)
+    html += '<div class="res-warn"><strong>' + _ic('warn') + ' Tienes un cálculo SIN agregar al presupuesto:</strong><br>' + _esc(p.desc)
       + '<br>Lo que se enviará es solo lo que aparece en esta lista.'
-      + '<div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn btn-success btn-sm" onclick="_resolverPendiente(\'' + p.tipo + '\')">➕ Agregarlo al presupuesto</button>'
+      + '<div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn btn-success btn-sm" onclick="_resolverPendiente(\'' + p.tipo + '\')">' + _ic('plus') + ' Agregarlo al presupuesto</button>'
       + '<button type="button" class="btn btn-ghost btn-sm" onclick="_ignorarPendiente=true;_renderResumenEnvio()">Enviar sin ese cálculo</button></div></div>';
   });
   if (est.viejos.length) {
-    html += '<div class="res-warn"><strong>⚠️ ' + est.viejos.length + (est.viejos.length === 1 ? ' ítem lleva' : ' ítems llevan') + ' más de ' + _HORAS_VIEJO + ' h en el presupuesto.</strong><br>'
+    html += '<div class="res-warn"><strong>' + _ic('warn') + ' ' + est.viejos.length + (est.viejos.length === 1 ? ' ítem lleva' : ' ítems llevan') + ' más de ' + _HORAS_VIEJO + ' h en el presupuesto.</strong><br>'
       + 'Pueden ser de una cotización anterior. Confírmalo antes de enviar.'
       + '<div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn btn-ghost btn-sm" onclick="_ignorarViejos=true;_renderResumenEnvio()">Sí, son de esta cotización</button>'
       + '<button type="button" class="btn btn-danger btn-sm" onclick="_quitarViejos()">Quitar los viejos</button></div></div>';
@@ -510,7 +588,7 @@ function _renderResumenEnvio(){
         + '<small>' + Number(it.cantidad).toLocaleString('en-US', { maximumFractionDigits: 2 }) + ' ' + _esc(it.unidad) + ' × ' + _fmtMoneda(it.precio_unitario, est.armado.moneda)
         + (viejo ? ' · <span class="stale">agregado ' + _haceCuanto(edad) + '</span>' : '') + '</small></div>'
         + '<div class="rt">' + _fmtMoneda(it.cantidad * it.precio_unitario, est.armado.moneda) + '</div>'
-        + (ci ? '<button type="button" class="btn btn-danger btn-sm" style="align-self:center" onclick="_quitarDesdeResumen(' + ci.uid + ')">✕</button>' : '') + '</div>';
+        + (ci ? '<button type="button" class="btn btn-danger btn-sm" style="align-self:center" onclick="_quitarDesdeResumen(' + ci.uid + ')" aria-label="Quitar">' + _ic('x') + '</button>' : '') + '</div>';
     });
     html += '<div class="res-total"><span>TOTAL ' + (!document.getElementById('cotDesglosarIVA').checked ? '(IVA incluido)' : '(sin IVA)') + '</span><span>' + _fmtMoneda(est.armado.total, est.armado.moneda) + '</span></div>';
   }
@@ -587,19 +665,19 @@ function _mostrarConfirmacionCotReal(estado, info){
   var bodyEl  = document.getElementById('mcrBody');
 
   if (estado === 'ok'){
-    titleEl.textContent = info.titulo || '✅ Cotización enviada';
+    titleEl.textContent = info.titulo || 'Cotización enviada';
     bodyEl.innerHTML =
         '<p><strong>Folio:</strong> ' + info.no_cotizacion + '</p>'
       + '<p><strong>Enviada a:</strong> ' + info.vendedorCorreo + '</p>'
       + (info.clienteCorreo ? '<p><strong>Copia a:</strong> ' + info.clienteCorreo + '</p>' : '')
       + '<p style="margin-top:10px;padding:10px;background:#f0f9f5;border-radius:6px;color:#1a6b45;font-weight:700;">Revisa tu correo — debería llegar en segundos. Queda en Historial › Mis cotizaciones, donde puedes editarla o reenviarla.</p>';
   } else if (estado === 'creada_sin_correo'){
-    titleEl.textContent = '⚠️ Cotización creada, correo falló';
+    titleEl.textContent = 'Cotización guardada, correo falló';
     bodyEl.innerHTML =
         '<p><strong>Folio:</strong> ' + info.no_cotizacion + ' (ya quedó guardada en el sistema)</p>'
       + '<p style="margin-top:8px;padding:10px;background:#fef9ec;border-radius:6px;color:#92400e;">' + (info.aviso || 'No se pudo enviar el correo automáticamente. Avisa a soporte con este folio para que te la reenvíen.') + '</p>';
   } else {
-    titleEl.textContent = '❌ No se generó la cotización';
+    titleEl.textContent = 'No se generó la cotización';
     bodyEl.innerHTML = '<p style="color:#d32f2f">' + (info.error || 'Error desconocido') + '</p>'
       + '<p style="margin-top:8px;font-size:12px;color:#888;">El presupuesto no se perdió — corrige e intenta de nuevo.</p>';
   }
@@ -760,12 +838,93 @@ function renderMisCotizaciones(){
     return '<div class="item-card" style="flex-wrap:wrap">'
       + '<div class="item-info"><strong>' + _esc(c.no_cotizacion) + ' — ' + _esc(c.cliente) + '</strong>'
       + '<small>' + _fechaCorta(c.created_at) + ' · ' + c.total_items + ' ítem(s)' + (editada ? ' · editada ' + _fechaCorta(c.updated_at) : '') + '</small>'
-      + '<div style="margin-top:4px"><span class="pill ' + pill[1] + '">' + _esc(pill[0]) + '</span></div></div>'
+      + '<div style="margin-top:4px"><span class="pill ' + pill[1] + '">' + _esc(pill[0]) + '</span>' + (c.vendida ? ' <span class="pill ok">Vendida</span>' : '') + '</div></div>'
       + '<div style="text-align:right"><strong style="color:#1a6b45;font-size:15px">' + _fmtMoneda(c.total, c.moneda) + '</strong></div>'
       + '<div style="width:100%;display:flex;gap:6px;justify-content:flex-end">'
-      + '<button class="btn btn-warning btn-sm" onclick="abrirEditar(' + c.id + ')">' + (c.editable ? '✏️ Editar' : '👁 Ver') + '</button>'
-      + '<button class="btn btn-success btn-sm" onclick="abrirReenviar(' + c.id + ')">📧 Reenviar</button></div></div>';
+      + '<button class="btn btn-warning btn-sm" onclick="abrirEditar(' + c.id + ')">' + _ic(c.editable ? 'edit' : 'eye') + ' ' + (c.editable ? 'Editar' : 'Ver') + '</button>'
+      + '<button class="kebab-m" onclick="abrirAcciones(' + c.id + ')" aria-label="Más acciones">' + _ic('more') + '</button></div></div>';
   }).join('');
+}
+
+// ── Menú ⋮ (mismas acciones que el kebab de Cotizaciones en el ERP) ──
+function _cotLocal(id){ return (_misCot || []).filter(function(x){ return x.id === id; })[0]; }
+function abrirAcciones(id){
+  var c = _cotLocal(id);
+  if (!c) return;
+  var it = function(ic, txt, fn, cls){ return '<button class="act-item' + (cls ? ' ' + cls : '') + '" onclick="cerrarAcciones();' + fn + '">' + _ic(ic) + '<span>' + txt + '</span></button>'; };
+  var h = it(c.editable ? 'edit' : 'eye', c.editable ? 'Editar' : 'Ver', 'abrirEditar(' + id + ')')
+    + it('print', 'Imprimir', "accionPdf(" + id + ",'imprimir')")
+    + it('download', 'Descargar PDF', "accionPdf(" + id + ",'descargar')")
+    + it('mail', 'Enviar por correo', 'abrirReenviar(' + id + ')');
+  if (c.puede_clonar) h += it('copy', 'Clonar', 'clonarCot(' + id + ')');
+  if (c.puede_editar_estado || c.puede_eliminar) h += '<div class="act-sep"></div>';
+  if (c.puede_editar_estado) h += it('sold', c.vendida ? 'Desmarcar vendida' : 'Marcar como vendida', 'marcarVendida(' + id + ')');
+  if (c.puede_eliminar) h += it('trash', 'Eliminar', 'eliminarCotizacion(' + id + ')', 'danger');
+  document.getElementById('accTitle').textContent = c.no_cotizacion + ' — ' + c.cliente;
+  document.getElementById('accList').innerHTML = h;
+  document.getElementById('modalAcciones').classList.remove('hidden');
+}
+function cerrarAcciones(){ document.getElementById('modalAcciones').classList.add('hidden'); }
+
+async function accionPdf(id, modo){
+  // En iOS una pestaña abierta después de un await la bloquea el navegador: se abre antes.
+  var w = modo === 'imprimir' ? window.open('', '_blank') : null;
+  toast('Generando PDF…');
+  try {
+    var sesion = _cargarSesion();
+    if (!sesion || !sesion.token) { if (w) w.close(); _mostrarLogin(); return; }
+    var r = await fetch(COT_API_BASE + '/api/ventas/cotizaciones-publicas/mis/' + id + '/pdf', {
+      headers: { 'X-Api-Key': COT_API_KEY, 'Authorization': 'Bearer ' + sesion.token },
+    });
+    if (r.status === 401) { if (w) w.close(); _cerrarSesion('Tu sesión expiró — inicia sesión de nuevo.'); return; }
+    if (!r.ok) { if (w) w.close(); var d = await r.json().catch(function(){ return {}; }); toast(d.error || 'No se pudo generar el PDF', 'err'); return; }
+    var blob = await r.blob();
+    var url = URL.createObjectURL(blob);
+    if (modo === 'imprimir') { if (w) w.location.href = url; else window.open(url, '_blank'); }
+    else {
+      var a = document.createElement('a');
+      a.href = url; a.download = r.headers.get('X-Filename') || ('cotizacion-' + id + '.pdf');
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 120000);
+  } catch (e) {
+    if (w) w.close();
+    toast('Sin conexión al sistema — revisa tu internet', 'err');
+  }
+}
+
+async function clonarCot(id){
+  var c = _cotLocal(id);
+  if (!c || !confirm('¿Clonar ' + c.no_cotizacion + '? Se crea un nuevo borrador con otro folio para que lo edites.')) return;
+  try {
+    var r = await _api('/mis/' + id + '/clonar', { method: 'POST' });
+    if (!r.ok) { toast(r.data.error || 'No se pudo clonar', 'err'); return; }
+    toast('Clonada como ' + r.data.no_cotizacion);
+    await cargarMisCotizaciones(true);
+    abrirEditar(r.data.id);
+  } catch (e) { if (!e.handled) toast('Sin conexión al sistema — revisa tu internet', 'err'); }
+}
+async function marcarVendida(id){
+  var c = _cotLocal(id);
+  if (!c) return;
+  try {
+    var r = await _api('/mis/' + id + '/vendida', { method: 'POST', body: { vendida: !c.vendida } });
+    if (!r.ok) { toast(r.data.error || 'No se pudo actualizar', 'err'); return; }
+    c.vendida = r.data.vendida;
+    renderMisCotizaciones();
+    toast(c.vendida ? 'Marcada como vendida' : 'Marca de vendida quitada');
+  } catch (e) { if (!e.handled) toast('Sin conexión al sistema — revisa tu internet', 'err'); }
+}
+async function eliminarCotizacion(id){
+  var c = _cotLocal(id);
+  if (!c || !confirm('¿Eliminar ' + c.no_cotizacion + ' de ' + c.cliente + '? No se puede deshacer.')) return;
+  try {
+    var r = await _api('/mis/' + id + '/eliminar', { method: 'POST' });
+    if (!r.ok) { toast(r.data.error || 'No se pudo eliminar', 'err'); return; }
+    _misCot = _misCot.filter(function(x){ return x.id !== id; });
+    renderMisCotizaciones();
+    toast('Cotización eliminada');
+  } catch (e) { if (!e.handled) toast('Sin conexión al sistema — revisa tu internet', 'err'); }
 }
 
 // ── Editor de una cotización existente ──
@@ -779,10 +938,12 @@ async function abrirEditar(id){
     var q = r.data;
     _edit = { id: q.id, no: q.no_cotizacion, estatus: q.estatus, editable: q.editable, moneda: q.moneda, base: q.updated_at, codCliente: q.cod_cliente || null, items: q.items };
     var ro = !q.editable;
-    document.getElementById('medTitle').textContent = (ro ? '👁 ' : '✏️ ') + q.no_cotizacion;
+    document.getElementById('medTitle').textContent = (ro ? 'Ver ' : 'Editar ') + q.no_cotizacion;
+    var est = String(q.estatus || '').toUpperCase();
     document.getElementById('medAviso').innerHTML = ro
-      ? '<div class="res-warn"><strong>Solo lectura.</strong> Esta cotización ya está ' + _esc(String(q.estatus).toLowerCase()) + ' en el sistema; no se puede modificar desde el celular. Puedes reenviarla tal como está.</div>'
-      : '<div class="res-warn" style="border-color:#1a6b45"><strong style="color:#1a6b45">Editando el folio ' + _esc(q.no_cotizacion) + '.</strong> Al guardar se actualiza esta misma cotización (no se crea otra).</div>';
+      ? '<div class="res-warn"><strong>Solo lectura.</strong> Esta cotización se creó o avanzó en el sistema (' + _esc(est.toLowerCase()) + '), así que desde el celular solo se puede ver, descargar y reenviar. Edítala en el ERP.</div>'
+      : '<div class="res-warn" style="border-color:#1a6b45"><strong style="color:#1a6b45">Editando el folio ' + _esc(q.no_cotizacion) + '.</strong> Al guardar se actualiza esta misma cotización (no se crea otra).'
+        + ((est === 'APROBADA' || est === 'PENDIENTE') ? '<br><strong>Estaba ' + _esc(est.toLowerCase()) + ':</strong> volverá a borrador y requerirá autorización de nuevo.' : '') + '</div>';
     document.getElementById('medCliente').value = q.cliente || '';
     document.getElementById('medNit').value = q.cliente_nit || '';
     document.getElementById('medClienteCorreo').value = q.cliente_correo || '';
@@ -813,7 +974,7 @@ function medRender(){
       + '<div class="med-grid"><div><label>Cantidad (' + _esc(it.unidad || 'UNIDAD') + ')</label><input type="number" inputmode="decimal" step="any" min="0" value="' + it.cantidad + '" ' + dis + ' oninput="medSet(' + i + ',\'cantidad\',this.value)"></div>'
       + '<div><label>Precio unitario</label><input type="number" inputmode="decimal" step="any" min="0" value="' + it.precio_unitario + '" ' + dis + ' oninput="medSet(' + i + ',\'precio_unitario\',this.value)"></div></div>'
       + '<div class="med-foot"><span class="med-lt" id="medLT' + i + '">' + _fmtMoneda(it.cantidad * it.precio_unitario, _edit.moneda) + '</span>'
-      + (ro ? '' : '<button type="button" class="btn btn-danger btn-sm" onclick="medQuitar(' + i + ')">✕ Quitar línea</button>') + '</div></div>';
+      + (ro ? '' : '<button type="button" class="btn btn-danger btn-sm" onclick="medQuitar(' + i + ')">' + _ic('x') + ' Quitar línea</button>') + '</div></div>';
   }).join('');
   medRecalcular();
 }
@@ -871,7 +1032,7 @@ async function guardarEdicion(reenviar){
     var sesion = _cargarSesion() || {};
     if (!reenviar) toast('✅ Cambios guardados en ' + r.data.no_cotizacion);
     else if (r.data.email_enviado === false) _mostrarConfirmacionCotReal('creada_sin_correo', { no_cotizacion: r.data.no_cotizacion, aviso: r.data.aviso });
-    else _mostrarConfirmacionCotReal('ok', { titulo: '✅ Cotización actualizada y reenviada', no_cotizacion: r.data.no_cotizacion, vendedorCorreo: sesion.correo, clienteCorreo: correo });
+    else _mostrarConfirmacionCotReal('ok', { titulo: 'Cotización actualizada y reenviada', no_cotizacion: r.data.no_cotizacion, vendedorCorreo: sesion.correo, clienteCorreo: correo });
   } catch (e) {
     if (!e.handled) toast('Sin conexión al sistema — revisa tu internet e intenta de nuevo', 'err');
   } finally {
@@ -908,7 +1069,7 @@ async function confirmarReenvio(){
     if (!r.ok) { toast(r.data.error || 'No se pudo reenviar', 'err'); return; }
     var no = _reenv.no;
     cerrarModalReenviar();
-    _mostrarConfirmacionCotReal('ok', { titulo: '✅ Cotización reenviada', no_cotizacion: no, vendedorCorreo: r.data.enviada_a, clienteCorreo: r.data.copia_a });
+    _mostrarConfirmacionCotReal('ok', { titulo: 'Cotización reenviada', no_cotizacion: no, vendedorCorreo: r.data.enviada_a, clienteCorreo: r.data.copia_a });
   } catch (e) {
     if (!e.handled) toast('Sin conexión al sistema — revisa tu internet e intenta de nuevo', 'err');
   } finally {
