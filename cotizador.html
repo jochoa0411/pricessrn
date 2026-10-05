@@ -151,6 +151,45 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
   #pdfOverlay > div:first-child { display: none !important; }
   #pdfOverlay > div:last-child { box-shadow: none !important; max-width: none !important; margin: 0 !important; display: block !important; }
 }
+
+/* ── Autocompletado de clientes, recientes, resumen de envío, historial del sistema ── */
+.sug { position:absolute; left:0; right:0; top:100%; z-index:60; background:#fff; border:1px solid #1a6b45; border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.18); max-height:280px; overflow-y:auto; margin-top:2px; }
+.sug.hidden { display:none; }
+.sug-item { padding:11px 12px; border-bottom:1px solid #eee; cursor:pointer; min-height:44px; }
+.sug-item:last-child { border-bottom:none; }
+.sug-item:active { background:#e8f5e9; }
+.sug-item strong { display:block; font-size:14px; color:#222; }
+.sug-item small { color:#666; font-size:12px; }
+.sug-tag { float:right; font-size:10px; font-weight:700; color:#fff; background:#1a6b45; border-radius:99px; padding:1px 7px; }
+.sug-tag.rec { background:#555; }
+.sug-vacio { padding:12px; color:#777; font-size:13px; }
+.chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+.chip { background:#fff; border:1px solid #1a6b45; color:#1a6b45; border-radius:99px; padding:6px 12px; font-size:13px; font-weight:600; cursor:pointer; min-height:34px; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.resumen { border:2px solid #1a6b45; border-radius:10px; padding:10px 12px; margin-bottom:14px; background:#fff; }
+.resumen h4 { margin:0 0 6px; font-size:13px; color:#1a6b45; text-transform:uppercase; letter-spacing:.3px; }
+.res-row { display:flex; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:1px solid #eee; font-size:13px; }
+.res-row .rd { flex:1; min-width:0; }
+.res-row .rd small { display:block; color:#666; }
+.res-row .rt { font-weight:700; white-space:nowrap; }
+.res-total { display:flex; justify-content:space-between; padding-top:8px; font-size:16px; font-weight:800; color:#1a6b45; }
+.res-warn { border:2px solid #d97706; border-radius:8px; padding:10px; margin:8px 0; font-size:13px; line-height:1.5; color:#222; background:#fff; }
+.res-warn.err { border-color:#d32f2f; }
+.res-warn strong { color:#b45309; }
+.res-warn.err strong { color:#d32f2f; }
+.res-warn .btn { margin-top:6px; }
+.stale { color:#b45309; font-weight:700; }
+.chk { display:flex; align-items:flex-start; gap:8px; font-size:13px; cursor:pointer; margin:8px 0; }
+.chk input { width:20px; height:20px; margin:0; flex-shrink:0; -webkit-appearance:checkbox; appearance:checkbox; }
+.muted { color:#999; padding:16px; text-align:center; }
+.pill { display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:99px; color:#fff; background:#555; }
+.pill.ok { background:#1a6b45; } .pill.borr { background:#0066cc; } .pill.conv { background:#6b21a8; }
+.med-line { border:1px solid #d1d1d6; border-radius:10px; padding:8px; margin-bottom:8px; }
+.med-line textarea { width:100%; font-family:inherit; font-size:15px; padding:8px; border:1px solid #d1d1d6; border-radius:8px; }
+.med-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px; }
+.med-grid label { font-size:11px; font-weight:700; color:#666; text-transform:uppercase; display:block; margin-bottom:2px; }
+.med-grid input { width:100%; }
+.med-foot { display:flex; justify-content:space-between; align-items:center; margin-top:8px; gap:8px; }
+.med-lt { font-weight:700; font-size:14px; color:#1a6b45; }
 </style>
 </head>
 <body>
@@ -271,7 +310,12 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
             <button type="button" class="btn btn-primary" id="btnConsultarNit" onclick="consultarNit()" style="white-space:nowrap;flex-shrink:0">🔍 Buscar</button>
           </div>
         </div>
-        <div class="field"><label>Cliente *</label><input type="text" id="cotCliente" placeholder="Nombre del cliente"></div>
+        <div class="field" style="position:relative">
+          <label>Cliente *</label>
+          <input type="text" id="cotCliente" placeholder="Escribe para buscar en tus clientes…" autocomplete="off" oninput="buscarClientes()" onfocus="buscarClientes()">
+          <div id="cliSug" class="sug hidden"></div>
+          <div id="cliRecientes" class="chips"></div>
+        </div>
         <div class="field"><label>Referencia</label><input type="text" id="cotRef" placeholder="ej: COT-2026-001"></div>
         <div class="field" style="margin-top:12px;">
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;font-size:14px;color:#1a6b45;font-weight:700;">
@@ -426,9 +470,14 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
     <!-- ===== HISTORIAL ===== -->
     <div id="historial" class="seccion">
       <div class="card">
-        <div class="card-title">Historial de Cotizaciones</div>
+        <div class="card-title">Mis cotizaciones <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="cargarMisCotizaciones(true)">🔄 Actualizar</button></div>
+        <input type="search" id="misCotFiltro" placeholder="Buscar por cliente o folio…" oninput="renderMisCotizaciones()" style="margin-bottom:6px">
+        <div id="misCotList"><p class="muted">Cargando…</p></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Borradores locales</div>
         <div id="historialList"></div>
-        <button class="btn btn-danger btn-block" style="margin-top:12px;" onclick="limpiarHistorial()">🗑️ Limpiar historial</button>
+        <button class="btn btn-danger btn-block" style="margin-top:12px;" onclick="limpiarHistorial()">🗑️ Limpiar borradores</button>
       </div>
     </div>
   </div>
@@ -490,16 +539,60 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
       <div class="modal-title">✅ Generar cotización real</div>
       <span class="modal-close" onclick="cerrarModalEnviarReal()">×</span>
     </div>
+    <div id="merResumen" class="resumen"></div>
     <div class="field"><label>Se enviará a</label><div id="merVendedorCorreoDisplay" style="padding:12px;background:#f4f4f5;border-radius:10px;font-weight:600;color:#1a6b45;"></div></div>
     <div class="field"><label>Correo del cliente (opcional, copia)</label><input type="email" id="merClienteCorreo" placeholder="cliente@empresa.com"></div>
-    <div class="field"><label>Forma de entrega *</label><input type="text" id="merFormaEntrega" placeholder="Ej: Terrestre, Marítima, Aérea"></div>
-    <div class="field"><label>Lugar de entrega *</label><input type="text" id="merLugarEntrega" placeholder="Dirección o bodega de entrega"></div>
-    <div class="field"><label>Tiempo de entrega *</label><input type="text" id="merTiempoEntrega" placeholder="Ej: 3 días hábiles después de la OC"></div>
-    <div class="field"><label>Forma de pago *</label><input type="text" id="merFormaPago" placeholder="Ej: Contado, Crédito 30 días"></div>
+    <div class="field"><label>Forma de entrega *</label><input type="text" id="merFormaEntrega" list="dl_merFormaEntrega" autocomplete="off" placeholder="Ej: Terrestre, Marítima, Aérea"></div>
+    <div class="field"><label>Lugar de entrega *</label><input type="text" id="merLugarEntrega" list="dl_merLugarEntrega" autocomplete="off" placeholder="Dirección o bodega de entrega"></div>
+    <div class="field"><label>Tiempo de entrega *</label><input type="text" id="merTiempoEntrega" list="dl_merTiempoEntrega" autocomplete="off" placeholder="Ej: 3 días hábiles después de la OC"></div>
+    <div class="field"><label>Forma de pago *</label><input type="text" id="merFormaPago" list="dl_merFormaPago" autocomplete="off" placeholder="Ej: Contado, Crédito 30 días"></div>
     <div class="field"><label>Comentarios adicionales (opcional)</label><textarea id="merComentarios" rows="2" placeholder="Condiciones especiales, instrucciones…" style="width:100%;padding:12px;border:1px solid #d1d1d6;border-radius:10px;font-size:16px;font-family:inherit;resize:vertical"></textarea></div>
+    <datalist id="dl_merFormaEntrega"></datalist><datalist id="dl_merLugarEntrega"></datalist><datalist id="dl_merTiempoEntrega"></datalist><datalist id="dl_merFormaPago"></datalist>
     <div class="modal-btns">
       <button class="btn btn-success btn-block" id="btnCotReal" onclick="generarCotizacionReal()">Enviar cotización real</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR / VER COTIZACION EXISTENTE -->
+<div id="modalEditar" class="modal hidden" onclick="if(event.target===this)cerrarModalEditar()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="medTitle">Cotización</div>
+      <span class="modal-close" onclick="cerrarModalEditar()">×</span>
+    </div>
+    <div id="medAviso"></div>
+    <div class="field"><label>Cliente *</label><input type="text" id="medCliente"></div>
+    <div class="field"><label>NIT</label><input type="text" id="medNit"></div>
+    <div class="field"><label>Correo del cliente (copia al reenviar)</label><input type="email" id="medClienteCorreo"></div>
+    <div class="field"><label>Ítems</label><div id="medItems"></div>
+      <button type="button" class="btn btn-ghost btn-sm" id="medAddLinea" onclick="medAgregarLinea()" style="margin-top:6px">➕ Agregar línea</button>
+    </div>
+    <label class="chk"><input type="checkbox" id="medConIva" onchange="medRecalcular()"> Los precios incluyen IVA 12%</label>
+    <div class="total-box" style="margin-top:8px"><strong>Total: <span id="medTotal">—</span></strong></div>
+    <div class="field" style="margin-top:12px"><label>Forma de entrega</label><input type="text" id="medFormaEntrega"></div>
+    <div class="field"><label>Lugar de entrega</label><input type="text" id="medLugarEntrega"></div>
+    <div class="field"><label>Tiempo de entrega</label><input type="text" id="medTiempoEntrega"></div>
+    <div class="field"><label>Forma de pago</label><input type="text" id="medFormaPago"></div>
+    <div class="field"><label>Comentarios adicionales</label><textarea id="medComentarios" rows="2" style="width:100%;padding:12px;border:1px solid #d1d1d6;border-radius:10px;font-size:16px;font-family:inherit;resize:vertical"></textarea></div>
+    <div class="modal-btns" style="flex-direction:column">
+      <button class="btn btn-success btn-block" id="btnMedGuardarEnviar" onclick="guardarEdicion(true)">💾 Guardar y reenviar</button>
+      <button class="btn btn-primary btn-block" id="btnMedGuardar" onclick="guardarEdicion(false)">Guardar sin enviar</button>
+      <button class="btn btn-success btn-block hidden" id="btnMedReenviar" onclick="reenviarDesdeEditor()">📧 Reenviar tal como está</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL REENVIAR -->
+<div id="modalReenviar" class="modal hidden" onclick="if(event.target===this)cerrarModalReenviar()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="mreTitle">Reenviar cotización</div>
+      <span class="modal-close" onclick="cerrarModalReenviar()">×</span>
+    </div>
+    <div class="field"><label>Se enviará a</label><div id="mreVendedor" style="padding:12px;background:#f4f4f5;border-radius:10px;font-weight:600;color:#1a6b45;"></div></div>
+    <div class="field"><label>Copia al cliente (opcional)</label><input type="email" id="mreClienteCorreo" placeholder="cliente@empresa.com"></div>
+    <div class="modal-btns"><button class="btn btn-success btn-block" id="btnMreEnviar" onclick="confirmarReenvio()">📧 Reenviar</button></div>
   </div>
 </div>
 
@@ -821,12 +914,14 @@ function agregarTela(){
 
   CARRITO.push({
     uid: Date.now() + Math.random(),
+    addedAt: Date.now(),
     tipo: 'tela', telaId: t.id, nombre: t.nombre,
     ua, ul, aSolFt: aFt, aSolM: a, aCobFt: aC, aCobM: aC/MT, lFt, lM: l,
     cant, arCorte, ar, p, tu, tc: tcValido ? tc : null,
     totalQ: tcValido ? tu*tc : null,
     modo, recargo: r, precioManual: (!isNaN(pm)&&pm>0) ? pm : null
   });
+  _ultimaFirmaTela = _firmaTela();
   saveCarrito();
   renderCarrito();
   toast('✅ Tela agregada al presupuesto');
@@ -849,13 +944,28 @@ function agregarSaco(){
 
   CARRITO.push({
     uid: Date.now() + Math.random(),
+    addedAt: Date.now(),
     tipo: 'saco', sacoId: s.id, nombre: s.nombre, medidas: s.medidas,
     tier, cantidad: c, precioUnit: p, totalQ: c*p,
     recargo: r, precioManual: (!isNaN(pm) && pm > 0) ? pm : null
   });
+  _ultimaFirmaSaco = _firmaSaco();
   saveCarrito();
   renderCarrito();
   toast('✅ Saco agregado al presupuesto');
+}
+
+// Firma de lo tecleado en la calculadora: permite saber si hay un cálculo que el vendedor
+// hizo pero NO agregó al presupuesto (ver real-quote.js › _calculosPendientes).
+let _ultimaFirmaTela = '', _ultimaFirmaSaco = '';
+function _vv(id){ const e=document.getElementById(id); return e ? e.value : ''; }
+function _firmaTela(){
+  const m = document.querySelector('input[name="cotModoTela"]:checked');
+  return ['cotTelaSelect','cotAncho','cotUAncho','cotLargo','cotULargo','cotCantTela','cotTC','cotRecargo','cotPrecioManual'].map(_vv).join('|') + '|' + (m ? m.value : '');
+}
+function _firmaSaco(){
+  const t = document.querySelector('input[name="cotTierSaco"]:checked');
+  return ['cotSacoSelect','cotCantSaco','cotRecargoSaco','cotPMSaco'].map(_vv).join('|') + '|' + (t ? t.value : '');
 }
 
 function quitarItem(uid){
@@ -1194,5 +1304,5 @@ function eliminarSaco(id){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261005"></script></body>
 </html>
