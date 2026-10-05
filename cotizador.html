@@ -222,6 +222,8 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 .mp-row:last-child { border-bottom:none; }
 .act-item, .btn, .kebab-m, .chip, .tab-btn, .nav-item, .sug-item { -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
 .btn { text-decoration:none; }
+.cli-guardar { margin-top:8px; padding:10px 12px; border:1px dashed #1a6b45; border-radius:10px; font-size:12px; color:#333; display:flex; flex-direction:column; gap:8px; }
+.cli-guardar .btn { align-self:flex-start; }
 </style>
 </head>
 <body>
@@ -332,11 +334,11 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
     <div id="cotizar" class="seccion active">
 
       <div class="card">
-        <div class="card-title">Datos del presupuesto</div>
+        <div class="card-title">Cliente</div>
         <div class="field">
           <label>NIT del cliente (sin NIT = CF)</label>
           <div style="display:flex;gap:6px;align-items:stretch">
-            <input type="text" id="cotNit" placeholder="Ej: 12345678-9" style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();consultarNit();}">
+            <input type="text" id="cotNit" placeholder="Ej: 12345678-9" style="flex:1" oninput="_actualizarGuardarClienteCard()" onkeydown="if(event.key==='Enter'){event.preventDefault();consultarNit();}">
             <button type="button" class="btn btn-primary" id="btnConsultarNit" onclick="consultarNit()" style="white-space:nowrap;flex-shrink:0"><span class="ic" data-ic="search"></span> Buscar</button>
           </div>
         </div>
@@ -348,6 +350,10 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
           </div>
           <div id="cliSug" class="sug hidden"></div>
           <div id="cliRecientes" class="chips"></div>
+          <div id="cliGuardarBox" class="cli-guardar" style="display:none">
+            <span id="cliGuardarTxt"></span>
+            <button type="button" class="btn btn-primary btn-sm" id="btnGuardarCliente" onclick="guardarClienteFrecuente()"><span class="ic" data-ic="user"></span> Guardar como cliente frecuente</button>
+          </div>
         </div>
         <div class="field"><label>Referencia</label><input type="text" id="cotRef" placeholder="ej: COT-2026-001"></div>
         <div class="field" style="margin-top:12px;">
@@ -514,10 +520,6 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
     <div class="field"><label>Tiempo de entrega *</label><input type="text" id="merTiempoEntrega" list="dl_merTiempoEntrega" autocomplete="off" placeholder="Ej: 3 días hábiles después de la OC"></div>
     <div class="field"><label>Forma de pago *</label><input type="text" id="merFormaPago" list="dl_merFormaPago" autocomplete="off" placeholder="Ej: Contado, Crédito 30 días"></div>
     <div class="field"><label>Comentarios adicionales (opcional)</label><textarea id="merComentarios" rows="2" placeholder="Condiciones especiales, instrucciones…" style="width:100%;padding:12px;border:1px solid #d1d1d6;border-radius:10px;font-size:16px;font-family:inherit;resize:vertical"></textarea></div>
-    <label class="chk" id="merGuardarClienteBox" style="display:none">
-      <input type="checkbox" id="merGuardarCliente">
-      <span id="merGuardarClienteTxt">Guardar como cliente recurrente</span>
-    </label>
     <datalist id="dl_merFormaEntrega"></datalist><datalist id="dl_merLugarEntrega"></datalist><datalist id="dl_merTiempoEntrega"></datalist><datalist id="dl_merFormaPago"></datalist>
     <div class="modal-btns">
       <button class="btn btn-success btn-block" id="btnCotReal" onclick="generarCotizacionReal()">Enviar cotización real</button>
@@ -1175,5 +1177,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261011"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261012"></script></body>
 </html>

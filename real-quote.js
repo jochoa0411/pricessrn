@@ -326,6 +326,7 @@ function _aplicarCliente(c){
   document.getElementById('cotCliente').value = c.nombre;
   document.getElementById('cotNit').value = c.nit || 'CF';
   document.getElementById('cliSug').classList.add('hidden');
+  _actualizarGuardarClienteCard();
   toast('Cliente: ' + c.nombre);
 }
 
@@ -364,7 +365,7 @@ async function sincronizarClientes(forzar){
   } finally {
     _cliSyncing = false;
     var el = document.getElementById('cotCliente');
-    if (el && document.activeElement === el) buscarClientes();
+    if (el && document.activeElement === el) buscarClientes(); else _actualizarGuardarClienteCard();
   }
 }
 function forzarSyncClientes(ev){
@@ -415,6 +416,7 @@ function buscarClientes(){
   var el = document.getElementById('cotCliente');
   var q = el.value.trim();
   if (_clienteSel && q !== _clienteSel.nombre) _clienteSel = null;
+  _actualizarGuardarClienteCard();
   if (!_cliCache) _cliCargarLocal();
   var nq = _norm(q);
   var rec = _lsGet('cotClientesRecientes', []).filter(function(x){
@@ -445,13 +447,14 @@ async function consultarNit(){
   // Sin NIT (o ya "CF"): consumidor final. No se consulta a la SAT y se conserva el nombre tecleado.
   if (!nit || _esCF(nit)) {
     nitEl.value = 'CF';
+    _actualizarGuardarClienteCard();
     toast(document.getElementById('cotCliente').value.trim() ? 'Consumidor final (CF) — se conserva el nombre' : 'Consumidor final (CF) — escribe el nombre del cliente');
     if (!document.getElementById('cotCliente').value.trim()) document.getElementById('cotCliente').focus();
     return;
   }
 
   var btn = document.getElementById('btnConsultarNit');
-  var textoOriginal = btn.textContent;
+  var textoOriginal = btn.innerHTML;   // innerHTML: conserva el icono de la lupa
   btn.disabled = true;
   btn.textContent = 'Buscando...';
 
@@ -471,7 +474,8 @@ async function consultarNit(){
     toast('Sin conexión al sistema — revisa tu conexión a internet', 'err');
   } finally {
     btn.disabled = false;
-    btn.textContent = textoOriginal;
+    btn.innerHTML = textoOriginal;
+    _actualizarGuardarClienteCard();
   }
 }
 
@@ -717,7 +721,7 @@ function _agregarClienteACache(codigo, nombre, nit, correo){
   _cliCache.lista.sort(function(a, b){ return String(a[1]).localeCompare(String(b[1]), 'es'); });
   _cliIndexar();
   _lsSet('cotClientesCache', _cliCache);
-  toast('Cliente guardado como recurrente (' + codigo + ')');
+  toast('Cliente guardado como frecuente (' + codigo + ')');
 }
 function _clienteEnCatalogo(nombre, nit){
   if (!_cliCache) return false;
@@ -726,15 +730,39 @@ function _clienteEnCatalogo(nombre, nit){
     return _norm(c[1]) === n || (nt && !_esCF(nt) && String(c[2] || '').trim().toUpperCase() === nt);
   });
 }
-// Casilla "Guardar como cliente recurrente": solo si su usuario puede crear clientes y el cliente no está en el catálogo.
-function _actualizarCasillaGuardarCliente(){
-  var box = document.getElementById('merGuardarClienteBox');
+// Bloque «Guardar como cliente frecuente» en la tarjeta Cliente: aparece solo si su usuario puede crear
+// clientes y el que tecleó no está en el catálogo descargado.
+function _actualizarGuardarClienteCard(){
+  var box = document.getElementById('cliGuardarBox');
+  if (!box) return;
   var nombre = document.getElementById('cotCliente').value.trim();
   var nit = _nitONormal(document.getElementById('cotNit').value);
-  var mostrar = !!(_cliCache && _cliCache.puede_crear && nombre && !(_clienteSel && _clienteSel.nombre === nombre) && !_clienteEnCatalogo(nombre, nit));
+  var mostrar = !!(_cliCache && _cliCache.puede_crear && nombre.length >= 3 && !(_clienteSel && _clienteSel.nombre === nombre) && !_clienteEnCatalogo(nombre, nit));
   box.style.display = mostrar ? 'flex' : 'none';
-  document.getElementById('merGuardarCliente').checked = false;
-  if (mostrar) document.getElementById('merGuardarClienteTxt').textContent = 'Guardar «' + nombre + '» (NIT ' + nit + ') como cliente recurrente para encontrarlo la próxima vez con sus datos.';
+  if (mostrar) document.getElementById('cliGuardarTxt').textContent = '«' + nombre + '» (NIT ' + nit + ') no está en tus clientes. Guárdalo para encontrarlo la próxima vez con sus datos.';
+}
+async function guardarClienteFrecuente(){
+  var nombre = document.getElementById('cotCliente').value.trim();
+  var nit = _nitONormal(document.getElementById('cotNit').value);
+  if (!nombre) { toast('Escribe el nombre del cliente', 'err'); return; }
+  var btn = document.getElementById('btnGuardarCliente');
+  var original = btn.innerHTML;
+  btn.disabled = true; btn.textContent = 'Guardando…';
+  try {
+    var r = await _api('/clientes', { method: 'POST', body: { nombre: nombre, nit: nit, email: (document.getElementById('merClienteCorreo').value || '').trim() } });
+    if (!r.ok) { toast(r.data.error || 'No se pudo guardar el cliente', 'err'); return; }
+    document.getElementById('cotNit').value = nit;
+    if (r.data.nuevo) _agregarClienteACache(r.data.codigo, nombre, nit, '');
+    else toast('Ese cliente ya estaba en tu catálogo (' + r.data.codigo + ')');
+    _clienteSel = { codigo: r.data.codigo, nombre: nombre, nit: nit, correo: '' };
+    _recordarCliente({ nombre: nombre, nit: nit, correo: '', codigo: r.data.codigo });
+    _renderRecientes();
+  } catch (e) {
+    if (!e.handled) toast('Sin conexión al sistema — revisa tu internet', 'err');
+  } finally {
+    btn.disabled = false; btn.innerHTML = original;
+    _actualizarGuardarClienteCard();
+  }
 }
 
 // Precarga lo último usado: datos de entrega/pago (con sugerencias) y el correo del cliente elegido.
@@ -775,7 +803,6 @@ function abrirModalEnviarReal(){
   if (display) display.textContent = sesion.correo || '(sin correo configurado)';
   _ignorarPendiente = false; _ignorarViejos = false; _ignorarPreciosAnt = false;
   _prellenarModalEnvio();
-  _actualizarCasillaGuardarCliente();
   _renderResumenEnvio();
   document.getElementById('modalEnviarReal').classList.remove('hidden');
 }
@@ -871,7 +898,6 @@ async function generarCotizacionReal(){
     cliente_nit: clienteNit,
     cod_cliente: (_clienteSel && _clienteSel.nombre === cliente && _clienteSel.codigo) || undefined,
     precios_version: parseInt(localStorage.getItem('PRECIOS_VERSION') || '0', 10) || undefined,
-    guardar_cliente: document.getElementById('merGuardarClienteBox').style.display !== 'none' && document.getElementById('merGuardarCliente').checked ? true : undefined,
     cliente_correo: clienteCorreo,
     moneda: armado.moneda,
     con_iva: conIva,
@@ -912,7 +938,6 @@ async function generarCotizacionReal(){
     _recordarTerminos({ forma_entrega: formaEntrega, lugar_entrega: lugarEntrega, tiempo_entrega: tiempoEntrega, forma_pago: formaPago });
     _renderRecientes();
     _misCot = null;
-    if (data.cliente_guardado) _agregarClienteACache(data.cliente_guardado, cliente, clienteNit, clienteCorreo);
     CARRITO = [];
     saveCarrito();
     renderCarrito();
