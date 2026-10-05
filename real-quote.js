@@ -147,7 +147,7 @@ function _mostrarApp(sesion){
   _reiniciarVigilanciaInactividad();
   _renderRecientes();
   _cliCargarLocal();
-  sincronizarClientes(false);
+  sincronizarClientes(true, true);
   if (typeof syncPrecios === 'function') syncPrecios(false);
 }
 
@@ -348,10 +348,16 @@ function _cliCargarLocal(){
   if (_cliCache && !Array.isArray(_cliCache.lista)) _cliCache = null;
   _cliIndexar();
 }
-async function sincronizarClientes(forzar){
+// `forzar`: ignora el TTL (el servidor responde «sin cambios» si el catálogo es el mismo, así que es barato).
+// `silencioso`: sin avisos. Al abrir la app se revisa siempre: así un permiso recién otorgado (p. ej. crear
+// clientes) o clientes nuevos aparecen sin esperar las 12 h del TTL.
+var _ultimaSyncClientes = 0;
+async function sincronizarClientes(forzar, silencioso){
   if (_cliSyncing) return;
   if (!_cliCache) _cliCargarLocal();
-  if (!forzar && _cliCache && Date.now() - _cliCache.ts < CLI_TTL_MS) return;
+  if (!forzar && _cliCache && _cliCache.puede_crear !== undefined && Date.now() - _cliCache.ts < CLI_TTL_MS) return;
+  if (silencioso && Date.now() - _ultimaSyncClientes < 60 * 1000) return;
+  _ultimaSyncClientes = Date.now();
   _cliSyncing = true;
   try {
     var r = await _api('/clientes/todos' + (_cliCache && _cliCache.hash ? '?hash=' + _cliCache.hash : ''));
@@ -359,9 +365,9 @@ async function sincronizarClientes(forzar){
     if (r.data.unchanged && _cliCache) { _cliCache.ts = Date.now(); _cliCache.puede_crear = !!r.data.puede_crear; }
     else { _cliCache = { ts: Date.now(), hash: r.data.hash, lista: r.data.clientes || [], puede_crear: !!r.data.puede_crear }; _cliIndexar(); }
     _lsSet('cotClientesCache', _cliCache);
-    if (forzar) toast('Clientes actualizados (' + _cliCache.lista.length + ')');
+    if (forzar && !silencioso) toast('Clientes actualizados (' + _cliCache.lista.length + ')');
   } catch (e) {
-    if (forzar && !e.handled) toast('Sin conexión — se usa la lista guardada en el teléfono', 'err');
+    if (forzar && !silencioso && !e.handled) toast('Sin conexión — se usa la lista guardada en el teléfono', 'err');
   } finally {
     _cliSyncing = false;
     var el = document.getElementById('cotCliente');
@@ -450,6 +456,14 @@ async function consultarNit(){
     _actualizarGuardarClienteCard();
     toast(document.getElementById('cotCliente').value.trim() ? 'Consumidor final (CF) — se conserva el nombre' : 'Consumidor final (CF) — escribe el nombre del cliente');
     if (!document.getElementById('cotCliente').value.trim()) document.getElementById('cotCliente').focus();
+    return;
+  }
+
+  // ¿Ese NIT ya está en tus clientes? Se usa el cliente guardado, con sus datos, sin ir a la SAT.
+  if (!_cliCache) _cliCargarLocal();
+  var enCat = _cliCache && _cliCache.lista.filter(function(c){ return String(c[2] || '').trim().toUpperCase() === nit.toUpperCase(); })[0];
+  if (enCat) {
+    _aplicarCliente({ codigo: enCat[0], nombre: enCat[1], nit: enCat[2], correo: enCat[3] });
     return;
   }
 
