@@ -355,8 +355,8 @@ async function sincronizarClientes(forzar){
   try {
     var r = await _api('/clientes/todos' + (_cliCache && _cliCache.hash ? '?hash=' + _cliCache.hash : ''));
     if (!r.ok) { if (forzar) toast(r.data.error || 'No se pudo actualizar los clientes', 'err'); return; }
-    if (r.data.unchanged && _cliCache) { _cliCache.ts = Date.now(); }
-    else { _cliCache = { ts: Date.now(), hash: r.data.hash, lista: r.data.clientes || [] }; _cliIndexar(); }
+    if (r.data.unchanged && _cliCache) { _cliCache.ts = Date.now(); _cliCache.puede_crear = !!r.data.puede_crear; }
+    else { _cliCache = { ts: Date.now(), hash: r.data.hash, lista: r.data.clientes || [], puede_crear: !!r.data.puede_crear }; _cliIndexar(); }
     _lsSet('cotClientesCache', _cliCache);
     if (forzar) toast('Clientes actualizados (' + _cliCache.lista.length + ')');
   } catch (e) {
@@ -710,6 +710,33 @@ function _quitarDesdeResumen(uid){
   _renderResumenEnvio();
 }
 
+// ¿El cliente tecleado ya está en el catálogo descargado? (mismo nombre o mismo NIT real)
+function _agregarClienteACache(codigo, nombre, nit, correo){
+  if (!_cliCache) return;
+  _cliCache.lista.push([codigo, nombre, nit, correo || '']);
+  _cliCache.lista.sort(function(a, b){ return String(a[1]).localeCompare(String(b[1]), 'es'); });
+  _cliIndexar();
+  _lsSet('cotClientesCache', _cliCache);
+  toast('Cliente guardado como recurrente (' + codigo + ')');
+}
+function _clienteEnCatalogo(nombre, nit){
+  if (!_cliCache) return false;
+  var n = _norm(nombre), nt = String(nit || '').trim().toUpperCase();
+  return _cliCache.lista.some(function(c){
+    return _norm(c[1]) === n || (nt && !_esCF(nt) && String(c[2] || '').trim().toUpperCase() === nt);
+  });
+}
+// Casilla "Guardar como cliente recurrente": solo si su usuario puede crear clientes y el cliente no está en el catálogo.
+function _actualizarCasillaGuardarCliente(){
+  var box = document.getElementById('merGuardarClienteBox');
+  var nombre = document.getElementById('cotCliente').value.trim();
+  var nit = _nitONormal(document.getElementById('cotNit').value);
+  var mostrar = !!(_cliCache && _cliCache.puede_crear && nombre && !(_clienteSel && _clienteSel.nombre === nombre) && !_clienteEnCatalogo(nombre, nit));
+  box.style.display = mostrar ? 'flex' : 'none';
+  document.getElementById('merGuardarCliente').checked = false;
+  if (mostrar) document.getElementById('merGuardarClienteTxt').textContent = 'Guardar «' + nombre + '» (NIT ' + nit + ') como cliente recurrente para encontrarlo la próxima vez con sus datos.';
+}
+
 // Precarga lo último usado: datos de entrega/pago (con sugerencias) y el correo del cliente elegido.
 function _prellenarModalEnvio(){
   var cur = _lsGet('cotTerminos', {});
@@ -748,6 +775,7 @@ function abrirModalEnviarReal(){
   if (display) display.textContent = sesion.correo || '(sin correo configurado)';
   _ignorarPendiente = false; _ignorarViejos = false; _ignorarPreciosAnt = false;
   _prellenarModalEnvio();
+  _actualizarCasillaGuardarCliente();
   _renderResumenEnvio();
   document.getElementById('modalEnviarReal').classList.remove('hidden');
 }
@@ -843,6 +871,7 @@ async function generarCotizacionReal(){
     cliente_nit: clienteNit,
     cod_cliente: (_clienteSel && _clienteSel.nombre === cliente && _clienteSel.codigo) || undefined,
     precios_version: parseInt(localStorage.getItem('PRECIOS_VERSION') || '0', 10) || undefined,
+    guardar_cliente: document.getElementById('merGuardarClienteBox').style.display !== 'none' && document.getElementById('merGuardarCliente').checked ? true : undefined,
     cliente_correo: clienteCorreo,
     moneda: armado.moneda,
     con_iva: conIva,
@@ -883,6 +912,7 @@ async function generarCotizacionReal(){
     _recordarTerminos({ forma_entrega: formaEntrega, lugar_entrega: lugarEntrega, tiempo_entrega: tiempoEntrega, forma_pago: formaPago });
     _renderRecientes();
     _misCot = null;
+    if (data.cliente_guardado) _agregarClienteACache(data.cliente_guardado, cliente, clienteNit, clienteCorreo);
     CARRITO = [];
     saveCarrito();
     renderCarrito();
@@ -964,30 +994,29 @@ function abrirAcciones(id){
 }
 function cerrarAcciones(){ document.getElementById('modalAcciones').classList.add('hidden'); }
 
+// PDF por enlace firmado (https real): los navegadores móviles abren mal los blob:/ventanas en blanco.
+// El enlace dura 10 min y solo sirve para esta cotización; se abre con un toque directo del usuario.
+function cerrarModalPdf(){ document.getElementById('modalPdf').classList.add('hidden'); }
 async function accionPdf(id, modo){
-  // En iOS una pestaña abierta después de un await la bloquea el navegador: se abre antes.
-  var w = modo === 'imprimir' ? window.open('', '_blank') : null;
-  toast('Generando PDF…');
+  var c = _cotLocal(id) || {};
+  toast('Preparando PDF…');
   try {
-    var sesion = _cargarSesion();
-    if (!sesion || !sesion.token) { if (w) w.close(); _mostrarLogin(); return; }
-    var r = await fetch(COT_API_BASE + '/api/ventas/cotizaciones-publicas/mis/' + id + '/pdf', {
-      headers: { 'X-Api-Key': COT_API_KEY, 'Authorization': 'Bearer ' + sesion.token },
-    });
-    if (r.status === 401) { if (w) w.close(); _cerrarSesion('Tu sesión expiró — inicia sesión de nuevo.'); return; }
-    if (!r.ok) { if (w) w.close(); var d = await r.json().catch(function(){ return {}; }); toast(d.error || 'No se pudo generar el PDF', 'err'); return; }
-    var blob = await r.blob();
-    var url = URL.createObjectURL(blob);
-    if (modo === 'imprimir') { if (w) w.location.href = url; else window.open(url, '_blank'); }
-    else {
-      var a = document.createElement('a');
-      a.href = url; a.download = r.headers.get('X-Filename') || ('cotizacion-' + id + '.pdf');
-      document.body.appendChild(a); a.click(); a.remove();
-    }
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 120000);
+    var r = await _api('/mis/' + id + '/pdf-link', { method: 'POST' });
+    if (!r.ok) { toast(r.data.error || 'No se pudo preparar el PDF', 'err'); return; }
+    var url = COT_API_BASE + '/api/ventas/cotizaciones-publicas/pdf/' + r.data.token;
+    var imprimir = modo === 'imprimir';
+    document.getElementById('mpdfTitle').textContent = (imprimir ? 'Imprimir ' : 'Descargar ') + (c.no_cotizacion || 'cotización');
+    var abrir = document.getElementById('mpdfAbrir'), desc = document.getElementById('mpdfDescargar');
+    abrir.href = url;
+    abrir.innerHTML = imprimir ? _ic('print') + ' Abrir para imprimir' : _ic('eye') + ' Abrir PDF';
+    desc.href = url + '?descargar=1';
+    desc.innerHTML = _ic('download') + ' Descargar PDF';
+    // La acción pedida va primero y resaltada
+    abrir.className = 'btn btn-block ' + (imprimir ? 'btn-success' : 'btn-ghost');
+    desc.className = 'btn btn-block ' + (imprimir ? 'btn-ghost' : 'btn-success');
+    document.getElementById('modalPdf').classList.remove('hidden');
   } catch (e) {
-    if (w) w.close();
-    toast('Sin conexión al sistema — revisa tu internet', 'err');
+    if (!e.handled) toast('Sin conexión al sistema — revisa tu internet', 'err');
   }
 }
 

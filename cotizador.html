@@ -220,6 +220,8 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 .mp-lista { max-height:42vh; overflow-y:auto; border:1px solid #e5e7eb; border-radius:8px; }
 .mp-row { padding:8px 10px; border-bottom:1px solid #eee; font-size:12px; }
 .mp-row:last-child { border-bottom:none; }
+.act-item, .btn, .kebab-m, .chip, .tab-btn, .nav-item, .sug-item { -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+.btn { text-decoration:none; }
 </style>
 </head>
 <body>
@@ -512,6 +514,10 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
     <div class="field"><label>Tiempo de entrega *</label><input type="text" id="merTiempoEntrega" list="dl_merTiempoEntrega" autocomplete="off" placeholder="Ej: 3 días hábiles después de la OC"></div>
     <div class="field"><label>Forma de pago *</label><input type="text" id="merFormaPago" list="dl_merFormaPago" autocomplete="off" placeholder="Ej: Contado, Crédito 30 días"></div>
     <div class="field"><label>Comentarios adicionales (opcional)</label><textarea id="merComentarios" rows="2" placeholder="Condiciones especiales, instrucciones…" style="width:100%;padding:12px;border:1px solid #d1d1d6;border-radius:10px;font-size:16px;font-family:inherit;resize:vertical"></textarea></div>
+    <label class="chk" id="merGuardarClienteBox" style="display:none">
+      <input type="checkbox" id="merGuardarCliente">
+      <span id="merGuardarClienteTxt">Guardar como cliente recurrente</span>
+    </label>
     <datalist id="dl_merFormaEntrega"></datalist><datalist id="dl_merLugarEntrega"></datalist><datalist id="dl_merTiempoEntrega"></datalist><datalist id="dl_merFormaPago"></datalist>
     <div class="modal-btns">
       <button class="btn btn-success btn-block" id="btnCotReal" onclick="generarCotizacionReal()">Enviar cotización real</button>
@@ -569,6 +575,21 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
     <div class="field"><label>Se enviará a</label><div id="mreVendedor" style="padding:12px;background:#f4f4f5;border-radius:10px;font-weight:600;color:#1a6b45;"></div></div>
     <div class="field"><label>Copia al cliente (opcional)</label><input type="email" id="mreClienteCorreo" placeholder="cliente@empresa.com"></div>
     <div class="modal-btns"><button class="btn btn-success btn-block" id="btnMreEnviar" onclick="confirmarReenvio()"><span class="ic" data-ic="mail"></span> Reenviar</button></div>
+  </div>
+</div>
+
+<!-- PDF LISTO (enlace firmado: abrir/imprimir o descargar) -->
+<div id="modalPdf" class="modal hidden" onclick="if(event.target===this)cerrarModalPdf()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div id="mpdfTitle" class="modal-title">PDF listo</div>
+      <span class="modal-close" onclick="cerrarModalPdf()">×</span>
+    </div>
+    <p id="mpdfTxt" style="font-size:13px;color:#555;margin-bottom:14px">Toca para abrir la cotización. Desde el visor puedes imprimirla o compartirla con el botón Compartir.</p>
+    <div class="modal-btns" style="flex-direction:column">
+      <a id="mpdfAbrir" class="btn btn-success btn-block" href="#" target="_blank" rel="noopener" onclick="setTimeout(cerrarModalPdf,400)"></a>
+      <a id="mpdfDescargar" class="btn btn-ghost btn-block" href="#" target="_blank" rel="noopener" onclick="setTimeout(cerrarModalPdf,400)"></a>
+    </div>
   </div>
 </div>
 
@@ -1154,5 +1175,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261010"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261011"></script></body>
 </html>
