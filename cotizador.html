@@ -205,6 +205,18 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 .kebab-m .ic svg { width:20px; height:20px; }
 .cli-pie { padding:8px 12px; font-size:11px; color:#666; display:flex; justify-content:space-between; align-items:center; gap:8px; background:#f7f7f7; position:sticky; bottom:0; }
 .cli-pie button { background:none; border:none; color:#1a6b45; font-weight:700; font-size:12px; cursor:pointer; padding:6px; }
+
+.toggle-menu .ic svg { width:22px; height:22px; stroke-width:2.2; }
+.nav-item .ic { margin-right:8px; } .nav-item .ic svg { width:20px; height:20px; }
+.tab-btn .ic svg { width:18px; height:18px; } .tab-btn .ic { margin-right:4px; }
+.ci-nombre .ic svg { width:16px; height:16px; color:#1a6b45; }
+.warn-box .ic svg, .ci-cobrado .ic svg { width:15px; height:15px; }
+.info-text .ic svg { width:14px; height:14px; }
+.modal-title .ic svg { width:18px; height:18px; }
+.btn .ic svg { width:16px; height:16px; }
+.cart-item-body { min-width: 110px; }
+.cart-item .btn-sm { padding: 6px 9px; min-height: 34px; flex-shrink: 0; }
+.cart-item .ic svg { width: 16px; height: 16px; }
 </style>
 </head>
 <body>
@@ -297,18 +309,16 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 
 <div id="appShell" class="hidden">
 <header>
-  <button class="toggle-menu" onclick="toggleMenu()">☰</button>
+  <button class="toggle-menu" onclick="toggleMenu()" aria-label="Menú"><span class="ic" data-ic="menu"></span></button>
   <h1>Cotizador LGM</h1>
   <div style="width: 40px;"></div>
 </header>
 
 <div class="main">
   <div id="sidebarOverlay" onclick="cerrarMenu()" style="position:fixed;inset:0;z-index:49;display:none;background:rgba(0,0,0,0.3);"></div><div class="sidebar" id="sidebar">
-    <div class="nav-item active" onclick="abrirSeccion('cotizar',this)">🧮 Cotizar</div>
-    <div class="nav-item" onclick="abrirSeccion('telas',this)">📋 Telas</div>
-    <div class="nav-item" onclick="abrirSeccion('sacos',this)">🛍️ Sacos</div>
-    <div class="nav-item" onclick="abrirSeccion('historial',this)">📝 Historial</div>
-    <div class="nav-item" onclick="cerrarSesionManual()" style="color:#d32f2f;">👤 <span id="navSesionNombre"></span> · Salir</div>
+    <div class="nav-item active" onclick="abrirSeccion('cotizar',this)"><span class="ic" data-ic="calc"></span> Cotizar</div>
+    <div class="nav-item" onclick="abrirSeccion('historial',this)"><span class="ic" data-ic="history"></span> Historial</div>
+    <div class="nav-item" onclick="cerrarSesionManual()" style="color:#d32f2f;"><span class="ic" data-ic="user"></span> <span id="navSesionNombre"></span> · Salir</div>
   </div>
 
   <div class="content">
@@ -319,17 +329,17 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
       <div class="card">
         <div class="card-title">Datos del presupuesto</div>
         <div class="field">
-          <label>NIT del cliente (opcional)</label>
+          <label>NIT del cliente (sin NIT = CF)</label>
           <div style="display:flex;gap:6px;align-items:stretch">
             <input type="text" id="cotNit" placeholder="Ej: 12345678-9" style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();consultarNit();}">
-            <button type="button" class="btn btn-primary" id="btnConsultarNit" onclick="consultarNit()" style="white-space:nowrap;flex-shrink:0">🔍 Buscar</button>
+            <button type="button" class="btn btn-primary" id="btnConsultarNit" onclick="consultarNit()" style="white-space:nowrap;flex-shrink:0"><span class="ic" data-ic="search"></span> Buscar</button>
           </div>
         </div>
         <div class="field" style="position:relative">
           <label>Cliente *</label>
-          <div style="position:relative">
-            <input type="text" id="cotCliente" placeholder="Toca para ver tus clientes o escribe…" autocomplete="off" oninput="buscarClientes()" onfocus="buscarClientes()" style="padding-right:48px">
-            <button type="button" onclick="alternarListaClientes(event)" aria-label="Ver lista de clientes" style="position:absolute;right:0;top:0;bottom:0;width:46px;background:none;border:none;color:#1a6b45;cursor:pointer"><span class="ic"><svg viewBox="0 0 24 24" style="width:20px;height:20px"><path d="m6 9 6 6 6-6"/></svg></span></button>
+          <div style="display:flex;gap:6px;align-items:stretch">
+            <input type="text" id="cotCliente" placeholder="Toca para ver tus clientes o escribe…" autocomplete="off" oninput="buscarClientes()" onfocus="buscarClientes()" style="flex:1;min-width:0">
+            <button type="button" class="btn btn-primary" id="btnBuscarCliente" onclick="alternarListaClientes(event)" style="white-space:nowrap;flex-shrink:0"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span> Buscar</button>
           </div>
           <div id="cliSug" class="sug hidden"></div>
           <div id="cliRecientes" class="chips"></div>
@@ -344,8 +354,8 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
       </div>
 
       <div class="tabs">
-        <button class="tab-btn active" onclick="cambiarTab(this,'cot-tela')">📊 Telas</button>
-        <button class="tab-btn" onclick="cambiarTab(this,'cot-saco')">🛍️ Sacos</button>
+        <button class="tab-btn active" onclick="cambiarTab(this,'cot-tela')"><span class="ic" data-ic="fabric"></span> Telas</button>
+        <button class="tab-btn" onclick="cambiarTab(this,'cot-saco')"><span class="ic" data-ic="bag"></span> Sacos</button>
       </div>
 
       <!-- TAB TELA -->
@@ -378,7 +388,7 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
             <div class="field"><label>TC USD→Q</label><input type="number" id="cotTC" placeholder="7.80" step="0.01" min="0" inputmode="decimal" oninput="cotCalcTela()"></div>
             <div class="field"><label>Rec/Desc %</label><input type="number" id="cotRecargo" value="0" inputmode="decimal" oninput="cotCalcTela()"></div>
           </div>
-          <p class="info-text">💡 Positivo = aumento · Negativo = descuento</p>
+          <p class="info-text"><span class="ic" data-ic="bulb"></span> Positivo = aumento · Negativo = descuento</p>
           <div class="field"><label>Precio base manual USD/pie² (opcional)</label><input type="number" id="cotPrecioManual" placeholder="Vacío = precio catálogo" step="0.001" min="0" inputmode="decimal" oninput="cotCalcTela()"></div>
 
           <div id="cotResTela" class="resultado">
@@ -396,9 +406,9 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
               <div class="resultado-row"><span>IVA 12%:</span><strong id="rIvaTela">—</strong></div>
             </div>
             <div id="rQBox" class="total-box"><strong>Total Q: <span id="rQ">—</span></strong></div>
-            <p id="rQFalta" class="info-text" style="display:none;color:#d97706;margin-top:8px;">💡 Ingresa el tipo de cambio para ver el total en Q</p>
+            <p id="rQFalta" class="info-text" style="display:none;color:#d97706;margin-top:8px;"><span class="ic" data-ic="bulb"></span> Ingresa el tipo de cambio para ver el total en Q</p>
           </div>
-          <button class="btn btn-success btn-block" style="margin-top:12px;" onclick="agregarTela()">➕ Agregar al presupuesto</button>
+          <button class="btn btn-success btn-block" style="margin-top:12px;" onclick="agregarTela()"><span class="ic" data-ic="plus"></span> Agregar al presupuesto</button>
         </div>
       </div>
 
@@ -425,7 +435,7 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
             <div class="field"><label>Rec/Desc %</label><input type="number" id="cotRecargoSaco" value="0" inputmode="decimal" oninput="cotCalcSaco()"></div>
             <div class="field"><label>Precio manual Q/u</label><input type="number" id="cotPMSaco" placeholder="Opcional" step="0.01" min="0" inputmode="decimal" oninput="cotCalcSaco()"></div>
           </div>
-          <p class="info-text">💡 Precio manual reemplaza el precio del tier · Recargo aplica encima</p>
+          <p class="info-text"><span class="ic" data-ic="bulb"></span> Precio manual reemplaza el precio del tier · Recargo aplica encima</p>
 
           <div id="cotResSaco" class="resultado">
             <div class="resultado-row"><span>Precio base (tier <span id="rTierLabel">A</span>)</span><strong id="rPBaseSaco">—</strong></div>
@@ -437,14 +447,14 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
             </div>
             <div class="total-box"><strong>Total: <span id="rTotalSaco">—</span></strong></div>
           </div>
-          <button class="btn btn-success btn-block" style="margin-top:12px;" onclick="agregarSaco()">➕ Agregar al presupuesto</button>
+          <button class="btn btn-success btn-block" style="margin-top:12px;" onclick="agregarSaco()"><span class="ic" data-ic="plus"></span> Agregar al presupuesto</button>
         </div>
       </div>
 
       <!-- CARRITO -->
       <div class="cart-wrap">
         <div class="card-title">
-          📋 Presupuesto
+          <span class="ic" data-ic="clipboard"></span> Presupuesto
           <span id="cartBadge" class="badge">0 ítems</span>
         </div>
         <div id="cartList"><div class="cart-empty">Sin ítems — agrega telas o sacos arriba.</div></div>
@@ -455,33 +465,15 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
               <strong id="cartTotal">Q0.00</strong>
             </div>
             <div class="cart-btns">
-              <button class="btn btn-success" style="flex:2" onclick="abrirModalEnviarReal()">✅ Generar cotización real</button>
+              <button class="btn btn-success" style="flex:2" onclick="abrirModalEnviarReal()"><span class="ic" data-ic="check"></span> Generar cotización real</button>
             </div>
             <div class="cart-btns" style="margin-top:6px;">
-              <button class="btn btn-ghost" style="flex:2" onclick="generarPDF()">📤 Vista previa local</button>
-              <button class="btn btn-primary" style="flex:1" onclick="guardarHistorial()">💾 Guardar</button>
-              <button class="btn btn-ghost btn-sm" onclick="limpiarCarrito()">🗑️</button>
+              <button class="btn btn-ghost" style="flex:2" onclick="generarPDF()"><span class="ic" data-ic="eye"></span> Vista previa local</button>
+              <button class="btn btn-primary" style="flex:1" onclick="guardarHistorial()"><span class="ic" data-ic="save"></span> Guardar</button>
+              <button class="btn btn-ghost btn-sm" onclick="limpiarCarrito()" aria-label="Limpiar presupuesto"><span class="ic" data-ic="trash"></span></button>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- ===== TELAS ===== -->
-    <div id="telas" class="seccion">
-      <div class="card">
-        <div class="card-title">Listado de Telas</div>
-        <div id="telaList"></div>
-        <button class="btn btn-primary btn-block" style="margin-top:12px;" onclick="abrirModalTela()">➕ Agregar tela</button>
-      </div>
-    </div>
-
-    <!-- ===== SACOS ===== -->
-    <div id="sacos" class="seccion">
-      <div class="card">
-        <div class="card-title">Listado de Sacos</div>
-        <div id="sacoList"></div>
-        <button class="btn btn-primary btn-block" style="margin-top:12px;" onclick="abrirModalSaco()">➕ Agregar saco</button>
       </div>
     </div>
 
@@ -495,66 +487,18 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
       <div class="card">
         <div class="card-title">Borradores locales</div>
         <div id="historialList"></div>
-        <button class="btn btn-danger btn-block" style="margin-top:12px;" onclick="limpiarHistorial()">🗑️ Limpiar borradores</button>
+        <button class="btn btn-danger btn-block" style="margin-top:12px;" onclick="limpiarHistorial()"><span class="ic" data-ic="trash"></span> Limpiar borradores</button>
       </div>
     </div>
   </div>
 </div>
 </div>
 
-<!-- MODAL TELA -->
-<div id="modalTela" class="modal hidden" onclick="if(event.target===this)cerrarModalTela()">
-  <div class="modal-box" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <div id="modalTelaTitle" class="modal-title">➕ Agregar Tela</div>
-      <span class="modal-close" onclick="cerrarModalTela()">×</span>
-    </div>
-    <div class="field"><label>Nombre</label><input type="text" id="tF_nombre" placeholder="ej: Saran Negro 85%"></div>
-    <div class="grid2">
-      <div class="field"><label>Categoría</label><input type="text" id="tF_cat" placeholder="ej: Saran"></div>
-      <div class="field"><label>Sombra</label><input type="text" id="tF_sombra" placeholder="ej: 85%"></div>
-    </div>
-    <div class="field"><label>Rollo</label><input type="text" id="tF_rollo" placeholder="ej: 12'x300'"></div>
-    <div class="grid2">
-      <div class="field"><label>Precio Master ($/pie²)</label><input type="number" id="tF_pm" step="0.001" min="0" inputmode="decimal"></div>
-      <div class="field"><label>Precio Conf. ($/pie²)</label><input type="number" id="tF_pc" step="0.001" min="0" inputmode="decimal"></div>
-    </div>
-    <div class="modal-btns">
-      <button class="btn btn-success" onclick="guardarTela()">Guardar</button>
-      <button class="btn btn-ghost" onclick="cerrarModalTela()">Cancelar</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL SACO -->
-<div id="modalSaco" class="modal hidden" onclick="if(event.target===this)cerrarModalSaco()">
-  <div class="modal-box" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <div id="modalSacoTitle" class="modal-title">➕ Agregar Saco</div>
-      <span class="modal-close" onclick="cerrarModalSaco()">×</span>
-    </div>
-    <div class="field"><label>Nombre</label><input type="text" id="sF_nombre" placeholder="ej: Rocola 36x48"></div>
-    <div class="grid2">
-      <div class="field"><label>Medidas</label><input type="text" id="sF_medidas" placeholder='ej: 36"x48"'></div>
-      <div class="field"><label>Peso (gm)</label><input type="number" id="sF_gm" min="0" inputmode="numeric"></div>
-    </div>
-    <div class="grid3">
-      <div class="field"><label>Precio A (Q/u)</label><input type="number" id="sF_pA" step="0.01" min="0" inputmode="decimal" placeholder="0.00"></div>
-      <div class="field"><label>Precio B (Q/u)</label><input type="number" id="sF_pB" step="0.01" min="0" inputmode="decimal" placeholder="0.00"></div>
-      <div class="field"><label>Precio C (Q/u)</label><input type="number" id="sF_pC" step="0.01" min="0" inputmode="decimal" placeholder="0.00"></div>
-    </div>
-    <div class="modal-btns">
-      <button class="btn btn-success" onclick="guardarSaco()">Guardar</button>
-      <button class="btn btn-ghost" onclick="cerrarModalSaco()">Cancelar</button>
-    </div>
-  </div>
-</div>
-
 <!-- MODAL DATOS PARA COTIZACION REAL (entrega, pago, correos) -->
 <div id="modalEnviarReal" class="modal hidden" onclick="if(event.target===this)cerrarModalEnviarReal()">
   <div class="modal-box" onclick="event.stopPropagation()">
     <div class="modal-header">
-      <div class="modal-title">✅ Generar cotización real</div>
+      <div class="modal-title">Generar cotización real</div>
       <span class="modal-close" onclick="cerrarModalEnviarReal()">×</span>
     </div>
     <div id="merResumen" class="resumen"></div>
@@ -629,7 +573,7 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 <div id="modalCotReal" class="modal hidden" onclick="if(event.target===this)cerrarModalCotReal()">
   <div class="modal-box" onclick="event.stopPropagation()">
     <div class="modal-header">
-      <div id="mcrTitle" class="modal-title">✅ Cotización enviada</div>
+      <div id="mcrTitle" class="modal-title">Cotización enviada</div>
       <span class="modal-close" onclick="cerrarModalCotReal()">×</span>
     </div>
     <div id="mcrBody" style="font-size:14px;line-height:1.9;color:#333;"></div>
@@ -682,8 +626,6 @@ let SACOS = JSON.parse(localStorage.getItem('SACOS')) || [
 SACOS = SACOS.map(s => s.pA !== undefined ? s : {...s, pA:s.p2, pB:s.p2, pC:s.p2});
 
 let CARRITO = JSON.parse(localStorage.getItem('CARRITO')||'[]');
-let _editTelaId = null;
-let _editSacoId = null;
 
 function saveTelas(){ localStorage.setItem('TELAS', JSON.stringify(TELAS)); }
 function saveSacos(){ localStorage.setItem('SACOS', JSON.stringify(SACOS)); }
@@ -706,9 +648,7 @@ function abrirSeccion(sec, el){
   document.getElementById(sec).classList.add('active');
   el.classList.add('active');
   document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').style.display='none';
-  if(sec==='telas') refrescarTelas();
-  else if(sec==='sacos') refrescarSacos();
-  else if(sec==='historial') refrescarHistorial();
+  if(sec==='historial') refrescarHistorial();
 }
 
 function cambiarTab(btn, tabId){
@@ -862,7 +802,7 @@ function cotCalcTela(){
   const warn = document.getElementById('warnTela');
   const desperdicio = aC - aFt;
   if(desperdicio > 0.05){
-    warn.innerHTML = `<div class="warn-box">⚠️ Ancho ${ua==='m'?a.toFixed(2)+' m':aFt.toFixed(1)+' ft'} → cobrado ${fmtA(aC,ua)} (múltiplo de 6 ft). ${cant>1?cant+' cortes × ':''}${desperdicio.toFixed(1)} ft desperdicio c/u.</div>`;
+    warn.innerHTML = `<div class="warn-box">${_ic('warn')} Ancho ${ua==='m'?a.toFixed(2)+' m':aFt.toFixed(1)+' ft'} → cobrado ${fmtA(aC,ua)} (múltiplo de 6 ft). ${cant>1?cant+' cortes × ':''}${desperdicio.toFixed(1)} ft desperdicio c/u.</div>`;
   } else { warn.innerHTML = ''; }
 
   res.classList.add('show');
@@ -953,7 +893,7 @@ function agregarTela(){
   _ultimaFirmaTela = _firmaTela();
   saveCarrito();
   renderCarrito();
-  toast('✅ Tela agregada al presupuesto');
+  toast('Tela agregada al presupuesto');
 }
 
 function agregarSaco(){
@@ -981,7 +921,7 @@ function agregarSaco(){
   _ultimaFirmaSaco = _firmaSaco();
   saveCarrito();
   renderCarrito();
-  toast('✅ Saco agregado al presupuesto');
+  toast('Saco agregado al presupuesto');
 }
 
 // Firma de lo tecleado en la calculadora: permite saber si hay un cálculo que el vendedor
@@ -1041,7 +981,7 @@ function editarItemCarrito(uid){
     actSacoPreview();
   }
   document.querySelector('.content').scrollTo({top:0, behavior:'smooth'});
-  toast('✏️ Ítem cargado — modifica y vuelve a agregar');
+  toast('Ítem cargado — modifica y vuelve a agregar');
 }
 
 function limpiarCarrito(){
@@ -1084,23 +1024,23 @@ function renderCarrito(){
       const cantLabel = item.cant > 1 ? `<strong>${item.cant}×</strong> ` : '';
       html += `<div class="cart-item">
         <div class="cart-item-body">
-          <div class="ci-nombre">📊 ${cantLabel}${item.nombre}</div>
+          <div class="ci-nombre">${_ic('fabric')} ${cantLabel}${item.nombre}</div>
           <div class="ci-detalle">${solLabel} × ${lLabel}${item.cant>1?' c/u':''} → ${item.ar.toFixed(1)} pie² · $${item.p.toFixed(3)}/pie² (${item.modo==='master'?'Master':'Conf.'})${tcLabel}</div>
-          ${difiere?`<div class="ci-cobrado">⚠️ Cobrado: ${cobLabel}</div>`:''}
+          ${difiere?`<div class="ci-cobrado">${_ic('warn')} Cobrado: ${cobLabel}</div>`:''}
         </div>
         <div class="ci-total">${qLabel}</div>
-        <button class="btn btn-warning btn-sm" onclick="editarItemCarrito(${item.uid})">✏️</button>
-        <button class="btn btn-danger btn-sm" onclick="quitarItem(${item.uid})">✕</button>
+        <button class="btn btn-warning btn-sm" onclick="editarItemCarrito(${item.uid})" aria-label="Editar">${_ic('edit')}</button>
+        <button class="btn btn-danger btn-sm" onclick="quitarItem(${item.uid})" aria-label="Quitar">${_ic('x')}</button>
       </div>`;
     } else {
       html += `<div class="cart-item tipo-saco">
         <div class="cart-item-body">
-          <div class="ci-nombre">🛍️ ${item.nombre}</div>
+          <div class="ci-nombre">${_ic('bag')} ${item.nombre}</div>
           <div class="ci-detalle">${item.medidas} · ${item.cantidad} u · <strong>Tier ${item.tier}</strong> · Q${item.precioUnit.toFixed(2)}/u</div>
         </div>
         <div class="ci-total">Q${item.totalQ.toFixed(2)}</div>
-        <button class="btn btn-warning btn-sm" onclick="editarItemCarrito(${item.uid})">✏️</button>
-        <button class="btn btn-danger btn-sm" onclick="quitarItem(${item.uid})">✕</button>
+        <button class="btn btn-warning btn-sm" onclick="editarItemCarrito(${item.uid})" aria-label="Editar">${_ic('edit')}</button>
+        <button class="btn btn-danger btn-sm" onclick="quitarItem(${item.uid})" aria-label="Quitar">${_ic('x')}</button>
       </div>`;
     }
   });
@@ -1131,7 +1071,7 @@ function generarPDF_OLD_UNUSED(){
       const difiere  = Math.abs(item.aCobFt - item.aSolFt) > 0.05;
       txt += `\n${idx+1}. ${item.cant>1?item.cant+'× ':''}${item.nombre} (${item.modo==='master'?'Master':'Confeccionado'})\n`;
       txt += `   Solicitado: ${solLabel} × ${lLabel}\n`;
-      if(difiere) txt += `   ⚠️ Cobrado: ${cobLabel} × ${lLabel} (múltiplo 6ft)\n`;
+      if(difiere) txt += `   ATENCIÓN - Cobrado: ${cobLabel} × ${lLabel} (múltiplo 6ft)\n`;
       txt += `   Área: ${item.ar.toFixed(1)} pie² · $${item.p.toFixed(3)}/pie²\n`;
       txt += `   Total: $${item.tu.toFixed(2)} USD`;
       if(item.totalQ !== null) txt += ` = Q${item.totalQ.toFixed(2)} (TC ${item.tc})`;
@@ -1145,13 +1085,13 @@ function generarPDF_OLD_UNUSED(){
 
   txt += '\n━━━━━━━━━━━━━━━━━━━━\n';
   txt += `TOTAL GENERAL: Q${gran.toFixed(2)}${haySinTC?' (*items USD sin TC no incluidos)':''}\n`;
-  txt += '\n⚠️ Anchos cobrados = múltiplo de 6 pies superior al solicitado.\nPalín, Escuintla · Guatemala';
+  txt += '\nATENCIÓN: anchos cobrados = múltiplo de 6 pies superior al solicitado.\nPalín, Escuintla · Guatemala';
 
   if(navigator.share){
     navigator.share({ title: `Cotización ${ref}`, text: txt }).catch(()=>{});
   } else {
     navigator.clipboard?.writeText(txt);
-    toast('📋 Copiado al portapapeles');
+    toast('Copiado al portapapeles');
   }
 }
 
@@ -1163,7 +1103,7 @@ function guardarHistorial(){
   const gran    = CARRITO.reduce((s,i)=>s+(i.totalQ??0),0);
   h.push({ ref, cliente, fecha:new Date().toLocaleString('es-GT'), items:CARRITO.length, total:gran.toFixed(2) });
   localStorage.setItem('cotizaciones', JSON.stringify(h));
-  toast('✅ Guardado en historial');
+  toast('Guardado en historial');
 }
 
 function refrescarHistorial(){
@@ -1195,143 +1135,7 @@ function limpiarHistorial(){
   toast('Historial borrado');
 }
 
-function refrescarTelas(){
-  let html='';
-  TELAS.forEach(t=>{
-    html+=`<div class="item-card">
-      <div class="item-info">
-        <strong>${t.nombre}</strong>
-        <small>${t.cat}${t.sombra?' · '+t.sombra:''} · Rollo: ${t.rollo}</small><br>
-        <small>Master: $${t.pm.toFixed(3)} · Conf: $${t.pc.toFixed(3)}</small>
-      </div>
-      <div class="actions">
-        <button class="btn btn-warning btn-sm" onclick="abrirModalTela(${t.id})">✏️</button>
-        <button class="btn btn-danger btn-sm" onclick="eliminarTela(${t.id})">🗑️</button>
-      </div>
-    </div>`;
-  });
-  document.getElementById('telaList').innerHTML = html;
-}
-
-function abrirModalTela(id=null){
-  _editTelaId = id;
-  document.getElementById('modalTelaTitle').textContent = id ? '✏️ Editar Tela' : '➕ Agregar Tela';
-  if(id){
-    const t = TELAS.find(x=>x.id===id);
-    document.getElementById('tF_nombre').value = t.nombre;
-    document.getElementById('tF_cat').value    = t.cat;
-    document.getElementById('tF_sombra').value = t.sombra;
-    document.getElementById('tF_rollo').value  = t.rollo;
-    document.getElementById('tF_pm').value     = t.pm;
-    document.getElementById('tF_pc').value     = t.pc;
-  } else {
-    ['tF_nombre','tF_cat','tF_sombra','tF_rollo','tF_pm','tF_pc'].forEach(x=>document.getElementById(x).value='');
-  }
-  document.getElementById('modalTela').classList.remove('hidden');
-}
-
-function cerrarModalTela(){ document.getElementById('modalTela').classList.add('hidden'); }
-
-function guardarTela(){
-  const nombre = document.getElementById('tF_nombre').value.trim();
-  const cat    = document.getElementById('tF_cat').value.trim();
-  const sombra = document.getElementById('tF_sombra').value.trim();
-  const rollo  = document.getElementById('tF_rollo').value.trim();
-  const pm     = parseFloat(document.getElementById('tF_pm').value);
-  const pc     = parseFloat(document.getElementById('tF_pc').value);
-  if(!nombre || isNaN(pm) || isNaN(pc)){ toast('Completa nombre y precios','err'); return; }
-
-  if(_editTelaId){
-    const i = TELAS.findIndex(x=>x.id===_editTelaId);
-    TELAS[i] = {...TELAS[i], nombre, cat, sombra, rollo, pm, pc};
-    toast('✅ Tela actualizada');
-  } else {
-    const id = Math.max(...TELAS.map(x=>x.id),0)+1;
-    TELAS.push({id, nombre, cat, sombra, rollo, pm, pc});
-    toast('✅ Tela agregada');
-  }
-  saveTelas(); loadSelects(); refrescarTelas(); cerrarModalTela();
-}
-
-function eliminarTela(id){
-  if(!confirm('¿Eliminar esta tela?')) return;
-  TELAS = TELAS.filter(t=>t.id!==id);
-  saveTelas(); loadSelects(); refrescarTelas();
-  toast('Tela eliminada');
-}
-
-function refrescarSacos(){
-  let html='';
-  SACOS.forEach(s=>{
-    html+=`<div class="item-card" style="flex-wrap:wrap;gap:8px;">
-      <div class="item-info" style="min-width:0;">
-        <strong>${s.nombre}</strong>
-        <small>${s.medidas} · ${s.gm} gm</small>
-        <div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap;">
-          <span style="background:#e8f5e9;color:#1a6b45;font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;">A Q${s.pA.toFixed(2)}</span>
-          <span style="background:#e3f2fd;color:#0066cc;font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;">B Q${s.pB.toFixed(2)}</span>
-          <span style="background:#fff3e0;color:#d97706;font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;">C Q${s.pC.toFixed(2)}</span>
-        </div>
-      </div>
-      <div class="actions">
-        <button class="btn btn-warning btn-sm" onclick="abrirModalSaco(${s.id})">✏️</button>
-        <button class="btn btn-danger btn-sm" onclick="eliminarSaco(${s.id})">🗑️</button>
-      </div>
-    </div>`;
-  });
-  document.getElementById('sacoList').innerHTML = html;
-}
-
-function abrirModalSaco(id=null){
-  _editSacoId = id;
-  document.getElementById('modalSacoTitle').textContent = id ? '✏️ Editar Saco' : '➕ Agregar Saco';
-  if(id){
-    const s = SACOS.find(x=>x.id===id);
-    document.getElementById('sF_nombre').value  = s.nombre;
-    document.getElementById('sF_medidas').value = s.medidas;
-    document.getElementById('sF_gm').value      = s.gm;
-    document.getElementById('sF_pA').value      = s.pA;
-    document.getElementById('sF_pB').value      = s.pB;
-    document.getElementById('sF_pC').value      = s.pC;
-  } else {
-    ['sF_nombre','sF_medidas','sF_gm','sF_pA','sF_pB','sF_pC'].forEach(x=>document.getElementById(x).value='');
-  }
-  document.getElementById('modalSaco').classList.remove('hidden');
-}
-
-function cerrarModalSaco(){ document.getElementById('modalSaco').classList.add('hidden'); }
-
-function guardarSaco(){
-  const nombre  = document.getElementById('sF_nombre').value.trim();
-  const medidas = document.getElementById('sF_medidas').value.trim();
-  const gm      = parseInt(document.getElementById('sF_gm').value);
-  const pA      = parseFloat(document.getElementById('sF_pA').value);
-  const pB      = parseFloat(document.getElementById('sF_pB').value);
-  const pC      = parseFloat(document.getElementById('sF_pC').value);
-  if(!nombre || !medidas || isNaN(gm) || isNaN(pA) || isNaN(pB) || isNaN(pC)){
-    toast('Completa todos los campos incluidos los 3 precios','err'); return;
-  }
-
-  if(_editSacoId){
-    const i = SACOS.findIndex(x=>x.id===_editSacoId);
-    SACOS[i] = {...SACOS[i], nombre, medidas, gm, pA, pB, pC};
-    toast('✅ Saco actualizado');
-  } else {
-    const id = Math.max(...SACOS.map(x=>x.id),0)+1;
-    SACOS.push({id, nombre, medidas, gm, pA, pB, pC});
-    toast('✅ Saco agregado');
-  }
-  saveSacos(); loadSelects(); refrescarSacos(); cerrarModalSaco();
-}
-
-function eliminarSaco(id){
-  if(!confirm('¿Eliminar este saco?')) return;
-  SACOS = SACOS.filter(s=>s.id!==id);
-  saveSacos(); loadSelects(); refrescarSacos();
-  toast('Saco eliminado');
-}
-
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261007"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261009"></script></body>
 </html>

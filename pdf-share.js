@@ -205,17 +205,20 @@ if(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Loca
   window.Capacitor.Plugins.LocalNotifications.requestPermissions();
 }
 
-// -- Sync de precios (GitHub API con Token) --
-var GITHUB_API_URL = 'https://api.github.com/repos/jochoa0411/pricessrn/contents/precios.json';
+// -- Sync de precios: la lista se edita en el ERP (PFS > Ventas > Catalogo > Catalogo de Precios)
+// y se descarga del relay con la sesion del vendedor (GET /precios). Sin sesion no sincroniza.
+var _ultimaSyncPrecios = 0;
+var SYNC_PRECIOS_MS = 5 * 60 * 1000;
 
 async function syncPrecios(manual){
   try {
-    var headers = {'Accept':'application/vnd.github.v3+json'};
-    var r = await fetch(GITHUB_API_URL + '?t=' + Date.now(), { headers: headers });
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    var jsonResponse = await r.json();
-    var content = decodeURIComponent(escape(atob(jsonResponse.content.replace(/\s/g, ''))));
-    var data = JSON.parse(content);
+    if(!manual && Date.now() - _ultimaSyncPrecios < SYNC_PRECIOS_MS) return;
+    var sesion = typeof _cargarSesion === 'function' ? _cargarSesion() : null;
+    if(!sesion || !sesion.token){ if(manual) toast('Inicia sesion para actualizar los precios','err'); return; }
+    var resp = await _api('/precios');
+    if(!resp.ok) throw new Error(resp.data && resp.data.error || ('HTTP '+resp.status));
+    _ultimaSyncPrecios = Date.now();
+    var data = resp.data;
 
     var vLocal = parseInt(localStorage.getItem('PRECIOS_VERSION')||'0');
     if(data.version > vLocal){
@@ -245,7 +248,7 @@ async function syncPrecios(manual){
       toast('Ya tenes la ultima version (v'+vLocal+')');
     }
   } catch(e){
-    if(manual) toast('Sin conexion - usando precios locales','err');
+    if(manual && !(e && e.handled)) toast('Sin conexion - usando precios locales','err');
   }
 }
 
@@ -254,12 +257,13 @@ window.addEventListener('load', function(){
   var header = document.querySelector('header');
   var btn = document.createElement('button');
   btn.className = 'toggle-menu';
-  btn.textContent = '\u{1F504}';
+  btn.setAttribute('aria-label','Actualizar precios');
+  btn.innerHTML = (typeof _ic === 'function') ? _ic('refresh') : '';
   btn.onclick = function(){ syncPrecios(true); };
   header.replaceChild(btn, header.lastElementChild);
 });
 
-setInterval(function(){ syncPrecios(false); }, 5000);
+setInterval(function(){ syncPrecios(false); }, 60 * 1000);
 
 if(window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App){
   Capacitor.Plugins.App.addListener('appStateChange', function(state){
