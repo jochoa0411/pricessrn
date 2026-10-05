@@ -327,7 +327,10 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
         </div>
         <div class="field" style="position:relative">
           <label>Cliente *</label>
-          <input type="text" id="cotCliente" placeholder="Escribe para buscar en tus clientes…" autocomplete="off" oninput="buscarClientes()" onfocus="buscarClientes()">
+          <div style="position:relative">
+            <input type="text" id="cotCliente" placeholder="Toca para ver tus clientes o escribe…" autocomplete="off" oninput="buscarClientes()" onfocus="buscarClientes()" style="padding-right:48px">
+            <button type="button" onclick="alternarListaClientes(event)" aria-label="Ver lista de clientes" style="position:absolute;right:0;top:0;bottom:0;width:46px;background:none;border:none;color:#1a6b45;cursor:pointer"><span class="ic"><svg viewBox="0 0 24 24" style="width:20px;height:20px"><path d="m6 9 6 6 6-6"/></svg></span></button>
+          </div>
           <div id="cliSug" class="sug hidden"></div>
           <div id="cliRecientes" class="chips"></div>
         </div>
@@ -1330,5 +1333,5 @@ function eliminarSaco(id){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261006"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261007"></script></body>
 </html>

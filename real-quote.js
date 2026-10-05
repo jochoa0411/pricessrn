@@ -368,7 +368,7 @@ function _buscarLocal(q){
     var h = _cliIdx[i];
     if (toks.every(function(t){ return h.indexOf(t) >= 0; })) (h.indexOf(toks[0]) === 0 ? ini : resto).push(_cliCache.lista[i]);
   }
-  return ini.concat(resto).slice(0, 15);
+  return ini.concat(resto).slice(0, 40);
 }
 function _haceCuantoCorto(ts){
   var m = Math.floor((Date.now() - ts) / 60000);
@@ -390,6 +390,7 @@ function _pintarSug(rec, srv){
     return '<div class="sug-item" onclick="elegirSug(' + i + ')"><span class="sug-tag' + (it.rec ? ' rec' : '') + '">' + (it.rec ? 'Reciente' : 'Cliente') + '</span>'
       + '<strong>' + _esc(c.nombre) + '</strong><small>' + (c.nit ? 'NIT ' + _esc(c.nit) : 'Sin NIT') + (c.correo ? ' · ' + _esc(c.correo) : '') + '</small></div>';
   }).join('');
+  if (_sugItems.length >= 80 && !document.getElementById('cotCliente').value.trim()) html += '<div class="sug-vacio">Mostrando los primeros 80 — escribe para filtrar el resto.</div>';
   if (!_sugItems.length) html += '<div class="sug-vacio">' + (_cliCache ? 'Sin coincidencias — se usará el nombre que escribas.' : (_cliSyncing ? 'Descargando catálogo de clientes…' : 'Catálogo aún no descargado. Toca Actualizar con internet.')) + '</div>';
   html += '<div class="cli-pie"><span>' + (_cliCache ? _cliCache.lista.length + ' clientes guardados · act. hace ' + _haceCuantoCorto(_cliCache.ts) : 'Sin catálogo local') + '</span>'
     + '<button type="button" onclick="forzarSyncClientes(event)">' + _ic('refresh', 14) + ' ' + (_cliSyncing ? 'Actualizando…' : 'Actualizar') + '</button></div>';
@@ -403,14 +404,19 @@ function buscarClientes(){
   var q = el.value.trim();
   if (_clienteSel && q !== _clienteSel.nombre) _clienteSel = null;
   if (!_cliCache) _cliCargarLocal();
+  var nq = _norm(q);
   var rec = _lsGet('cotClientesRecientes', []).filter(function(x){
-    return !q || _norm(x.nombre + ' ' + x.nit).indexOf(_norm(q)) >= 0;
+    return !nq || _norm(x.nombre + ' ' + x.nit).indexOf(nq) >= 0;
   }).slice(0, 4);
-  if (q.length < 2) {
-    if (!q && rec.length) _pintarSug(rec, []); else document.getElementById('cliSug').classList.add('hidden');
-    return;
-  }
-  _pintarSug(rec, _buscarLocal(q));
+  // Sin texto: se despliega el catálogo completo (A-Z) para explorarlo; con texto, se filtra.
+  var lista = q ? _buscarLocal(q) : (_cliCache ? _cliCache.lista.slice(0, 80) : []);
+  _pintarSug(rec, lista);
+}
+function alternarListaClientes(ev){
+  if (ev) ev.stopPropagation();
+  var box = document.getElementById('cliSug');
+  if (!box.classList.contains('hidden')) { box.classList.add('hidden'); return; }
+  buscarClientes();
 }
 document.addEventListener('click', function(ev){
   if (!ev.target.closest || ev.target.closest('#cotCliente') || ev.target.closest('#cliSug')) return;
@@ -941,7 +947,7 @@ async function abrirEditar(id){
     document.getElementById('medTitle').textContent = (ro ? 'Ver ' : 'Editar ') + q.no_cotizacion;
     var est = String(q.estatus || '').toUpperCase();
     document.getElementById('medAviso').innerHTML = ro
-      ? '<div class="res-warn"><strong>Solo lectura.</strong> Esta cotización se creó o avanzó en el sistema (' + _esc(est.toLowerCase()) + '), así que desde el celular solo se puede ver, descargar y reenviar. Edítala en el ERP.</div>'
+      ? '<div class="res-warn"><strong>Solo lectura.</strong> Esta cotización está ' + _esc(est.toLowerCase()) + (q.fel_numero ? ' y facturada' : '') + ', así que ya no puede cambiar de monto. Puedes verla, descargarla y reenviarla.</div>'
       : '<div class="res-warn" style="border-color:#1a6b45"><strong style="color:#1a6b45">Editando el folio ' + _esc(q.no_cotizacion) + '.</strong> Al guardar se actualiza esta misma cotización (no se crea otra).'
         + ((est === 'APROBADA' || est === 'PENDIENTE') ? '<br><strong>Estaba ' + _esc(est.toLowerCase()) + ':</strong> volverá a borrador y requerirá autorización de nuevo.' : '') + '</div>';
     document.getElementById('medCliente').value = q.cliente || '';
