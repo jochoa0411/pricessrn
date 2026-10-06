@@ -581,14 +581,14 @@ function _construirItemsCotizacionReal(){
       // el cliente; la medida pedida sí, porque es literalmente lo que va a recibir.
       var anchoLabel = item.ua === 'm' ? item.aSolM.toFixed(2) + 'm' : item.aSolFt.toFixed(1) + 'ft';
       var largoLabel = item.ul === 'm' ? item.lM.toFixed(2) + 'm' : item.lFt.toFixed(1) + 'ft';
-      var medida = anchoLabel + ' x ' + largoLabel;
+      var medida = anchoLabel.replace(/(\d)(ft|m)$/, '$1 $2') + ' x ' + largoLabel.replace(/(\d)(ft|m)$/, '$1 $2');
       var modoLabel = item.modo === 'master' ? 'Master' : 'Confeccionado';
       var precioSqft = moneda === 'GTQ' ? (item.p * item.tc) : item.p;
 
       if (item.modo === 'master') {
         // Rollo Master: material crudo, se vende por área continua.
         return {
-          descripcion: item.nombre + ' — ' + medida + ' — ' + modoLabel,
+          descripcion: tlDescripcionLinea(item, medida),
           unidad: 'pie²',
           cantidad: item.ar,
           precio_unitario: precioSqft,
@@ -597,14 +597,14 @@ function _construirItemsCotizacionReal(){
       // Confeccionado: pieza terminada (con ojetes/rebete) — se cotiza por unidad,
       // no por área; el precio unitario es el total de UNA pieza de esa medida.
       return {
-        descripcion: item.nombre + ' — ' + medida + ' — ' + modoLabel + (window.tlAcabadoTxt && tlAcabadoTxt(item) ? ' — ' + tlAcabadoTxt(item) : ''),
+        descripcion: tlDescripcionLinea(item, medida),
         unidad: 'UNIDAD',
         cantidad: item.cant,
         precio_unitario: item.arCorte * precioSqft,
       };
     }
     return {
-      descripcion: item.nombre + (item.medidas ? ' (' + item.medidas + ')' : ''),
+      descripcion: tlDescripcionSaco(item),
       unidad: 'UNIDAD',
       cantidad: item.cantidad,
       precio_unitario: item.precioUnit,

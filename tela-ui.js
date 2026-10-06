@@ -53,6 +53,31 @@
     return t + (it.fuelle ? ' · con fuelle' : '');
   };
 
+  // Descripción de la línea de cotización, redactada como una frase (sin guiones que delaten una línea armada)
+  window.tlDescripcionLinea = function (item, medida) {
+    var ac = [];
+    if (item.modo === 'master') return item.nombre + ' en rollo, corte de ' + medida;
+    var base = item.nombre + ' confeccionada de ' + medida;
+    if (item.orSi != null) {
+      var c = item.orCada;
+      ac.push(item.orSi ? 'con ojetes y rebete cada ' + fmt(c, c % 1 ? 1 : 0) + (c === 1 ? ' pie' : ' pies') : 'sin ojetes ni rebete');
+      if (item.fuelle) ac.push('con fuelle');
+    }
+    return base + (ac.length ? ', ' + ac.join(' y ') : '');
+  };
+  window.tlDescripcionSaco = function (item) {
+    var s = (typeof SACOS !== 'undefined') ? SACOS.filter(function (x) { return x.id == item.sacoId; })[0] : null;
+    var nom = String(item.nombre || '').trim(), baja = nom.toLowerCase();
+    var t = /^saco/i.test(nom) ? nom : 'Saco ' + nom;
+    var med = String(item.medidas || (s && s.medidas) || '').trim();
+    if (med && baja.indexOf(med.toLowerCase()) < 0) t += ' de ' + med;
+    var extra = [];
+    if (s && s.gm) extra.push(s.gm + ' gm');
+    if (s && s.color && baja.indexOf(String(s.color).toLowerCase()) < 0) extra.push('color ' + String(s.color).toLowerCase());
+    if (s && s.impresion === 'CON') extra.push('con impresión'); else if (s && s.impresion === 'SIN') extra.push('sin impresión');
+    return t + (extra.length ? ', ' + extra.join(', ') : '');
+  };
+
   // ── Unidades: segmentado ft | m por dimensión (convierte el valor para conservar la medida física) ──
   window.tlSetUom = function (cual, u) {
     var sel = $(cual === 'ancho' ? 'cotUAncho' : 'cotULargo'), inp = $(cual === 'ancho' ? 'cotAncho' : 'cotLargo');
