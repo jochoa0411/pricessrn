@@ -216,10 +216,12 @@ async function syncPrecios(manual){
     if(!manual && Date.now() - _ultimaSyncPrecios < SYNC_PRECIOS_MS) return;
     var sesion = typeof _cargarSesion === 'function' ? _cargarSesion() : null;
     if(!sesion || !sesion.token){ if(manual) toast('Inicia sesion para actualizar los precios','err'); return; }
-    var resp = await _api('/precios');
+    // Se manda la versión local: si no cambió, el servidor responde {unchanged:true} sin reenviar la lista
+    var resp = await _api('/precios?v=' + (parseInt(localStorage.getItem('PRECIOS_VERSION')||'0') || 0));
     if(!resp.ok) throw new Error(resp.data && resp.data.error || ('HTTP '+resp.status));
     _ultimaSyncPrecios = Date.now();
     var data = resp.data;
+    if(data.unchanged){ if(manual) toast('Ya tenes la ultima version (v'+data.version+')'); return; }
 
     var vLocal = parseInt(localStorage.getItem('PRECIOS_VERSION')||'0');
     if(data.version > vLocal){

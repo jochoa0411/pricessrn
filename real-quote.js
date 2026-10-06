@@ -258,22 +258,61 @@ function _fmtMoneda(n, moneda){
 }
 
 // Llamada autenticada al relay. Cierra la sesión sola si el servidor responde 401.
+// fetch con tiempo límite: en redes móviles una petición puede quedarse colgada sin fallar nunca y dejar la
+// pantalla en «Cargando…». Al vencer lanza un error con .timeout = true.
+function _fetchTO(url, init, ms){
+  var ctl = new AbortController();
+  var t = setTimeout(function(){ ctl.abort(); }, ms || 15000);
+  init = Object.assign({}, init, { signal: ctl.signal });
+  return fetch(url, init).catch(function(e){
+    if (e && e.name === 'AbortError') { var te = new Error('Tiempo de espera agotado'); te.timeout = true; throw te; }
+    throw e;
+  }).finally(function(){ clearTimeout(t); });
+}
+function _esperar(ms){ return new Promise(function(res){ setTimeout(res, ms); }); }
+
+// Llamada autenticada al relay. Cierra la sesión sola si el servidor responde 401.
+//  - Tiempo límite: 15 s en lecturas, 45 s en escrituras (crear/enviar generan PDF y correo).
+//  - Lecturas (GET): se reintenta UNA vez si falla la red, vence el tiempo o el servidor responde 502/503/504;
+//    dos pedidos iguales al mismo tiempo comparten la misma petición. Las escrituras nunca se reintentan solas
+//    (evitaría duplicar cotizaciones).
+var _apiEnVuelo = {};
 async function _api(path, opts){
   var sesion = _cargarSesion();
   if (!sesion || !sesion.token) { _mostrarLogin(); var e0 = new Error('sin sesión'); e0.handled = true; throw e0; }
   opts = opts || {};
+  var metodo = opts.method || 'GET';
+  var esGet = metodo === 'GET';
+  if (esGet && _apiEnVuelo[path]) return _apiEnVuelo[path];
+
   var headers = { 'X-Api-Key': COT_API_KEY, 'Authorization': 'Bearer ' + sesion.token };
   if (opts.body) headers['Content-Type'] = 'application/json';
-  var r = await fetch(COT_API_BASE + '/api/ventas/cotizaciones-publicas' + path, {
-    method: opts.method || 'GET', headers: headers,
-    body: opts.body ? JSON.stringify(opts.body) : undefined,
-  });
-  var data = await r.json().catch(function(){ return {}; });
-  if (r.status === 401) {
-    _cerrarSesion('Tu sesión expiró — inicia sesión de nuevo. Lo que tenías en pantalla no se perdió.');
-    var e1 = new Error('401'); e1.handled = true; throw e1;
-  }
-  return { ok: r.ok, status: r.status, data: data };
+  var init = { method: metodo, headers: headers, body: opts.body ? JSON.stringify(opts.body) : undefined };
+  var url = COT_API_BASE + '/api/ventas/cotizaciones-publicas' + path;
+  var ms = esGet ? 15000 : 45000;
+
+  var tarea = (async function(){
+    var r, intento = 0;
+    for (;;) {
+      try {
+        r = await _fetchTO(url, init, ms);
+        if (esGet && intento === 0 && (r.status === 502 || r.status === 503 || r.status === 504)) { intento++; await _esperar(700); continue; }
+        break;
+      } catch (e) {
+        if (esGet && intento === 0) { intento++; await _esperar(700); continue; }
+        throw e;
+      }
+    }
+    var data = await r.json().catch(function(){ return {}; });
+    if (r.status === 401) {
+      _cerrarSesion('Tu sesión expiró — inicia sesión de nuevo. Lo que tenías en pantalla no se perdió.');
+      var e1 = new Error('401'); e1.handled = true; throw e1;
+    }
+    if (r.status === 429 && !data.error) data.error = 'Demasiadas solicitudes seguidas. Espera un momento e intenta de nuevo.';
+    return { ok: r.ok, status: r.status, data: data };
+  })();
+  if (esGet) { _apiEnVuelo[path] = tarea; tarea.then(function(){ delete _apiEnVuelo[path]; }, function(){ delete _apiEnVuelo[path]; }); }
+  return tarea;
 }
 
 // ── Memoria local: últimos clientes y últimos datos de entrega/pago usados ──
@@ -472,9 +511,9 @@ async function consultarNit(){
   btn.classList.add('cargando');
 
   try {
-    var r = await fetch(COT_API_BASE + '/api/util/nit/' + encodeURIComponent(nit), {
+    var r = await _fetchTO(COT_API_BASE + '/api/util/nit/' + encodeURIComponent(nit), {
       headers: { 'X-Api-Key': COT_API_KEY },
-    });
+    }, 15000);
     var data = await r.json().catch(function(){ return {}; });
     if (!r.ok) {
       toast(r.status === 404 ? 'NIT no encontrado en el registro de la SAT' : (data.error || 'No se pudo consultar el NIT'), 'err');
