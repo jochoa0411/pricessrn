@@ -691,16 +691,16 @@ body.tl-bar-on .content { padding-bottom:104px; }
       <div id="cot-saco" class="tab-content">
         <div class="card">
           <div class="card-title">Ítem de saco</div>
-          <div class="field"><label>Saco</label>
+          <div class="field" id="cotListaCampo" style="display:none;">
+            <label>1. Lista de precios</label>
+            <select id="cotListaSaco" onchange="cambiarListaSaco(true)"><option value="">General (A / B / C)</option></select>
+            <div id="cotListaChip" class="chip-lista" style="display:none;"></div>
+          </div>
+          <div class="field"><label id="cotSacoLbl">Saco</label>
             <select id="cotSacoSelect" onchange="actSacoPreview()"><option value="">Selecciona un saco…</option></select>
           </div>
           <div id="cotSacoPreview" class="preview-box"></div>
 
-          <div class="field" id="cotListaCampo" style="margin-top:10px;display:none;">
-            <label>Lista de precios</label>
-            <select id="cotListaSaco" onchange="cambiarListaSaco(true)"><option value="">General (A / B / C)</option></select>
-            <div id="cotListaChip" class="chip-lista" style="display:none;"></div>
-          </div>
           <div class="field" style="margin-top:10px;">
             <label id="tierLabel">Tipo de cliente</label>
             <div class="tier-group" id="tierGroup">
@@ -1059,8 +1059,8 @@ function loadSelects(){
   // Sacos agrupados por medida (mayor a menor) y, dentro de cada medida, por color y peso
   let html = '<option value="">Selecciona un saco…</option>';
   gruposSacos().forEach((lista, medida) => {
-    const ops = lista.map(s => { const ok = window.sacoDisponibleEnLista ? sacoDisponibleEnLista(s) : true; return `<option value="${s.id}"${ok?'':' disabled'}>${etiquetaSaco(s)}${ok?'':' — sin precio en esta lista'}</option>`; }).join('');
-    html += `<optgroup label="${medida}">` + ops + '</optgroup>';
+    const ops = lista.filter(s => window.sacoDisponibleEnLista ? sacoDisponibleEnLista(s) : true).map(s => `<option value="${s.id}">${etiquetaSaco(s)}${window.precioListaTxt ? precioListaTxt(s) : ''}</option>`).join('');
+    if(ops) html += `<optgroup label="${medida}">` + ops + '</optgroup>';
   });
   sS.innerHTML = html;
   if(sv2) sS.value = sv2;
@@ -1517,5 +1517,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=2"></script><script src="listas-ui.js?v=1"></script><script src="real-quote.js?v=20261023"></script><script src="tela-ui.js?v=5"></script><script src="carrito-ui.js?v=4"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=2"></script><script src="listas-ui.js?v=2"></script><script src="real-quote.js?v=20261023"></script><script src="tela-ui.js?v=5"></script><script src="carrito-ui.js?v=4"></script></body>
 </html>

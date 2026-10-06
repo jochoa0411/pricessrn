@@ -82,6 +82,7 @@ var _listaManual = false;      // el vendedor eligió la lista a mano: ya no se 
     var mapa = id ? { A: 'BASE', B: 'MAS10', C: 'MAS10' } : { BASE: 'A', MAS10: 'B' };
     renderTiers(id, mapa[prev] || null);
     if (typeof loadSelects === 'function') loadSelects();
+    var ss = $('cotSacoSelect'); if (ss && ss.value && !ss.querySelector('option[value="' + ss.value + '"]')) ss.value = '';
     if (typeof actSacoPreview === 'function') actSacoPreview(); else cotCalcSaco();
     pintarChipLista();
   };
@@ -124,6 +125,12 @@ var _listaManual = false;      // el vendedor eligió la lista a mano: ya no se 
   };
 
   // Opciones de sacos: con una lista elegida, las que no tienen precio en ella se muestran atenuadas y sin poder elegirse
+  // «  ·  Q1.65 / Q1.82» junto al nombre del saco cuando hay una lista de cliente elegida
+  window.precioListaTxt = function (s) {
+    var l = listaPorId(listaSacoId()); var p = l && l.precios && l.precios[s.id]; if (!p) return '';
+    var f = function (v) { return v == null ? '—' : 'Q' + Number(v).toFixed(2); };
+    return ' · ' + f(p.base) + ' / ' + f(p.mas10);
+  };
   window.sacoDisponibleEnLista = function (s) {
     var l = listaPorId(listaSacoId());
     return !l || tieneAlgunPrecio(l, s);
