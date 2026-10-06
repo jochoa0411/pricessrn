@@ -332,6 +332,47 @@ body.tl-bar-on .content { padding-bottom:104px; }
 .tc-row { display:flex; gap:6px; align-items:center; }
 .tc-row input { flex:1; min-width:0; padding:9px 10px; font-size:16px; }
 .tc-row .btn { flex-shrink:0; }
+
+/* ── Presupuesto: filas con cantidad rápida, edición en su lugar y deshacer ── */
+.cx-item { border:1px solid #e5e5ea; border-left:4px solid #1a6b45; border-radius:10px; padding:10px 10px 8px; margin-bottom:10px; background:#fff; }
+.cx-item.saco { border-left-color:#334155; }
+.cx-item.editando { border-color:#1a6b45; box-shadow:0 0 0 3px rgba(26,107,69,.14); }
+.cx-top { display:flex; gap:10px; align-items:flex-start; }
+.cx-ico { color:#1a6b45; margin-top:1px; } .cx-ico .ic svg { width:20px; height:20px; }
+.cx-item.saco .cx-ico { color:#334155; }
+.cx-txt { flex:1; min-width:0; }
+.cx-n { font-weight:700; font-size:14px; color:#111; line-height:1.25; }
+.cx-d { font-size:11px; color:#777; margin-top:2px; line-height:1.35; }
+.cx-nota { font-size:10px; color:#8a5a00; font-weight:600; margin-top:3px; display:flex; gap:4px; align-items:center; }
+.cx-nota .ic svg { width:12px; height:12px; }
+.cx-viejo { margin-top:6px; min-height:26px; padding:3px 10px; font-size:11px; }
+.cx-tot { font-weight:800; font-size:15px; color:#1a6b45; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.cx-bot { display:flex; justify-content:space-between; align-items:center; margin-top:8px; padding-top:8px; border-top:1px dashed #e5e5ea; gap:8px; }
+.cx-step { display:inline-flex; align-items:center; background:#f4f4f5; border-radius:10px; }
+.cx-step button { width:38px; height:34px; border:none; background:transparent; font-size:19px; font-weight:700; color:#333; cursor:pointer; }
+.cx-step button:active { background:#e4e4e7; border-radius:10px; }
+.cx-step span { min-width:76px; text-align:center; font-size:12px; color:#555; }
+.cx-step b { font-size:14px; color:#111; }
+.cx-acc { display:flex; gap:4px; }
+.cx-acc button { width:38px; height:34px; border:none; border-radius:9px; background:#f4f4f5; color:#334155; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
+.cx-acc button .ic svg { width:17px; height:17px; }
+.cx-acc button.danger { color:#b91c1c; }
+.cx-acc button:active { background:#e4e4e7; }
+.cx-add { width:100%; border:1.5px dashed #1a6b45; background:#fff; color:#1a6b45; border-radius:10px; padding:11px; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; margin-bottom:4px; }
+.cx-vacio { text-align:center; color:#8e8e93; padding:22px 12px; } .cx-vacio .ic svg { width:34px; height:34px; stroke-width:1.5; } .cx-vacio div { font-weight:700; margin-top:6px; color:#555; } .cx-vacio small { font-size:12px; }
+.cx-aviso { background:#fff; border:1.5px solid #b91c1c; color:#7f1d1d; border-radius:8px; padding:8px 10px; font-size:12px; margin-bottom:10px; gap:6px; align-items:flex-start; }
+.cx-aviso .ic svg { width:14px; height:14px; margin-top:1px; }
+.cx-sec { display:flex; justify-content:space-between; gap:4px; margin-top:8px; }
+.cx-sec button { flex:1; background:none; border:none; color:#334155; font-size:12px; font-weight:600; padding:10px 4px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:5px; }
+.cx-sec button:active { background:#f4f4f5; }
+.cx-sec button.danger { color:#b91c1c; }
+.cx-sec .ic svg { width:15px; height:15px; }
+.edit-banner { scroll-margin-top:76px; display:flex; justify-content:space-between; align-items:center; gap:10px; background:#1a6b45; color:#fff; border-radius:10px; padding:10px 14px; margin-bottom:10px; font-size:13px; }
+.edit-banner .ic svg { width:15px; height:15px; vertical-align:-2px; }
+.edit-banner button { background:rgba(255,255,255,.18); color:#fff; border:1px solid rgba(255,255,255,.5); border-radius:8px; padding:6px 12px; font-weight:700; font-size:12px; cursor:pointer; }
+.toast-undo { position:fixed; left:50%; bottom:max(86px, calc(78px + env(safe-area-inset-bottom))); transform:translateX(-50%) translateY(14px); z-index:1200; background:#1c1c1e; color:#fff; border-radius:12px; padding:8px 8px 8px 16px; display:flex; align-items:center; gap:14px; font-size:13px; font-weight:600; box-shadow:0 8px 24px rgba(0,0,0,.3); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; max-width:92vw; }
+.toast-undo.show { opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; }
+.toast-undo button { background:#fff; color:#1a6b45; border:none; border-radius:8px; padding:8px 14px; font-weight:800; font-size:12px; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -654,13 +695,14 @@ body.tl-bar-on .content { padding-bottom:104px; }
               <span>Total general</span>
               <strong id="cartTotal">Q0.00</strong>
             </div>
+            <div id="cartAviso" class="cx-aviso" style="display:none"></div>
             <div class="cart-btns">
-              <button class="btn btn-success" style="flex:2" onclick="abrirModalEnviarReal()"><span class="ic" data-ic="check"></span> Generar cotización real</button>
+              <button class="btn btn-success btn-block" onclick="abrirModalEnviarReal()"><span class="ic" data-ic="check"></span> Generar cotización real</button>
             </div>
-            <div class="cart-btns" style="margin-top:6px;">
-              <button class="btn btn-ghost" style="flex:2" onclick="generarPDF()"><span class="ic" data-ic="eye"></span> Vista previa local</button>
-              <button class="btn btn-primary" style="flex:1" onclick="guardarHistorial()"><span class="ic" data-ic="save"></span> Guardar</button>
-              <button class="btn btn-ghost btn-sm" onclick="limpiarCarrito()" aria-label="Limpiar presupuesto"><span class="ic" data-ic="trash"></span></button>
+            <div class="cx-sec">
+              <button type="button" onclick="generarPDF()"><span class="ic" data-ic="eye"></span> Vista previa</button>
+              <button type="button" onclick="guardarHistorial()"><span class="ic" data-ic="save"></span> Guardar borrador</button>
+              <button type="button" class="danger" onclick="limpiarCarrito()"><span class="ic" data-ic="trash"></span> Vaciar</button>
             </div>
           </div>
         </div>
@@ -1371,5 +1413,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261015"></script><script src="tela-ui.js?v=5"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261015"></script><script src="tela-ui.js?v=5"></script><script src="carrito-ui.js?v=2"></script></body>
 </html>
