@@ -1032,7 +1032,8 @@ function actSacoPreview(){
   if(!id){ box.style.display='none'; cotCalcSaco(); return; }
   const s = SACOS.find(x=>x.id==id);
   box.style.display = 'block';
-  box.innerHTML = `<strong>${s.nombre}</strong> · ${s.medidas} · ${s.gm} gm
+  const extra = (s.color?' · '+s.color:'') + (s.impresion==='CON'?' · con impresión':s.impresion==='SIN'?' · sin impresión':'');
+  box.innerHTML = `<strong>${s.nombre}</strong> · ${s.medidas} · ${s.gm} gm${extra}
     <div class="precio-tiers">
       <div class="precio-tier-badge"><span class="t-label">A</span><span class="t-val">Q${s.pA.toFixed(2)}</span></div>
       <div class="precio-tier-badge"><span class="t-label">B</span><span class="t-val">Q${s.pB.toFixed(2)}</span></div>
@@ -1454,5 +1455,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261017"></script><script src="tela-ui.js?v=5"></script><script src="carrito-ui.js?v=3"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261018"></script><script src="tela-ui.js?v=5"></script><script src="carrito-ui.js?v=3"></script></body>
 </html>
