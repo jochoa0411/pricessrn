@@ -22,12 +22,14 @@ function _emailValido(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||'')
 // Reemplaza el campo "Tu correo" de texto libre: la identidad de quien cotiza
 // ahora viene de sus credenciales reales del sistema, verificadas por el
 // servidor (POST /login emite un token acotado — solo sirve para estas rutas,
-// ver middleware/cotizadorMovilAuth.js en el backend). La sesión se cierra
-// sola tras 20 min sin actividad; el token además expira solo a las 8h como
-// respaldo del lado servidor.
+// ver middleware/cotizadorMovilAuth.js en el backend). La sesión PERMANECE
+// iniciada en el teléfono: el token dura 30 días y se renueva solo al abrir la
+// app si tiene más de un día. No hay cierre por inactividad; el servidor
+// revalida en cada petición que la cuenta siga activa, con permiso y con la
+// misma contraseña, y quien pierda el teléfono puede ser bloqueado desde el ERP
+// (suspender la cuenta o cambiar la contraseña). «Cerrar sesión» sigue en el menú.
 var COT_SESSION_KEY = 'cotSesion';
-var IDLE_MS = 20 * 60 * 1000;
-var _idleTimer = null;
+var SESION_RENOVAR_MS = 24 * 3600 * 1000;
 
 // Iconos del ojo (mostrar / ocultar contraseña) — SVG en vez de emoji.
 var _EYE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
@@ -146,7 +148,7 @@ function _mostrarApp(sesion){
   document.getElementById('navUserNombre').textContent = nom;
   document.getElementById('navUserCorreo').textContent = sesion.correo || '';
   document.getElementById('navUserIni').textContent = (nom.split(/\s+/).slice(0, 2).map(function(w){ return w.charAt(0); }).join('') || '?').toUpperCase();
-  _reiniciarVigilanciaInactividad();
+  renovarSesionSiHaceFalta(sesion);
   _renderRecientes();
   _cliCargarLocal();
   sincronizarClientes(true, true);
@@ -156,23 +158,20 @@ function _mostrarApp(sesion){
 
 function _cerrarSesion(mensaje){
   localStorage.removeItem(COT_SESSION_KEY);
-  if (_idleTimer) { clearTimeout(_idleTimer); _idleTimer = null; }
   _mostrarLogin();
   if (mensaje) toast(mensaje, 'err');
 }
 function cerrarSesionManual(){ _cerrarSesion(); }
 
-function _reiniciarVigilanciaInactividad(){
-  if (_idleTimer) clearTimeout(_idleTimer);
-  _idleTimer = setTimeout(function(){
-    _cerrarSesion('Tu sesión expiró por inactividad — inicia sesión de nuevo.');
-  }, IDLE_MS);
+// Renueva el token (otros 30 días) si el actual se emitió hace más de un día. Silencioso: si falla por red
+// se sigue con el token actual; si el servidor lo rechaza (401), _api cierra la sesión.
+async function renovarSesionSiHaceFalta(sesion){
+  if (Date.now() - (sesion.emitida || 0) < SESION_RENOVAR_MS) return;
+  try {
+    var r = await _api('/renovar', { method: 'POST' });
+    if (r.ok && r.data.token) _guardarSesion({ token: r.data.token, nombre: r.data.nombre, correo: r.data.correo, emitida: Date.now() });
+  } catch (e) { /* sin red: se conserva la sesión actual */ }
 }
-['click', 'keydown', 'touchstart'].forEach(function(ev){
-  document.addEventListener(ev, function(){
-    if (_idleTimer) _reiniciarVigilanciaInactividad();
-  }, { passive: true });
-});
 
 async function iniciarSesionCotizador(){
   var userEl = document.getElementById('loginUsername');
@@ -197,8 +196,10 @@ async function iniciarSesionCotizador(){
       toast(data.error || 'No se pudo iniciar sesión', 'err');
       return;
     }
-    var sesion = { token: data.token, nombre: data.nombre, correo: data.correo };
+    var sesion = { token: data.token, nombre: data.nombre, correo: data.correo, emitida: Date.now() };
     _guardarSesion(sesion);
+    // Pide al navegador que no borre los datos del sitio (sesión incluida) cuando falte espacio
+    try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
     passEl.value = '';
     _mostrarApp(sesion);
   } catch (e) {
