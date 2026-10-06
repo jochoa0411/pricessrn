@@ -24,7 +24,33 @@
   };
   window.tlModo = function (v) {
     var r = document.querySelector('input[name="cotModoTela"][value="' + v + '"]');
-    if (r) { r.checked = true; actTelaPreview(); }
+    if (r) { r.checked = true; actTelaPreview(); pintarAcabado(); }
+  };
+
+  // ── Acabado de la pieza confeccionada: ojetes y rebete (OR) cada N pies + fuelle. Solo informa (no cambia el precio) ──
+  var orSi = true, orCada = 2, fuelle = false;
+  function pintarAcabado() {
+    var box = $('tlAcabado'); if (!box) return;
+    var conf = (document.querySelector('input[name="cotModoTela"]:checked') || {}).value === 'conf';
+    box.style.display = conf ? 'block' : 'none';
+    setOn('tlOrSi', orSi); setOn('tlOrNo', !orSi); setOn('tlFuSi', fuelle); setOn('tlFuNo', !fuelle);
+    $('tlOrBox').style.display = orSi ? 'flex' : 'none';
+    if (document.activeElement !== $('tlOrCada')) $('tlOrCada').value = orCada || '';
+    document.querySelectorAll('.tl-or-q').forEach(function (b) { b.classList.toggle('on', parseFloat(b.dataset.v) === orCada); });
+  }
+  window.tlOR = function (v) { orSi = !!v; pintarAcabado(); };
+  window.tlOrCada = function (v) { orCada = parseFloat(v) || 0; pintarAcabado(); };
+  window.tlFuelle = function (v) { fuelle = !!v; pintarAcabado(); };
+  window.tlAcabadoDe = function () { return { orSi: orSi ? 1 : 0, orCada: orSi ? orCada : 0, fuelle: fuelle ? 1 : 0 }; };
+  window.tlSetAcabado = function (it) {   // al editar un ítem del presupuesto (los antiguos sin dato: Con OR cada 2 pies)
+    orSi = it && it.orSi != null ? !!it.orSi : true; orCada = it && it.orCada > 0 ? it.orCada : 2; fuelle = !!(it && it.fuelle);
+    pintarAcabado();
+  };
+  // «Con OR cada 2 pies · con fuelle» / «Sin OR»
+  window.tlAcabadoTxt = function (it) {
+    if (!it || it.modo === 'master' || it.orSi == null) return '';
+    var t = it.orSi ? 'Con OR cada ' + fmt(it.orCada, it.orCada % 1 ? 1 : 0) + ' ' + (it.orCada === 1 ? 'pie' : 'pies') : 'Sin OR';
+    return t + (it.fuelle ? ' · con fuelle' : '');
   };
 
   // ── Unidades: segmentado ft | m por dimensión (convierte el valor para conservar la medida física) ──
@@ -152,6 +178,7 @@
   function setOn(id, on) { var e = $(id); if (e) e.classList.toggle('on', !!on); }
   window.syncTelaUI = function () {
     if (!$('tlBar')) return;
+    pintarAcabado();
     var ua = $('cotUAncho').value, ul = $('cotULargo').value;
     var a = n($('cotAncho').value), l = n($('cotLargo').value);
     setOn('tlAnchoFt', ua === 'ft'); setOn('tlAnchoM', ua === 'm');
@@ -200,8 +227,15 @@
   var _agregarTela = window.agregarTela;
   window.agregarTela = function () {
     var antes = (typeof CARRITO !== 'undefined') ? CARRITO.length : 0;
+    var esConf = (document.querySelector('input[name="cotModoTela"]:checked') || {}).value === 'conf';
+    if (esConf && orSi && !(orCada > 0)) { toast('Indica cada cuántos pies van los ojetes (o elige Sin OR)', 'err'); $('tlOrCada').focus(); return; }
+    var ac = esConf ? tlAcabadoDe() : null;
     _agregarTela.apply(this, arguments);
     if (CARRITO.length > antes) {
+      if (ac) Object.assign(CARRITO[CARRITO.length - 1], ac);
+      if (typeof saveCarrito === 'function') saveCarrito();
+      if (typeof renderCarrito === 'function') renderCarrito();
+      orSi = true; orCada = 2; fuelle = false;
       // El formulario se limpia tras agregar (pdf-share.js): se reinician también las tarjetas y el ajuste
       adjTipo = 'none'; $('tlAdjPct').value = '';
       var m = document.querySelector('input[name="cotModoTela"]:checked');
@@ -225,7 +259,7 @@
   });
 
   window.addEventListener('load', function () {
-    tlRenderModos(null, 'master');
+    tlRenderModos(null, 'master'); pintarAcabado();
     tcOficial = leerTcLocal(); pintarTcHint(); pintarIvaChip();
     syncTelaUI();
   });

@@ -35,7 +35,8 @@
   function detalleTela(it) {
     var sol = it.ua === 'm' ? fmt(it.aSolM, 2) + ' m' : fmt(it.aSolFt, 1) + ' ft';
     var largo = it.ul === 'm' ? fmt(it.lM, 2) + ' m' : fmt(it.lFt, 1) + ' ft';
-    return (it.modo === 'master' ? 'Master' : 'Confeccionado') + ' · ' + sol + ' × ' + largo + (it.cant > 1 ? ' c/u' : '')
+    var ac = window.tlAcabadoTxt ? tlAcabadoTxt(it) : '';
+    return (it.modo === 'master' ? 'Master' : 'Confeccionado') + (ac ? ' · ' + ac : '') + ' · ' + sol + ' × ' + largo + (it.cant > 1 ? ' c/u' : '')
       + ' · $' + Number(it.p).toFixed(3) + '/pie²' + (it.tc ? ' · TC ' + it.tc : '');
   }
   function notaCobro(it) {
@@ -225,6 +226,7 @@
       $('cotPrecioManual').value = item.precioManual != null ? item.precioManual : '';
       var mr = document.querySelector('input[name="cotModoTela"][value="' + (item.modo || 'conf') + '"]');
       if (mr) mr.checked = true;
+      if (window.tlSetAcabado) tlSetAcabado(item);
       actTelaPreview();
     } else {
       tabBtns[1].classList.add('active'); $('cot-saco').classList.add('active');

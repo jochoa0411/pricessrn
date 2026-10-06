@@ -22,7 +22,7 @@ async function generarPDF(){
       var dimsCob = (item.aCobFt && Math.abs(item.aCobFt - item.aSolFt) > 0.01) ? anchoCob+' x '+largoSol : null;
       filas += '<tr>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;color:#bbb;font-size:10px;">'+(idx+1)+'</td>'
-        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;"><strong style="color:#1a6b45;">'+(item.cant>1?item.cant+'\u00d7 ':'')+item.nombre+'</strong><br><small style="color:#888;">'+(item.modo==='master'?'Rollo Master':'Confeccionado')+(item.recargo?' \u00b7 Rec/Desc '+item.recargo+'%':'')+'</small></td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;"><strong style="color:#1a6b45;">'+(item.cant>1?item.cant+'\u00d7 ':'')+item.nombre+'</strong><br><small style="color:#888;">'+(item.modo==='master'?'Rollo Master':'Confeccionado'+(window.tlAcabadoTxt&&tlAcabadoTxt(item)?' \u00b7 '+tlAcabadoTxt(item):''))+(item.recargo?' \u00b7 Rec/Desc '+item.recargo+'%':'')+'</small></td>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;font-size:11px;"><span style="font-weight:700;color:#555;">Solicitado:</span> '+dimsTxt+(dimsCob?'<br><span style="font-weight:700;color:#d97706;">Cobrado: '+dimsCob+'</span>':'')+'</td>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">'+(item.ar||0).toFixed(1)+' pie\u00b2</td>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">$'+(item.p||0).toFixed(3)+'</td>'

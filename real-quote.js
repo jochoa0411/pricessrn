@@ -597,7 +597,7 @@ function _construirItemsCotizacionReal(){
       // Confeccionado: pieza terminada (con ojetes/rebete) — se cotiza por unidad,
       // no por área; el precio unitario es el total de UNA pieza de esa medida.
       return {
-        descripcion: item.nombre + ' — ' + medida + ' — ' + modoLabel,
+        descripcion: item.nombre + ' — ' + medida + ' — ' + modoLabel + (window.tlAcabadoTxt && tlAcabadoTxt(item) ? ' — ' + tlAcabadoTxt(item) : ''),
         unidad: 'UNIDAD',
         cantidad: item.cant,
         precio_unitario: item.arCorte * precioSqft,
