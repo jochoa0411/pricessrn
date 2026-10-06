@@ -912,6 +912,7 @@ async function generarCotizacionReal(){
     cliente_nit: clienteNit,
     cod_cliente: (_clienteSel && _clienteSel.nombre === cliente && _clienteSel.codigo) || undefined,
     precios_version: parseInt(localStorage.getItem('PRECIOS_VERSION') || '0', 10) || undefined,
+    calculo: CARRITO.map(function(i){ var o = {}; Object.keys(i).forEach(function(k){ if (k !== 'uid' && k !== 'addedAt') o[k] = i[k]; }); return o; }),
     cliente_correo: clienteCorreo,
     moneda: armado.moneda,
     con_iva: conIva,
@@ -1013,6 +1014,76 @@ function renderMisCotizaciones(){
   }).join('');
 }
 
+// ── Hoja de cálculo de una cotización: cómo se costeó (anchos, largos, cortes, TC, recargo…) ──
+var _calc = null;   // { items, no }
+function cerrarModalCalculo(){ document.getElementById('modalCalculo').classList.add('hidden'); _calc = null; }
+
+function _fmtN(n, d){ return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+function _filaCalc(k, v){ return '<div class="cal-row"><span>' + k + '</span><b>' + v + '</b></div>'; }
+function _medida(ft, m, usaM){ return usaM ? _fmtN(m, 2) + ' m (' + _fmtN(ft, 1) + ' ft)' : _fmtN(ft, 1) + ' ft'; }
+
+function _htmlCalculoItem(i){
+  var h = '';
+  if (i.tipo === 'tela') {
+    var difiere = Math.abs((i.aCobFt || 0) - (i.aSolFt || 0)) > 0.05;
+    var base = i.precioManual ? i.precioManual : (i.p / (1 + (i.recargo || 0) / 100));
+    h += '<h5>' + _ic('fabric') + ' ' + _esc(i.nombre) + ' · ' + (i.modo === 'master' ? 'Rollo Master' : 'Confeccionado') + '</h5>'
+      + _filaCalc('Ancho solicitado', _medida(i.aSolFt, i.aSolM, i.ua === 'm'))
+      + _filaCalc('Ancho cobrado (múltiplo de 6 ft)', _medida(i.aCobFt, i.aCobM, i.ua === 'm') + (difiere ? ' ⟵ ajustado' : ''))
+      + _filaCalc('Largo por corte', _medida(i.lFt, i.lM, i.ul === 'm'))
+      + _filaCalc('Cortes', _fmtN(i.cant || 1, 0))
+      + _filaCalc('Área por corte', _fmtN(i.arCorte, 1) + ' pie²')
+      + _filaCalc('Área total facturada', _fmtN(i.ar, 1) + ' pie²')
+      + _filaCalc(i.precioManual ? 'Precio manual' : 'Precio de lista', '$' + _fmtN(base, 3) + ' /pie²')
+      + (i.recargo ? _filaCalc('Recargo / descuento', (i.recargo > 0 ? '+' : '') + _fmtN(i.recargo, 1) + ' %') : '')
+      + _filaCalc('Precio aplicado', '$' + _fmtN(i.p, 3) + ' /pie²')
+      + _filaCalc('Total USD', '$' + _fmtN(i.tu, 2))
+      + (i.tc ? _filaCalc('Tipo de cambio', 'Q' + _fmtN(i.tc, 2) + ' por US$1') + _filaCalc('Total Q', 'Q' + _fmtN(i.totalQ, 2)) : '');
+  } else {
+    var baseS = i.precioManual ? i.precioManual : (i.precioUnit / (1 + (i.recargo || 0) / 100));
+    h += '<h5>' + _ic('bag') + ' ' + _esc(i.nombre) + (i.medidas ? ' (' + _esc(i.medidas) + ')' : '') + '</h5>'
+      + _filaCalc('Cantidad', _fmtN(i.cantidad, 0) + ' u')
+      + _filaCalc(i.precioManual ? 'Precio manual' : 'Precio tier ' + _esc(i.tier || 'A'), 'Q' + _fmtN(baseS, 2) + ' /u')
+      + (i.recargo ? _filaCalc('Recargo / descuento', (i.recargo > 0 ? '+' : '') + _fmtN(i.recargo, 1) + ' %') : '')
+      + _filaCalc('Precio aplicado', 'Q' + _fmtN(i.precioUnit, 2) + ' /u')
+      + _filaCalc('Total Q', 'Q' + _fmtN(i.totalQ, 2));
+  }
+  return '<div class="cal-item">' + h + '</div>';
+}
+
+async function verCalculo(id){
+  var c = _cotLocal(id) || {};
+  toast('Abriendo cálculo…');
+  try {
+    var r = await _api('/mis/' + id);
+    if (!r.ok) { toast(r.data.error || 'No se pudo abrir el cálculo', 'err'); return; }
+    var q = r.data;
+    if (!q.calculo || !q.calculo.length) { toast('Esta cotización no tiene hoja de cálculo guardada', 'err'); return; }
+    _calc = { items: q.calculo, no: q.no_cotizacion };
+    document.getElementById('mcalTitle').textContent = 'Cálculo · ' + q.no_cotizacion;
+    var editada = new Date(q.updated_at) - new Date(q.created_at) > 60000;
+    document.getElementById('mcalBody').innerHTML =
+      '<div class="cal-nota">Así se costeó al crearla el ' + _fechaCorta(q.created_at)
+      + (q.precios_version ? ', con la lista de precios <b>v' + q.precios_version + '</b>' : '') + '.'
+      + (editada ? ' Después se editó: las líneas actuales pueden diferir de este cálculo.' : '') + '</div>'
+      + q.calculo.map(_htmlCalculoItem).join('');
+    document.getElementById('mcalCopiar').innerHTML = _ic('copy') + ' Copiar al presupuesto';
+    document.getElementById('modalCalculo').classList.remove('hidden');
+  } catch (e) { if (!e.handled) toast('Sin conexión al sistema — revisa tu internet', 'err'); }
+}
+
+// Vuelve a cargar esos cálculos en el presupuesto para ajustarlos con la calculadora (✎ en cada ítem).
+function copiarCalculoAlPresupuesto(){
+  if (!_calc) return;
+  var ahora = Date.now();
+  _calc.items.forEach(function(it){ CARRITO.push(Object.assign({}, it, { uid: ahora + Math.random(), addedAt: ahora })); });
+  saveCarrito(); renderCarrito();
+  var n = _calc.items.length;
+  cerrarModalCalculo();
+  abrirSeccion('cotizar', document.querySelector('#sidebar .nav-item'));
+  toast(n + (n === 1 ? ' ítem copiado' : ' ítems copiados') + ' al presupuesto');
+}
+
 // ── Menú ⋮ (mismas acciones que el kebab de Cotizaciones en el ERP) ──
 function _cotLocal(id){ return (_misCot || []).filter(function(x){ return x.id === id; })[0]; }
 function abrirAcciones(id){
@@ -1020,6 +1091,7 @@ function abrirAcciones(id){
   if (!c) return;
   var it = function(ic, txt, fn, cls){ return '<button class="act-item' + (cls ? ' ' + cls : '') + '" onclick="cerrarAcciones();' + fn + '">' + _ic(ic) + '<span>' + txt + '</span></button>'; };
   var h = it(c.editable ? 'edit' : 'eye', c.editable ? 'Editar' : 'Ver', 'abrirEditar(' + id + ')')
+    + (c.tiene_calculo ? it('calc', 'Ver cálculo', 'verCalculo(' + id + ')') : '')
     + it('print', 'Imprimir', "accionPdf(" + id + ",'imprimir')")
     + it('download', 'Descargar PDF', "accionPdf(" + id + ",'descargar')")
     + it('mail', 'Enviar por correo', 'abrirReenviar(' + id + ')');

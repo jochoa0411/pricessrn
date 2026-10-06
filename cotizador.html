@@ -224,6 +224,13 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 .btn { text-decoration:none; }
 .cli-guardar { margin-top:8px; padding:10px 12px; border:1px dashed #1a6b45; border-radius:10px; font-size:12px; color:#333; display:flex; flex-direction:column; gap:8px; }
 .cli-guardar .btn { align-self:flex-start; }
+.cal-item { border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px; margin-bottom:10px; }
+.cal-item h5 { margin:0 0 6px; font-size:14px; color:#1a6b45; display:flex; gap:6px; align-items:center; }
+.cal-row { display:flex; justify-content:space-between; gap:10px; padding:3px 0; font-size:12px; border-bottom:1px dashed #eee; }
+.cal-row:last-child { border-bottom:none; }
+.cal-row span:first-child { color:#666; }
+.cal-row b { text-align:right; }
+.cal-nota { background:#f4f4f5; border-radius:8px; padding:8px 10px; font-size:12px; color:#555; margin-bottom:10px; }
 </style>
 </head>
 <body>
@@ -355,7 +362,7 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
             <button type="button" class="btn btn-primary btn-sm" id="btnGuardarCliente" onclick="guardarClienteFrecuente()"><span class="ic" data-ic="user"></span> Guardar como cliente frecuente</button>
           </div>
         </div>
-        <div class="field"><label>Referencia</label><input type="text" id="cotRef" placeholder="ej: COT-2026-001"></div>
+        <input type="hidden" id="cotRef">
         <div class="field" style="margin-top:12px;">
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;font-size:14px;color:#1a6b45;font-weight:700;">
             <input type="checkbox" id="cotDesglosarIVA" style="width:20px;height:20px;margin:0;-webkit-appearance:checkbox;appearance:checkbox;" onchange="cotCalcTela();cotCalcSaco();">
@@ -577,6 +584,21 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
     <div class="field"><label>Se enviará a</label><div id="mreVendedor" style="padding:12px;background:#f4f4f5;border-radius:10px;font-weight:600;color:#1a6b45;"></div></div>
     <div class="field"><label>Copia al cliente (opcional)</label><input type="email" id="mreClienteCorreo" placeholder="cliente@empresa.com"></div>
     <div class="modal-btns"><button class="btn btn-success btn-block" id="btnMreEnviar" onclick="confirmarReenvio()"><span class="ic" data-ic="mail"></span> Reenviar</button></div>
+  </div>
+</div>
+
+<!-- HOJA DE CALCULO DE UNA COTIZACION -->
+<div id="modalCalculo" class="modal hidden" onclick="if(event.target===this)cerrarModalCalculo()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div id="mcalTitle" class="modal-title">Cálculo</div>
+      <span class="modal-close" onclick="cerrarModalCalculo()">×</span>
+    </div>
+    <div id="mcalBody" style="font-size:13px"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost btn-block" onclick="cerrarModalCalculo()">Cerrar</button>
+      <button class="btn btn-success btn-block" id="mcalCopiar" onclick="copiarCalculoAlPresupuesto()"></button>
+    </div>
   </div>
 </div>
 
@@ -1177,5 +1199,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261013"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261014"></script></body>
 </html>
