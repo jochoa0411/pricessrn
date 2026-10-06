@@ -149,8 +149,8 @@ function _mostrarApp(sesion){
   document.getElementById('navUserCorreo').textContent = sesion.correo || '';
   document.getElementById('navUserIni').textContent = (nom.split(/\s+/).slice(0, 2).map(function(w){ return w.charAt(0); }).join('') || '?').toUpperCase();
   renovarSesionSiHaceFalta(sesion);
-  _renderRecientes();
   _cliCargarLocal();
+  _renderRecientes();
   sincronizarClientes(true, true);
   setTimeout(function(){ if (!_misCot) cargarMisCotizaciones(false); }, 1500);   // precarga: el menú muestra el total y «Mis cotizaciones» abre al instante
   if (typeof syncPrecios === 'function') syncPrecios(false);
@@ -332,8 +332,15 @@ function _lsSet(base, val){ try { localStorage.setItem(_lsKey(base), JSON.string
 
 var _CAMPOS_TERMINOS = { forma_entrega: 'merFormaEntrega', lugar_entrega: 'merLugarEntrega', tiempo_entrega: 'merTiempoEntrega', forma_pago: 'merFormaPago' };
 
+// La barra de «recientes» es solo para clientes que ya están en el catálogo: los nuevos se guardan en la BD
+// al enviar la cotización y de ahí en adelante se buscan en el catálogo, no se acumulan aquí.
+function _olvidarReciente(nombre){
+  var n = String(nombre || '').toLowerCase();
+  _lsSet('cotClientesRecientes', _lsGet('cotClientesRecientes', []).filter(function(x){ return x.nombre.toLowerCase() !== n; }));
+}
 function _recordarCliente(c){
   if (!c || !c.nombre) return;
+  if (!c.codigo && _cliCache && !_filaCatalogo(c.nombre, c.nit)) { _olvidarReciente(c.nombre); return; }
   var list = _lsGet('cotClientesRecientes', []).filter(function(x){ return x.nombre.toLowerCase() !== c.nombre.toLowerCase(); });
   list.unshift({ nombre: c.nombre, nit: c.nit || '', correo: c.correo || '', codigo: c.codigo || null, ts: Date.now() });
   _lsSet('cotClientesRecientes', list.slice(0, 12));
@@ -354,7 +361,14 @@ function _recordarTerminos(t){
 var _clienteSel = null;   // { codigo, nombre, nit, correo } del cliente elegido de la lista
 var _sugItems = [];
 
+function _depurarRecientes(){
+  if (!_cliCache) return;
+  var lista = _lsGet('cotClientesRecientes', []);
+  var buenos = lista.filter(function(x){ return x.codigo || _filaCatalogo(x.nombre, x.nit); });
+  if (buenos.length !== lista.length) _lsSet('cotClientesRecientes', buenos);
+}
 function _renderRecientes(){
+  _depurarRecientes();
   var box = document.getElementById('cliRecientes');
   if (!box) return;
   var rec = _lsGet('cotClientesRecientes', []).slice(0, 5);
@@ -972,11 +986,15 @@ async function generarCotizacionReal(){
   btn.disabled = true;
   btn.textContent = 'Generando...';
 
+  // Cliente que no está en el catálogo (y no es consumidor final): se registra en la BD junto con la cotización
+  var esNuevoCliente = !!(_cliCache && _cliCache.puede_crear && !(_clienteSel && _clienteSel.nombre === cliente && _clienteSel.codigo)
+    && !_esCF(clienteNit) && !_filaCatalogo(cliente, clienteNit));
   var conIva = !document.getElementById('cotDesglosarIVA').checked;
   var payload = {
     cliente: cliente,
     cliente_nit: clienteNit,
     cod_cliente: (_clienteSel && _clienteSel.nombre === cliente && _clienteSel.codigo) || undefined,
+    guardar_cliente: esNuevoCliente || undefined,
     precios_version: parseInt(localStorage.getItem('PRECIOS_VERSION') || '0', 10) || undefined,
     calculo: CARRITO.map(function(i){ var o = {}; Object.keys(i).forEach(function(k){ if (k !== 'uid' && k !== 'addedAt') o[k] = i[k]; }); return o; }),
     cliente_correo: clienteCorreo,
@@ -1015,7 +1033,8 @@ async function generarCotizacionReal(){
     // La cotización YA quedó guardada en el sistema en este punto (con o sin correo) —
     // se limpia el carrito para no volver a mandarla
     // por error con un segundo click (crearía un folio duplicado).
-    _recordarCliente({ nombre: cliente, nit: clienteNit, correo: clienteCorreo, codigo: payload.cod_cliente });
+    if (data.cliente_guardado) { _agregarClienteACache(data.cliente_guardado, cliente, clienteNit, clienteCorreo); _olvidarReciente(cliente); }
+    else _recordarCliente({ nombre: cliente, nit: clienteNit, correo: clienteCorreo, codigo: payload.cod_cliente });
     _recordarTerminos({ forma_entrega: formaEntrega, lugar_entrega: lugarEntrega, tiempo_entrega: tiempoEntrega, forma_pago: formaPago });
     _renderRecientes();
     _misCot = null;
