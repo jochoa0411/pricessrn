@@ -974,6 +974,7 @@ async function generarCotizacionReal(){
     CARRITO = [];
     saveCarrito();
     renderCarrito();
+    if (typeof tlMoneda === 'function') tlMoneda('USD');   // la siguiente cotización vuelve a empezar en dólares
     cerrarModalEnviarReal();
 
     if (data.email_enviado === false) {

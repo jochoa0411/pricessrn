@@ -323,6 +323,8 @@ body.tl-bar-on .content { padding-bottom:104px; }
 .tl-tc-hint .ic svg { width:14px; height:14px; }
 .tl-tc-hint.ok { color:#1a6b45; font-weight:600; }
 .tl-tc-hint a { color:#1a6b45; font-weight:700; text-decoration:underline; cursor:pointer; }
+.tl-lbl { display:block; font-size:12px; font-weight:700; color:#555; margin-bottom:5px; text-transform:none; letter-spacing:0; }
+.tl-lbl small { font-weight:500; color:#8e8e93; }
 </style>
 </head>
 <body>
@@ -550,9 +552,16 @@ body.tl-bar-on .content { padding-bottom:104px; }
           </div>
 
           <div class="tl-sec">
-            <div class="tl-h"><span class="tl-n">6</span> Tipo de cambio <small>oficial Banguat · editable</small></div>
-            <input type="number" id="cotTC" placeholder="Sin TC = solo USD" step="any" min="0" inputmode="decimal" oninput="tlTcInput();cotCalcTela()">
-            <div id="tcHint" class="tl-tc-hint"></div>
+            <div class="tl-h"><span class="tl-n">6</span> Moneda de la cotización</div>
+            <div class="tl-seg tl-seg-w" role="group" aria-label="Moneda">
+              <button type="button" id="tlMonUsd" class="on" onclick="tlMoneda('USD')">Dólares (US$)</button>
+              <button type="button" id="tlMonQ" onclick="tlMoneda('Q')">Quetzales (Q)</button>
+            </div>
+            <div id="tcBox" style="display:none;margin-top:10px">
+              <label for="cotTC" class="tl-lbl">Tipo de cambio <small>oficial Banguat · editable</small></label>
+              <input type="number" id="cotTC" placeholder="Ej: 7.80" step="any" min="0" inputmode="decimal" oninput="tlTcInput();cotCalcTela()">
+              <div id="tcHint" class="tl-tc-hint"></div>
+            </div>
             <details class="tl-adv">
               <summary>Sobrescribir precio de lista (excepción)</summary>
               <label for="cotPrecioManual">Precio base manual USD / pie²</label>
@@ -1350,5 +1359,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261015"></script><script src="tela-ui.js?v=3"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261015"></script><script src="tela-ui.js?v=4"></script></body>
 </html>
