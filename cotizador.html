@@ -1000,6 +1000,32 @@ function init(){
   });
 }
 
+// Orden de sacos: medida (de mayor a menor área) → color (A-Z; sin color al final) → peso (mayor primero) → nombre
+function medidaSaco(s){
+  const m = String(s.medidas || '').match(/(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)/i);
+  return m ? { a: +m[1], b: +m[2] } : null;
+}
+function compararSacos(x, y){
+  const mx = medidaSaco(x), my = medidaSaco(y);
+  const ax = mx ? mx.a * mx.b : -1, ay = my ? my.a * my.b : -1;
+  if (ax !== ay) return ay - ax;
+  if (mx && my && mx.a !== my.a) return my.a - mx.a;
+  const cx = String(x.color || '').trim(), cy = String(y.color || '').trim();
+  if (cx !== cy) { if (!cx) return 1; if (!cy) return -1; const c = cx.localeCompare(cy, 'es'); if (c) return c; }
+  if ((x.gm || 0) !== (y.gm || 0)) return (y.gm || 0) - (x.gm || 0);
+  return String(x.nombre || '').localeCompare(String(y.nombre || ''), 'es');
+}
+function gruposSacos(){
+  const grupos = new Map();
+  [...SACOS].sort(compararSacos).forEach(s => {
+    const m = medidaSaco(s);
+    const k = m ? `${m.a} × ${m.b} pulg` : 'Otras medidas';
+    if (!grupos.has(k)) grupos.set(k, []);
+    grupos.get(k).push(s);
+  });
+  return grupos;
+}
+
 // Texto de cada saco en la lista: nombre · peso · color (si el nombre no lo dice ya) · impresión (si está definida)
 function etiquetaSaco(s){
   const esc = t => String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -1021,7 +1047,12 @@ function loadSelects(){
   const sS = document.getElementById('cotSacoSelect');
   const sv2 = sS.value;
   sS.innerHTML = '<option value="">Selecciona un saco…</option>';
-  SACOS.forEach(s => sS.innerHTML += `<option value="${s.id}">${etiquetaSaco(s)}</option>`);
+  // Sacos agrupados por medida (mayor a menor) y, dentro de cada medida, por color y peso
+  let html = '<option value="">Selecciona un saco…</option>';
+  gruposSacos().forEach((lista, medida) => {
+    html += `<optgroup label="${medida}">` + lista.map(s => `<option value="${s.id}">${etiquetaSaco(s)}</option>`).join('') + '</optgroup>';
+  });
+  sS.innerHTML = html;
   if(sv2) sS.value = sv2;
 }
 
@@ -1466,5 +1497,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261020"></script><script src="tela-ui.js?v=5"></script><script src="carrito-ui.js?v=3"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261021"></script><script src="tela-ui.js?v=5"></script><script src="carrito-ui.js?v=3"></script></body>
 </html>
