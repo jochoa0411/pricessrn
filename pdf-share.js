@@ -163,7 +163,8 @@ agregarSaco = function(){
 
 // ── Botón ± para recargo/descuento ──
 window.addEventListener('load', function(){
-  [['cotRecargo','cotCalcTela'],['cotRecargoSaco','cotCalcSaco']].forEach(function(par){
+  // El de telas ya no lo necesita: el ajuste comercial se elige con Ninguno / Descuento / Recargo (tela-ui.js)
+  [['cotRecargoSaco','cotCalcSaco']].forEach(function(par){
     const input = document.getElementById(par[0]);
     if(!input) return;
     const wrap = document.createElement('div');

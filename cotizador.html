@@ -256,6 +256,69 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 .cli-iva { text-transform:none; letter-spacing:0; display:flex; align-items:center; gap:12px; margin-top:14px; padding-top:12px; border-top:1px solid #ececec; cursor:pointer; font-size:14px; font-weight:700; color:#222; }
 .cli-iva input { width:22px; height:22px; margin:0; flex-shrink:0; -webkit-appearance:checkbox; appearance:checkbox; accent-color:#1a6b45; padding:0; }
 .cli-iva small { text-transform:none; display:block; font-weight:400; color:#777; font-size:11px; margin-top:1px; }
+
+/* ── Formulario de telas (estilo HIG: secciones numeradas, tarjetas de modalidad, unidades segmentadas) ── */
+.tl-card { padding:14px 14px 16px; }
+.tl-sec { padding:12px 0; border-top:1px solid #efeff4; }
+.tl-sec:first-child { border-top:none; padding-top:2px; }
+.tl-h { display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#555; margin-bottom:8px; }
+.tl-h small { text-transform:none; letter-spacing:0; font-weight:500; color:#8e8e93; font-size:11px; }
+.tl-n { width:20px; height:20px; border-radius:50%; background:#1a6b45; color:#fff; font-size:11px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.tl-prev { margin-top:8px; font-size:12px; color:#555; }
+.tl-radios { display:none; }
+.tl-modos { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.tl-modo { text-align:left; padding:12px; border:2px solid #d9d9de; border-radius:12px; background:#fff; cursor:pointer; -webkit-user-select:none; user-select:none; transition:border-color .15s, background .15s; }
+.tl-modo:active { transform:scale(.985); }
+.tl-modo.on { border-color:#1a6b45; background:#f2f8f4; }
+.tl-modo-top { display:flex; justify-content:space-between; align-items:center; font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:#333; }
+.tl-modo.on .tl-modo-top { color:#1a6b45; }
+.tl-dot { width:18px; height:18px; border-radius:50%; border:2px solid #c4c4c9; display:inline-flex; align-items:center; justify-content:center; color:#fff; }
+.tl-modo.on .tl-dot { background:#1a6b45; border-color:#1a6b45; }
+.tl-dot svg { width:11px; height:11px; stroke:#fff; fill:none; stroke-width:3.5; display:none; }
+.tl-modo.on .tl-dot svg { display:block; }
+.tl-modo-p { font-size:22px; font-weight:800; letter-spacing:-.02em; margin:6px 0 2px; color:#111; }
+.tl-modo-p small { font-size:11px; font-weight:600; color:#8e8e93; letter-spacing:0; }
+.tl-modo-d { font-size:11px; color:#666; line-height:1.35; }
+.tl-presets { display:flex; gap:4px; background:#efeff4; border-radius:10px; padding:3px; margin-bottom:10px; }
+.tl-presets button { flex:1; border:none; background:transparent; border-radius:8px; padding:7px 4px; font-size:11px; font-weight:600; color:#555; cursor:pointer; }
+.tl-presets button.on { background:#fff; color:#1a6b45; font-weight:800; box-shadow:0 1px 3px rgba(0,0,0,.12); }
+.tl-dims { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.tl-dim { background:#f8f9fa; border:1px solid #e5e5ea; border-radius:12px; padding:10px 12px; }
+.tl-dim:focus-within { border-color:#1a6b45; box-shadow:0 0 0 3px rgba(26,107,69,.10); }
+.tl-dim-top { display:flex; justify-content:space-between; align-items:center; font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:#555; margin-bottom:6px; }
+.tl-dim input { background:transparent; border:none; padding:2px 0; font-size:26px; font-weight:800; letter-spacing:-.02em; box-shadow:none; }
+.tl-dim input:focus { box-shadow:none; }
+.tl-eq { font-size:11px; color:#8e8e93; margin-top:2px; min-height:14px; font-variant-numeric:tabular-nums; }
+.tl-seg { display:inline-flex; background:#e3e3e8; border-radius:8px; padding:2px; }
+.tl-seg button { border:none; background:transparent; padding:4px 12px; border-radius:6px; font-size:12px; font-weight:700; color:#555; cursor:pointer; text-transform:none; letter-spacing:0; }
+.tl-seg button.on { background:#fff; color:#1a6b45; box-shadow:0 1px 2px rgba(0,0,0,.15); }
+.tl-seg-w { display:flex; width:100%; }
+.tl-seg-w button { flex:1; padding:6px 4px; font-size:11px; }
+.tl-norm { margin-top:10px; background:#f4f4f5; border-radius:10px; padding:9px 12px; font-size:12px; color:#333; line-height:1.5; }
+.tl-norm b { font-variant-numeric:tabular-nums; }
+.tl-2col { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.tl-step { display:flex; align-items:center; justify-content:space-between; background:#f8f9fa; border:1px solid #e5e5ea; border-radius:12px; padding:4px; }
+.tl-step button { width:40px; height:40px; border:1px solid #e5e5ea; background:#fff; border-radius:9px; font-size:20px; font-weight:700; color:#333; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,.06); }
+.tl-step input { width:56px; text-align:center; border:none; background:transparent; font-size:20px; font-weight:800; padding:0; box-shadow:none; }
+.tl-adj { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:8px; }
+.tl-adj > button { border:none; background:#efeff4; border-radius:8px; padding:9px 0; font-size:12px; font-weight:700; color:#444; cursor:pointer; }
+.tl-pct { position:relative; grid-column:1 / -1; }
+.tl-pct input::-webkit-outer-spin-button, .tl-pct input::-webkit-inner-spin-button, .tl-step input::-webkit-outer-spin-button, .tl-step input::-webkit-inner-spin-button, .tl-dim input::-webkit-outer-spin-button, .tl-dim input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+.tl-pct input, .tl-step input, .tl-dim input { -moz-appearance:textfield; }
+.tl-pct input { padding:8px 26px 8px 10px; font-size:15px; font-weight:700; }
+.tl-pct span { position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:12px; font-weight:700; color:#8e8e93; }
+.tl-adv { margin-top:10px; }
+.tl-adv summary { font-size:12px; font-weight:600; color:#666; cursor:pointer; padding:6px 0; }
+.tl-adv label { display:block; font-size:11px; color:#666; margin:6px 0 4px; }
+.tl-old-add { display:none; }
+.tl-bar { position:fixed; left:0; right:0; bottom:0; z-index:40; background:rgba(255,255,255,.96); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); border-top:1px solid #e5e5ea; padding:10px 14px max(10px, env(safe-area-inset-bottom)); display:flex; align-items:center; gap:12px; box-shadow:0 -6px 20px rgba(0,0,0,.08); }
+.tl-bar-info { flex:1; min-width:0; }
+.tl-bar-sum { font-size:11px; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tl-bar-tot { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+.tl-bar-tot b { font-size:20px; font-weight:800; letter-spacing:-.02em; color:#111; font-variant-numeric:tabular-nums; }
+.tl-bar-tot span { font-size:14px; font-weight:800; color:#1a6b45; font-variant-numeric:tabular-nums; }
+.tl-bar .btn { min-height:46px; padding:0 18px; flex-shrink:0; }
+body.tl-bar-on .content { padding-bottom:104px; }
 </style>
 </head>
 <body>
@@ -406,36 +469,91 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 
       <!-- TAB TELA -->
       <div id="cot-tela" class="tab-content active">
-        <div class="card">
-          <div class="card-title">Ítem de tela</div>
-          <div class="field"><label>Material</label>
+        <div class="card tl-card">
+          <div class="tl-sec">
+            <div class="tl-h"><span class="tl-n">1</span> Material</div>
             <select id="cotTelaSelect" onchange="actTelaPreview()"><option value="">Selecciona un material…</option></select>
+            <div id="cotTelaPreview" class="tl-prev" style="display:none"></div>
           </div>
-          <div class="field">
-            <label>Tipo de rollo</label>
-            <div class="modo-seg">
-              <label class="seg-opt"><input type="radio" name="cotModoTela" value="master" checked onchange="actTelaPreview()">Rollo Master</label>
-              <label class="seg-opt"><input type="radio" name="cotModoTela" value="conf" onchange="actTelaPreview()">Confeccionado</label>
-            </div>
-            <div id="cotModoDesc" class="modo-desc"></div>
-          </div>
-          <div id="cotTelaPreview" class="preview-box" style="background:white;border-color:#e0e0e0;"></div>
 
-          <div class="grid2">
-            <div class="field"><label>Ancho</label><input type="number" id="cotAncho" placeholder="0" min="0" inputmode="decimal" oninput="cotCalcTela()"></div>
-            <div class="field"><label>Unidad</label><select id="cotUAncho" onchange="cotCalcTela()"><option value="ft">ft</option><option value="m">m</option></select></div>
+          <div id="cotModoDesc" hidden></div>
+          <div class="tl-sec">
+            <div class="tl-h"><span class="tl-n">2</span> Modalidad <small>precio de lista por pie²</small></div>
+            <div class="tl-radios" aria-hidden="true">
+              <input type="radio" name="cotModoTela" value="master" checked onchange="actTelaPreview()">
+              <input type="radio" name="cotModoTela" value="conf" onchange="actTelaPreview()">
+            </div>
+            <div id="tlModoCards" class="tl-modos"></div>
           </div>
-          <div class="grid2">
-            <div class="field"><label>Largo</label><input type="number" id="cotLargo" placeholder="0" min="0" inputmode="decimal" oninput="cotCalcTela()"></div>
-            <div class="field"><label>Unidad</label><select id="cotULargo" onchange="cotCalcTela()"><option value="ft">ft</option><option value="m">m</option></select></div>
+
+          <div class="tl-sec">
+            <div class="tl-h"><span class="tl-n">3</span> Medidas del corte</div>
+            <div class="tl-presets">
+              <button type="button" onclick="tlPreset('ft','m')" id="tlPreHib">Híbrido ft · m</button>
+              <button type="button" onclick="tlPreset('m','m')" id="tlPreM">Todo m</button>
+              <button type="button" onclick="tlPreset('ft','ft')" id="tlPreFt">Todo ft</button>
+            </div>
+            <div class="tl-dims">
+              <div class="tl-dim">
+                <div class="tl-dim-top"><span>Ancho</span>
+                <div class="tl-seg" role="group" aria-label="Unidad de ancho">
+                  <button type="button" id="tlAnchoFt" onclick="tlSetUom('ancho','ft')">ft</button>
+                  <button type="button" id="tlAnchoM" onclick="tlSetUom('ancho','m')">m</button>
+                </div>
+                </div>
+                <input type="number" id="cotAncho" placeholder="0" min="0" step="any" inputmode="decimal" oninput="cotCalcTela()">
+                <div class="tl-eq" id="tlEqAncho">&nbsp;</div>
+                <select id="cotUAncho" hidden onchange="cotCalcTela()"><option value="ft">ft</option><option value="m">m</option></select>
+              </div>
+              <div class="tl-dim">
+                <div class="tl-dim-top"><span>Largo</span>
+                <div class="tl-seg" role="group" aria-label="Unidad de largo">
+                  <button type="button" id="tlLargoFt" onclick="tlSetUom('largo','ft')">ft</button>
+                  <button type="button" id="tlLargoM" onclick="tlSetUom('largo','m')">m</button>
+                </div>
+                </div>
+                <input type="number" id="cotLargo" placeholder="0" min="0" step="any" inputmode="decimal" oninput="cotCalcTela()">
+                <div class="tl-eq" id="tlEqLargo">&nbsp;</div>
+                <select id="cotULargo" hidden onchange="cotCalcTela()"><option value="ft">ft</option><option value="m">m</option></select>
+              </div>
+            </div>
+            <div id="tlNorm" class="tl-norm" style="display:none"></div>
           </div>
-          <div class="grid3">
-            <div class="field"><label>Cortes</label><input type="number" id="cotCantTela" value="1" min="1" step="1" inputmode="numeric" oninput="cotCalcTela()"></div>
-            <div class="field"><label>TC USD→Q</label><input type="number" id="cotTC" placeholder="7.80" step="0.01" min="0" inputmode="decimal" oninput="cotCalcTela()"></div>
-            <div class="field"><label>Rec/Desc %</label><input type="number" id="cotRecargo" value="0" inputmode="decimal" oninput="cotCalcTela()"></div>
+
+          <div class="tl-sec tl-2col">
+            <div>
+              <div class="tl-h"><span class="tl-n">4</span> Cortes</div>
+              <div class="tl-step">
+                <button type="button" onclick="tlQty(-1)" aria-label="Menos">−</button>
+                <input type="number" id="cotCantTela" value="1" min="1" step="1" inputmode="numeric" oninput="cotCalcTela()">
+                <button type="button" onclick="tlQty(1)" aria-label="Más">+</button>
+              </div>
+              <div class="tl-eq">piezas iguales</div>
+            </div>
+            <div>
+              <div class="tl-h"><span class="tl-n">5</span> Ajuste comercial</div>
+              <div class="tl-seg tl-seg-w" role="group" aria-label="Ajuste comercial">
+                <button type="button" id="tlAdjNone" onclick="tlAdj('none')">Ninguno</button>
+                <button type="button" id="tlAdjDesc" onclick="tlAdj('desc')">Descuento</button>
+                <button type="button" id="tlAdjRec" onclick="tlAdj('rec')">Recargo</button>
+              </div>
+              <div id="tlAdjBox" class="tl-adj" style="display:none">
+                <div class="tl-pct"><input type="number" id="tlAdjPct" min="0" max="90" step="0.5" inputmode="decimal" placeholder="0" oninput="tlAdjPct()"><span>%</span></div>
+                <button type="button" onclick="tlQuick(5)">5%</button><button type="button" onclick="tlQuick(10)">10%</button><button type="button" onclick="tlQuick(15)">15%</button>
+              </div>
+              <input type="number" id="cotRecargo" value="0" hidden oninput="cotCalcTela()">
+            </div>
           </div>
-          <p class="info-text"><span class="ic" data-ic="bulb"></span> Positivo = aumento · Negativo = descuento</p>
-          <div class="field"><label>Precio base manual USD/pie² (opcional)</label><input type="number" id="cotPrecioManual" placeholder="Vacío = precio catálogo" step="0.001" min="0" inputmode="decimal" oninput="cotCalcTela()"></div>
+
+          <div class="tl-sec">
+            <div class="tl-h"><span class="tl-n">6</span> Tipo de cambio <small>opcional · vacío cotiza en USD</small></div>
+            <input type="number" id="cotTC" placeholder="7.80" step="0.01" min="0" inputmode="decimal" oninput="cotCalcTela()">
+            <details class="tl-adv">
+              <summary>Sobrescribir precio de lista (excepción)</summary>
+              <label for="cotPrecioManual">Precio base manual USD / pie²</label>
+              <input type="number" id="cotPrecioManual" placeholder="Vacío = precio de lista" step="0.001" min="0" inputmode="decimal" oninput="cotCalcTela()">
+            </details>
+          </div>
 
           <div id="cotResTela" class="resultado">
             <div id="warnTela"></div>
@@ -454,7 +572,7 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
             <div id="rQBox" class="total-box"><strong>Total Q: <span id="rQ">—</span></strong></div>
             <p id="rQFalta" class="info-text" style="display:none;color:#d97706;margin-top:8px;"><span class="ic" data-ic="bulb"></span> Ingresa el tipo de cambio para ver el total en Q</p>
           </div>
-          <button class="btn btn-success btn-block" style="margin-top:12px;" onclick="agregarTela()"><span class="ic" data-ic="plus"></span> Agregar al presupuesto</button>
+          <button class="btn btn-success btn-block tl-old-add" style="margin-top:12px;" onclick="agregarTela()"><span class="ic" data-ic="plus"></span> Agregar al presupuesto</button>
         </div>
       </div>
 
@@ -673,6 +791,15 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
   </div>
 </div>
 
+<!-- BARRA FIJA: total en vivo del ítem de tela + agregar -->
+<div id="tlBar" class="tl-bar" style="display:none">
+  <div class="tl-bar-info">
+    <div id="tlBarSum" class="tl-bar-sum"></div>
+    <div class="tl-bar-tot"><b id="tlBarUsd"></b><span id="tlBarQ"></span></div>
+  </div>
+  <button type="button" class="btn btn-success" onclick="agregarTela()"><span class="ic" data-ic="plus"></span> Agregar</button>
+</div>
+
 <div id="toast" class="toast ok"></div>
 
 <script>
@@ -781,25 +908,12 @@ function loadSelects(){
 function actTelaPreview(){
   const id = document.getElementById('cotTelaSelect').value;
   const box = document.getElementById('cotTelaPreview');
-  const modoDesc = document.getElementById('cotModoDesc');
-  if(!id){ box.style.display='none'; if(modoDesc) modoDesc.textContent=''; cotCalcTela(); return; }
-  const t = TELAS.find(x=>x.id==id);
   const modo = document.querySelector('input[name="cotModoTela"]:checked').value;
-  if(modoDesc) modoDesc.textContent = modo==='master' ? 'Sin ojetes ni rebete' : 'Con ojetes y rebete';
+  if(!id){ box.style.display='none'; if(window.tlRenderModos) tlRenderModos(null, modo); cotCalcTela(); return; }
+  const t = TELAS.find(x=>x.id==id);
   box.style.display = 'block';
-  box.innerHTML = `<strong>${t.nombre}</strong> · ${t.cat}${t.sombra?' · '+t.sombra:''} · Rollo: ${t.rollo}
-    <div class="precio-cards">
-      <div class="precio-card ${modo==='master'?'pc-activo':''}">
-        <div class="pc-label">Rollo Master</div>
-        <div class="pc-price">$${t.pm.toFixed(3)}</div>
-        <div class="pc-desc">por pie² · sin ojetes ni rebete</div>
-      </div>
-      <div class="precio-card ${modo==='conf'?'pc-activo':''}">
-        <div class="pc-label">Confeccionado</div>
-        <div class="pc-price">$${t.pc.toFixed(3)}</div>
-        <div class="pc-desc">por pie² · con ojetes y rebete</div>
-      </div>
-    </div>`;
+  box.innerHTML = `${t.cat}${t.sombra?' · '+t.sombra:''} · Rollo: ${t.rollo}`;
+  if(window.tlRenderModos) tlRenderModos(t, modo);
   cotCalcTela();
 }
 
@@ -819,6 +933,10 @@ function actSacoPreview(){
 }
 
 function cotCalcTela(){
+  _cotCalcTelaBase();
+  if(window.syncTelaUI) syncTelaUI();
+}
+function _cotCalcTelaBase(){
   const id = document.getElementById('cotTelaSelect').value;
   const res = document.getElementById('cotResTela');
   if(!id){ res.classList.remove('show'); return; }
@@ -1227,5 +1345,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261015"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261015"></script><script src="tela-ui.js?v=2"></script></body>
 </html>
