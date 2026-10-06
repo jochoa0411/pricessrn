@@ -32,7 +32,7 @@ async function generarPDF(){
     } else {
       filas += '<tr>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;color:#bbb;font-size:10px;">'+(idx+1)+'</td>'
-        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;"><strong style="color:#1a6b45;">'+item.nombre+'</strong><br><small style="color:#888;">Saco \u00b7 Tier '+item.tier+(item.recargo?' \u00b7 Rec/Desc '+item.recargo+'%':'')+'</small></td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;"><strong style="color:#1a6b45;">'+item.nombre+'</strong><br><small style="color:#888;">Saco \u00b7 '+etiquetaTierItem(item)+(item.recargo?' \u00b7 Rec/Desc '+item.recargo+'%':'')+'</small></td>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;font-size:11px;">'+(item.medidas||'')+' \u00b7 '+item.cantidad+' unidades</td>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">\u2014</td>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">Q'+(item.precioUnit||0).toFixed(2)+'</td>'
@@ -217,13 +217,16 @@ async function syncPrecios(manual){
     var sesion = typeof _cargarSesion === 'function' ? _cargarSesion() : null;
     if(!sesion || !sesion.token){ if(manual) toast('Inicia sesion para actualizar los precios','err'); return; }
     // Se manda la versión local: si no cambió, el servidor responde {unchanged:true} sin reenviar la lista
-    var resp = await _api('/precios?v=' + (parseInt(localStorage.getItem('PRECIOS_VERSION')||'0') || 0));
+    var resp = await _api('/precios?v=' + (parseInt(localStorage.getItem('PRECIOS_VERSION')||'0') || 0) + '&l=' + (window.LISTAS_REV || 0));
     if(!resp.ok) throw new Error(resp.data && resp.data.error || ('HTTP '+resp.status));
     _ultimaSyncPrecios = Date.now();
     var data = resp.data;
     if(data.unchanged){ if(manual) toast('Ya tenes la ultima version (v'+data.version+')'); return; }
+    // Listas por cliente: se guardan aunque la lista general no haya cambiado
+    if(data.listas_cliente && window.guardarListasCliente && data.listas_rev !== window.LISTAS_REV){ guardarListasCliente(data.listas_rev, data.listas_cliente); if(manual) toast('Listas por cliente actualizadas'); }
 
     var vLocal = parseInt(localStorage.getItem('PRECIOS_VERSION')||'0');
+    if(!data.telas) return;
     if(data.version > vLocal){
       var cambios = [];
       data.telas.forEach(function(nt){

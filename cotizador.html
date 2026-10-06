@@ -126,6 +126,9 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 .tier-opt span { display: block; padding: 10px 0; text-align: center; cursor: pointer; font-weight: 700; font-size: 15px; color: #888; border-right: 1.5px solid #ddd; }
 .tier-opt:last-child span { border-right: none; }
 .tier-opt input:checked + span { background: #1a6b45; color: white; }
+.chip-lista { align-items:center; gap:6px; margin-top:8px; padding:6px 10px; border-radius:999px; background:#e8f1ec; color:#1a6b45; font-size:12px; font-weight:600; }
+.aviso-saco { margin-top:8px; padding:9px 11px; border-radius:8px; background:#f2f2f7; border:1px solid #d1d1d6; color:#3a3a3c; font-size:12px; line-height:1.4; }
+.sin-precio { color:#999; }
 .precio-tiers { display: flex; gap: 6px; margin-top: 8px; }
 .precio-tier-badge { flex: 1; text-align: center; padding: 6px 4px; border-radius: 6px; font-size: 12px; border: 1.5px solid #ddd; }
 .precio-tier-badge .t-label { font-size: 10px; font-weight: 700; color: #888; display: block; }
@@ -693,13 +696,19 @@ body.tl-bar-on .content { padding-bottom:104px; }
           </div>
           <div id="cotSacoPreview" class="preview-box"></div>
 
+          <div class="field" id="cotListaCampo" style="margin-top:10px;display:none;">
+            <label>Lista de precios</label>
+            <select id="cotListaSaco" onchange="cambiarListaSaco(true)"><option value="">General (A / B / C)</option></select>
+            <div id="cotListaChip" class="chip-lista" style="display:none;"></div>
+          </div>
           <div class="field" style="margin-top:10px;">
-            <label>Tipo de cliente</label>
-            <div class="tier-group">
+            <label id="tierLabel">Tipo de cliente</label>
+            <div class="tier-group" id="tierGroup">
               <label class="tier-opt"><input type="radio" name="cotTierSaco" value="A" checked onchange="cotCalcSaco()"><span>A</span></label>
               <label class="tier-opt"><input type="radio" name="cotTierSaco" value="B" onchange="cotCalcSaco()"><span>B</span></label>
               <label class="tier-opt"><input type="radio" name="cotTierSaco" value="C" onchange="cotCalcSaco()"><span>C</span></label>
             </div>
+            <div id="cotAvisoSaco" class="aviso-saco" style="display:none;"></div>
           </div>
 
           <div class="field"><label>Cantidad</label><input type="number" id="cotCantSaco" placeholder="0" min="0" inputmode="numeric" oninput="cotCalcSaco()"></div>
@@ -1050,7 +1059,8 @@ function loadSelects(){
   // Sacos agrupados por medida (mayor a menor) y, dentro de cada medida, por color y peso
   let html = '<option value="">Selecciona un saco…</option>';
   gruposSacos().forEach((lista, medida) => {
-    html += `<optgroup label="${medida}">` + lista.map(s => `<option value="${s.id}">${etiquetaSaco(s)}</option>`).join('') + '</optgroup>';
+    const ops = lista.map(s => { const ok = window.sacoDisponibleEnLista ? sacoDisponibleEnLista(s) : true; return `<option value="${s.id}"${ok?'':' disabled'}>${etiquetaSaco(s)}${ok?'':' — sin precio en esta lista'}</option>`; }).join('');
+    html += `<optgroup label="${medida}">` + ops + '</optgroup>';
   });
   sS.innerHTML = html;
   if(sv2) sS.value = sv2;
@@ -1068,6 +1078,13 @@ function actTelaPreview(){
   cotCalcTela();
 }
 
+function _badgesSaco(s){
+  const lid = window.listaSacoId ? listaSacoId() : null;
+  const niveles = lid ? ['BASE','MAS10'] : ['A','B','C'];
+  return niveles.map(n => { const v = window.precioTierSaco ? precioTierSaco(s,n,lid) : s['p'+n];
+    return `<div class="precio-tier-badge"><span class="t-label">${window.tierLabel?tierLabel(n):n}</span><span class="t-val${v==null?' sin-precio':''}">${v==null?'—':'Q'+v.toFixed(2)}</span></div>`; }).join('');
+}
+
 function actSacoPreview(){
   const id = document.getElementById('cotSacoSelect').value;
   const box = document.getElementById('cotSacoPreview');
@@ -1076,11 +1093,7 @@ function actSacoPreview(){
   box.style.display = 'block';
   const extra = (s.color?' · '+s.color:'') + (s.impresion==='CON'?' · con impresión':s.impresion==='SIN'?' · sin impresión':'');
   box.innerHTML = `<strong>${s.nombre}</strong> · ${s.medidas} · ${s.gm} gm${extra}
-    <div class="precio-tiers">
-      <div class="precio-tier-badge"><span class="t-label">A</span><span class="t-val">Q${s.pA.toFixed(2)}</span></div>
-      <div class="precio-tier-badge"><span class="t-label">B</span><span class="t-val">Q${s.pB.toFixed(2)}</span></div>
-      <div class="precio-tier-badge"><span class="t-label">C</span><span class="t-val">Q${s.pC.toFixed(2)}</span></div>
-    </div>`;
+    <div class="precio-tiers">${_badgesSaco(s)}</div>`;
   cotCalcSaco();
 }
 
@@ -1180,13 +1193,15 @@ function cotCalcSaco(){
 
   if(!c){ res.classList.remove('show'); return; }
 
-  const tierPrice = s['p'+tier];
+  const tierPrice = precioTierSaco(s, tier, listaSacoId());
+  if(tierPrice == null && !(!isNaN(pm) && pm > 0)){ avisoSacoSinPrecio(s, tier); res.classList.remove('show'); return; }
+  avisoSacoSinPrecio(null);
   const base = (!isNaN(pm) && pm > 0) ? pm : tierPrice;
   const p = base * (1 + r/100);
   const total = c*p;
 
-  document.getElementById('rTierLabel').textContent  = tier;
-  document.getElementById('rPBaseSaco').textContent  = 'Q'+((!isNaN(pm)&&pm>0)?pm:tierPrice).toFixed(2);
+  document.getElementById('rTierLabel').textContent  = tierLabel(tier);
+  document.getElementById('rPBaseSaco').textContent  = 'Q'+base.toFixed(2);
   document.getElementById('rPUnitSaco').textContent  = 'Q'+p.toFixed(2);
   document.getElementById('rCantSaco').textContent   = c.toFixed(0)+' u';
   var quitarIVAS = document.getElementById('cotDesglosarIVA').checked;
@@ -1267,15 +1282,19 @@ function agregarSaco(){
   const r    = parseFloat(document.getElementById('cotRecargoSaco').value)||0;
   const pm   = parseFloat(document.getElementById('cotPMSaco').value);
 
-  const tierPrice = s['p'+tier];
+  const lid = listaSacoId();
+  const tierPrice = precioTierSaco(s, tier, lid);
+  if(tierPrice == null && !(!isNaN(pm) && pm > 0)){ toast('Ese saco no tiene precio en la lista elegida','err'); return; }
   const base = (!isNaN(pm) && pm > 0) ? pm : tierPrice;
   const p = base * (1 + r/100);
+  const lista = listaPorId(lid);
 
   CARRITO.push({
     uid: Date.now() + Math.random(),
     addedAt: Date.now(),
     tipo: 'saco', sacoId: s.id, nombre: s.nombre, medidas: s.medidas,
-    tier, cantidad: c, precioUnit: p, totalQ: c*p,
+    tier, listaId: lista ? lista.id : null, listaNombre: lista ? lista.nombre : null,
+    cantidad: c, precioUnit: p, totalQ: c*p,
     recargo: r, precioManual: (!isNaN(pm) && pm > 0) ? pm : null
   });
   _ultimaFirmaSaco = _firmaSaco();
@@ -1294,7 +1313,7 @@ function _firmaTela(){
 }
 function _firmaSaco(){
   const t = document.querySelector('input[name="cotTierSaco"]:checked');
-  return ['cotSacoSelect','cotCantSaco','cotRecargoSaco','cotPMSaco'].map(_vv).join('|') + '|' + (t ? t.value : '');
+  return ['cotSacoSelect','cotListaSaco','cotCantSaco','cotRecargoSaco','cotPMSaco'].map(_vv).join('|') + '|' + (t ? t.value : '');
 }
 
 function quitarItem(uid){
@@ -1332,6 +1351,7 @@ function editarItemCarrito(uid){
   } else {
     tabBtns[1].classList.add('active');
     document.getElementById('cot-saco').classList.add('active');
+    setListaSaco(item.listaId, item.tier);
     document.getElementById('cotSacoSelect').value  = item.sacoId;
     document.getElementById('cotCantSaco').value    = item.cantidad;
     document.getElementById('cotRecargoSaco').value = item.recargo ?? 0;
@@ -1396,7 +1416,7 @@ function renderCarrito(){
       html += `<div class="cart-item tipo-saco">
         <div class="cart-item-body">
           <div class="ci-nombre">${_ic('bag')} ${item.nombre}</div>
-          <div class="ci-detalle">${item.medidas} · ${item.cantidad} u · <strong>Tier ${item.tier}</strong> · Q${item.precioUnit.toFixed(2)}/u</div>
+          <div class="ci-detalle">${item.medidas} · ${item.cantidad} u · <strong>${esc(etiquetaTierItem(item))}</strong> · Q${item.precioUnit.toFixed(2)}/u</div>
         </div>
         <div class="ci-total">Q${item.totalQ.toFixed(2)}</div>
         <button class="btn btn-warning btn-sm" onclick="editarItemCarrito(${item.uid})" aria-label="Editar">${_ic('edit')}</button>
@@ -1438,7 +1458,7 @@ function generarPDF_OLD_UNUSED(){
       txt += '\n';
     } else {
       txt += `\n${idx+1}. ${item.nombre} (${item.medidas})\n`;
-      txt += `   ${item.cantidad} u × Q${item.precioUnit.toFixed(2)} (Tier ${item.tier})\n`;
+      txt += `   ${item.cantidad} u × Q${item.precioUnit.toFixed(2)} (${etiquetaTierItem(item)})\n`;
       txt += `   Total: Q${item.totalQ.toFixed(2)}\n`;
     }
   });
@@ -1497,5 +1517,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261022"></script><script src="tela-ui.js?v=5"></script><script src="carrito-ui.js?v=3"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=2"></script><script src="listas-ui.js?v=1"></script><script src="real-quote.js?v=20261023"></script><script src="tela-ui.js?v=5"></script><script src="carrito-ui.js?v=4"></script></body>
 </html>

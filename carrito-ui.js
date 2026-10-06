@@ -54,7 +54,7 @@
     var cantidad = tela ? (it.cant || 1) : it.cantidad;
     var total = it.totalQ != null ? 'Q' + fmt(it.totalQ, 2) : '$' + fmt(it.tu, 2) + ' USD';
     var detalle = tela ? detalleTela(it)
-      : esc(it.medidas || '') + ' · Tier ' + esc(it.tier) + ' · Q' + fmt(it.precioUnit, 2) + '/u';
+      : esc(it.medidas || '') + ' · ' + esc(etiquetaTierItem(it)) + ' · Q' + fmt(it.precioUnit, 2) + '/u';
     var uid = it.uid;
     return '<div class="cx-item' + (tela ? '' : ' saco') + (editUid === uid ? ' editando' : '') + '">'
       + '<div class="cx-top">'
@@ -228,6 +228,7 @@
       actTelaPreview();
     } else {
       tabBtns[1].classList.add('active'); $('cot-saco').classList.add('active');
+      setListaSaco(item.listaId, item.tier);
       $('cotSacoSelect').value = item.sacoId;
       $('cotCantSaco').value = item.cantidad;
       $('cotRecargoSaco').value = item.recargo != null ? item.recargo : 0;

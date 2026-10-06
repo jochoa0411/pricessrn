@@ -372,6 +372,7 @@ function _aplicarCliente(c){
   document.getElementById('cotNit').value = c.nit || 'CF';
   document.getElementById('cliSug').classList.add('hidden');
   _actualizarGuardarClienteCard();
+  if (window.autoListaCliente) autoListaCliente();
   toast('Cliente: ' + c.nombre);
 }
 
@@ -613,7 +614,9 @@ function _precioVigenteItem(item){
     return t ? (item.modo === 'master' ? t.pm : t.pc) * (1 + r) : null;
   }
   var s = SACOS.find(function(x){ return x.id === item.sacoId; });
-  return s ? s['p' + (item.tier || 'A')] * (1 + r) : null;
+  if (!s) return null;
+  var pt = precioTierSaco(s, item.tier || 'A', item.listaId);
+  return pt == null ? null : pt * (1 + r);
 }
 function _itemsPreciosAnteriores(){
   return CARRITO.filter(function(i){
@@ -1126,7 +1129,7 @@ function _htmlCalculoItem(i){
     var baseS = i.precioManual ? i.precioManual : (i.precioUnit / (1 + (i.recargo || 0) / 100));
     h += '<h5>' + _ic('bag') + ' ' + _esc(i.nombre) + (i.medidas ? ' (' + _esc(i.medidas) + ')' : '') + '</h5>'
       + _filaCalc('Cantidad', _fmtN(i.cantidad, 0) + ' u')
-      + _filaCalc(i.precioManual ? 'Precio manual' : 'Precio tier ' + _esc(i.tier || 'A'), 'Q' + _fmtN(baseS, 2) + ' /u')
+      + _filaCalc(i.precioManual ? 'Precio manual' : (i.listaNombre ? 'Lista ' + _esc(i.listaNombre) + ' · ' + _esc(tierLabel(i.tier)) : 'Precio tier ' + _esc(i.tier || 'A')), 'Q' + _fmtN(baseS, 2) + ' /u')
       + (i.recargo ? _filaCalc('Recargo / descuento', (i.recargo > 0 ? '+' : '') + _fmtN(i.recargo, 1) + ' %') : '')
       + _filaCalc('Precio aplicado', 'Q' + _fmtN(i.precioUnit, 2) + ' /u')
       + _filaCalc('Total Q', 'Q' + _fmtN(i.totalQ, 2));
