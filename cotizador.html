@@ -222,8 +222,6 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 .mp-row:last-child { border-bottom:none; }
 .act-item, .btn, .kebab-m, .chip, .tab-btn, .nav-item, .sug-item { -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
 .btn { text-decoration:none; }
-.cli-guardar { margin-top:8px; padding:10px 12px; border:1px dashed #1a6b45; border-radius:10px; font-size:12px; color:#333; display:flex; flex-direction:column; gap:8px; }
-.cli-guardar .btn { align-self:flex-start; }
 .cal-item { border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px; margin-bottom:10px; }
 .cal-item h5 { margin:0 0 6px; font-size:14px; color:#1a6b45; display:flex; gap:6px; align-items:center; }
 .cal-row { display:flex; justify-content:space-between; gap:10px; padding:3px 0; font-size:12px; border-bottom:1px dashed #eee; }
@@ -231,6 +229,33 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 .cal-row span:first-child { color:#666; }
 .cal-row b { text-align:right; }
 .cal-nota { background:#f4f4f5; border-radius:8px; padding:8px 10px; font-size:12px; color:#555; margin-bottom:10px; }
+.cli-card { padding:16px; }
+.cli-head { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:14px; }
+.cli-head-t { font-weight:700; font-size:16px; color:#1a6b45; display:flex; align-items:center; gap:8px; }
+.cli-head-t .ic svg { width:20px; height:20px; }
+.cli-chip { font-size:11px; font-weight:700; border-radius:99px; padding:4px 11px; display:inline-flex; align-items:center; gap:5px; white-space:nowrap; }
+.cli-chip .ic svg { width:13px; height:13px; }
+.cli-chip.ok { background:#1a6b45; color:#fff; }
+.cli-chip.nuevo { background:#334155; color:#fff; }
+.cli-chip.cf { background:#fff; color:#334155; border:1px solid #94a3b8; }
+.cli-grid { display:grid; grid-template-columns:1fr; gap:12px; }
+@media (min-width:560px) { .cli-grid { grid-template-columns:minmax(0,1fr) minmax(0,2fr); } }
+.cli-f label { display:block; font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:#555; margin-bottom:5px; }
+.cli-f label small { font-weight:500; text-transform:none; letter-spacing:0; color:#888; font-size:11px; }
+.cli-in { position:relative; }
+.cli-in input { padding-right:54px; }
+.cli-go { position:absolute; right:5px; top:5px; bottom:5px; width:40px; border:none; border-radius:8px; background:#1a6b45; color:#fff; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; -webkit-user-select:none; user-select:none; }
+.cli-go:active { opacity:.85; }
+.cli-go:disabled { opacity:.5; }
+.cli-go.cargando .ic svg { animation:cli-pulso .8s ease-in-out infinite alternate; }
+@keyframes cli-pulso { from { opacity:1; } to { opacity:.25; } }
+.cli-go .ic svg { width:18px; height:18px; stroke-width:2.4; }
+.cli-guardar { margin-top:12px; padding:10px 12px; border-left:4px solid #1a6b45; background:#f4f4f5; border-radius:8px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.cli-guardar-t { font-size:12px; color:#444; min-width:0; flex:1 1 180px; line-height:1.4; }
+.cli-guardar-t b { color:#111; display:block; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cli-iva { text-transform:none; letter-spacing:0; display:flex; align-items:center; gap:12px; margin-top:14px; padding-top:12px; border-top:1px solid #ececec; cursor:pointer; font-size:14px; font-weight:700; color:#222; }
+.cli-iva input { width:22px; height:22px; margin:0; flex-shrink:0; -webkit-appearance:checkbox; appearance:checkbox; accent-color:#1a6b45; padding:0; }
+.cli-iva small { text-transform:none; display:block; font-weight:400; color:#777; font-size:11px; margin-top:1px; }
 </style>
 </head>
 <body>
@@ -340,35 +365,38 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
     <!-- ===== COTIZAR ===== -->
     <div id="cotizar" class="seccion active">
 
-      <div class="card">
-        <div class="card-title">Cliente</div>
-        <div class="field">
-          <label>NIT del cliente (sin NIT = CF)</label>
-          <div style="display:flex;gap:6px;align-items:stretch">
-            <input type="text" id="cotNit" placeholder="Ej: 12345678-9" style="flex:1" oninput="_actualizarGuardarClienteCard()" onkeydown="if(event.key==='Enter'){event.preventDefault();consultarNit();}">
-            <button type="button" class="btn btn-primary" id="btnConsultarNit" onclick="consultarNit()" style="white-space:nowrap;flex-shrink:0"><span class="ic" data-ic="search"></span> Buscar</button>
+      <div class="card cli-card">
+        <div class="cli-head">
+          <div class="cli-head-t"><span class="ic" data-ic="user"></span> Cliente</div>
+          <span id="cliEstado" class="cli-chip" style="display:none"></span>
+        </div>
+        <div class="cli-grid">
+          <div class="cli-f">
+            <label for="cotNit">NIT <small>(sin NIT = CF)</small></label>
+            <div class="cli-in">
+              <input type="text" id="cotNit" placeholder="12345678-9" inputmode="text" autocomplete="off" oninput="_actualizarGuardarClienteCard()" onkeydown="if(event.key==='Enter'){event.preventDefault();consultarNit();}">
+              <button type="button" class="cli-go" id="btnConsultarNit" onclick="consultarNit()" aria-label="Buscar NIT en la SAT" title="Buscar NIT"><span class="ic" data-ic="search"></span></button>
+            </div>
+          </div>
+          <div class="cli-f" style="position:relative">
+            <label for="cotCliente">Nombre del cliente *</label>
+            <div class="cli-in">
+              <input type="text" id="cotCliente" placeholder="Toca para ver tus clientes o escribe…" autocomplete="off" oninput="buscarClientes()" onfocus="buscarClientes()">
+              <button type="button" class="cli-go" id="btnBuscarCliente" onclick="alternarListaClientes(event)" aria-label="Buscar en mis clientes" title="Buscar en mis clientes"><span class="ic" data-ic="search"></span></button>
+            </div>
+            <div id="cliSug" class="sug hidden"></div>
           </div>
         </div>
-        <div class="field" style="position:relative">
-          <label>Cliente *</label>
-          <div style="display:flex;gap:6px;align-items:stretch">
-            <input type="text" id="cotCliente" placeholder="Toca para ver tus clientes o escribe…" autocomplete="off" oninput="buscarClientes()" onfocus="buscarClientes()" style="flex:1;min-width:0">
-            <button type="button" class="btn btn-primary" id="btnBuscarCliente" onclick="alternarListaClientes(event)" style="white-space:nowrap;flex-shrink:0"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span> Buscar</button>
-          </div>
-          <div id="cliSug" class="sug hidden"></div>
-          <div id="cliRecientes" class="chips"></div>
-          <div id="cliGuardarBox" class="cli-guardar" style="display:none">
-            <span id="cliGuardarTxt"></span>
-            <button type="button" class="btn btn-primary btn-sm" id="btnGuardarCliente" onclick="guardarClienteFrecuente()"><span class="ic" data-ic="user"></span> Guardar como cliente frecuente</button>
-          </div>
+        <div id="cliRecientes" class="chips"></div>
+        <div id="cliGuardarBox" class="cli-guardar" style="display:none">
+          <div class="cli-guardar-t"><b id="cliGuardarNom"></b><span id="cliGuardarTxt"></span></div>
+          <button type="button" class="btn btn-success btn-sm" id="btnGuardarCliente" onclick="guardarClienteFrecuente()"><span class="ic" data-ic="plus"></span> Guardar cliente</button>
         </div>
         <input type="hidden" id="cotRef">
-        <div class="field" style="margin-top:12px;">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;font-size:14px;color:#1a6b45;font-weight:700;">
-            <input type="checkbox" id="cotDesglosarIVA" style="width:20px;height:20px;margin:0;-webkit-appearance:checkbox;appearance:checkbox;" onchange="cotCalcTela();cotCalcSaco();">
-            Quitar IVA (precio sin impuesto)
-          </label>
-        </div>
+        <label class="cli-iva">
+          <input type="checkbox" id="cotDesglosarIVA" onchange="cotCalcTela();cotCalcSaco();">
+          <span>Quitar IVA<small>Cotiza con precio sin impuesto</small></span>
+        </label>
       </div>
 
       <div class="tabs">
@@ -1199,5 +1227,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261014"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261015"></script></body>
 </html>

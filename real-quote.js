@@ -468,9 +468,8 @@ async function consultarNit(){
   }
 
   var btn = document.getElementById('btnConsultarNit');
-  var textoOriginal = btn.innerHTML;   // innerHTML: conserva el icono de la lupa
   btn.disabled = true;
-  btn.textContent = 'Buscando...';
+  btn.classList.add('cargando');
 
   try {
     var r = await fetch(COT_API_BASE + '/api/util/nit/' + encodeURIComponent(nit), {
@@ -488,7 +487,7 @@ async function consultarNit(){
     toast('Sin conexión al sistema — revisa tu conexión a internet', 'err');
   } finally {
     btn.disabled = false;
-    btn.innerHTML = textoOriginal;
+    btn.classList.remove('cargando');
     _actualizarGuardarClienteCard();
   }
 }
@@ -737,23 +736,42 @@ function _agregarClienteACache(codigo, nombre, nit, correo){
   _lsSet('cotClientesCache', _cliCache);
   toast('Cliente guardado como frecuente (' + codigo + ')');
 }
-function _clienteEnCatalogo(nombre, nit){
-  if (!_cliCache) return false;
+function _filaCatalogo(nombre, nit){
+  if (!_cliCache) return null;
   var n = _norm(nombre), nt = String(nit || '').trim().toUpperCase();
-  return _cliCache.lista.some(function(c){
+  return _cliCache.lista.filter(function(c){
     return _norm(c[1]) === n || (nt && !_esCF(nt) && String(c[2] || '').trim().toUpperCase() === nt);
-  });
+  })[0] || null;
 }
+function _clienteEnCatalogo(nombre, nit){ return !!_filaCatalogo(nombre, nit); }
 // Bloque «Guardar como cliente frecuente» en la tarjeta Cliente: aparece solo si su usuario puede crear
 // clientes y el que tecleó no está en el catálogo descargado.
 function _actualizarGuardarClienteCard(){
   var box = document.getElementById('cliGuardarBox');
-  if (!box) return;
+  var chip = document.getElementById('cliEstado');
+  if (!box || !chip) return;
   var nombre = document.getElementById('cotCliente').value.trim();
-  var nit = _nitONormal(document.getElementById('cotNit').value);
-  var mostrar = !!(_cliCache && _cliCache.puede_crear && nombre.length >= 3 && !(_clienteSel && _clienteSel.nombre === nombre) && !_clienteEnCatalogo(nombre, nit));
+  var nitRaw = document.getElementById('cotNit').value.trim();
+  var nit = _nitONormal(nitRaw);
+  var fila = nombre ? _filaCatalogo(nombre, nit) : null;
+  var delCatalogo = !!(fila || (_clienteSel && _clienteSel.nombre === nombre));
+
+  // Chip de estado junto al título
+  var estado = '';
+  if (nombre.length >= 2) {
+    if (delCatalogo) estado = '<span class="cli-chip ok">' + _ic('check') + ' En tus clientes' + ((fila && fila[0]) || (_clienteSel && _clienteSel.codigo) ? ' · ' + _esc((fila && fila[0]) || _clienteSel.codigo) : '') + '</span>';
+    else if (_esCF(nitRaw)) estado = '<span class="cli-chip cf">Consumidor final</span>';
+    else estado = '<span class="cli-chip nuevo">' + _ic('plus') + ' Cliente nuevo</span>';
+  }
+  chip.outerHTML = estado ? estado.replace('<span class="cli-chip', '<span id="cliEstado" class="cli-chip') : '<span id="cliEstado" class="cli-chip" style="display:none"></span>';
+
+  // Aviso para guardarlo (solo si su usuario puede crear clientes)
+  var mostrar = !!(_cliCache && _cliCache.puede_crear && nombre.length >= 3 && !delCatalogo);
   box.style.display = mostrar ? 'flex' : 'none';
-  if (mostrar) document.getElementById('cliGuardarTxt').textContent = '«' + nombre + '» (NIT ' + nit + ') no está en tus clientes. Guárdalo para encontrarlo la próxima vez con sus datos.';
+  if (mostrar) {
+    document.getElementById('cliGuardarNom').textContent = nombre;
+    document.getElementById('cliGuardarTxt').textContent = 'NIT ' + nit + ' · aún no está en tus clientes';
+  }
 }
 async function guardarClienteFrecuente(){
   var nombre = document.getElementById('cotCliente').value.trim();
