@@ -253,9 +253,6 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 .cli-guardar { margin-top:12px; padding:10px 12px; border-left:4px solid #1a6b45; background:#f4f4f5; border-radius:8px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
 .cli-guardar-t { font-size:12px; color:#444; min-width:0; flex:1 1 180px; line-height:1.4; }
 .cli-guardar-t b { color:#111; display:block; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.cli-iva { text-transform:none; letter-spacing:0; display:flex; align-items:center; gap:12px; margin-top:14px; padding-top:12px; border-top:1px solid #ececec; cursor:pointer; font-size:14px; font-weight:700; color:#222; }
-.cli-iva input { width:22px; height:22px; margin:0; flex-shrink:0; -webkit-appearance:checkbox; appearance:checkbox; accent-color:#1a6b45; padding:0; }
-.cli-iva small { text-transform:none; display:block; font-weight:400; color:#777; font-size:11px; margin-top:1px; }
 
 /* ── Formulario de telas (estilo HIG: secciones numeradas, tarjetas de modalidad, unidades segmentadas) ── */
 .tl-card { padding:14px 14px 16px; }
@@ -325,6 +322,16 @@ body.tl-bar-on .content { padding-bottom:104px; }
 .tl-tc-hint a { color:#1a6b45; font-weight:700; text-decoration:underline; cursor:pointer; }
 .tl-lbl { display:block; font-size:12px; font-weight:700; color:#555; margin-bottom:5px; text-transform:none; letter-spacing:0; }
 .tl-lbl small { font-weight:500; color:#8e8e93; }
+.opt-row { margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
+.opt-chip { display:inline-flex; align-items:center; gap:6px; padding:5px 12px; min-height:30px; border-radius:99px; border:1px solid #cbd5e1; background:#fff; color:#334155; font-size:12px; font-weight:600; cursor:pointer; -webkit-user-select:none; user-select:none; }
+.opt-chip .ic svg { width:13px; height:13px; }
+.opt-chip.ok { border-color:#1a6b45; color:#1a6b45; }
+.opt-chip.dark { background:#334155; border-color:#334155; color:#fff; }
+.opt-chip.alerta { border-color:#b91c1c; color:#b91c1c; }
+.tc-editor { margin-top:10px; padding:10px 12px; background:#f4f4f5; border-radius:10px; }
+.tc-row { display:flex; gap:6px; align-items:center; }
+.tc-row input { flex:1; min-width:0; padding:9px 10px; font-size:16px; }
+.tc-row .btn { flex-shrink:0; }
 </style>
 </head>
 <body>
@@ -462,10 +469,8 @@ body.tl-bar-on .content { padding-bottom:104px; }
           <button type="button" class="btn btn-success btn-sm" id="btnGuardarCliente" onclick="guardarClienteFrecuente()"><span class="ic" data-ic="plus"></span> Guardar cliente</button>
         </div>
         <input type="hidden" id="cotRef">
-        <label class="cli-iva">
-          <input type="checkbox" id="cotDesglosarIVA" onchange="cotCalcTela();cotCalcSaco();">
-          <span>Quitar IVA<small>Cotiza con precio sin impuesto</small></span>
-        </label>
+        <input type="checkbox" id="cotDesglosarIVA" hidden onchange="cotCalcTela();cotCalcSaco();">
+        <div class="opt-row"><button type="button" class="opt-chip" id="ivaChip" onclick="tlToggleIva()" aria-pressed="false" title="Cambiar si el precio incluye IVA"></button></div>
       </div>
 
       <div class="tabs">
@@ -558,9 +563,16 @@ body.tl-bar-on .content { padding-bottom:104px; }
               <button type="button" id="tlMonQ" onclick="tlMoneda('Q')">Quetzales (Q)</button>
             </div>
             <div id="tcBox" style="display:none;margin-top:10px">
-              <label for="cotTC" class="tl-lbl">Tipo de cambio <small>oficial Banguat · editable</small></label>
-              <input type="number" id="cotTC" placeholder="Ej: 7.80" step="any" min="0" inputmode="decimal" oninput="tlTcInput();cotCalcTela()">
-              <div id="tcHint" class="tl-tc-hint"></div>
+              <button type="button" class="opt-chip" id="tcChip" onclick="tlTcEditar()" aria-expanded="false"></button>
+              <div id="tcEditor" class="tc-editor" style="display:none">
+                <label for="cotTC" class="tl-lbl">Tipo de cambio <small>editable</small></label>
+                <div class="tc-row">
+                  <input type="number" id="cotTC" placeholder="Ej: 7.80" step="any" min="0" inputmode="decimal" oninput="tlTcInput();cotCalcTela()">
+                  <button type="button" class="btn btn-ghost btn-sm" onclick="tlUsarOficial()">Usar oficial</button>
+                  <button type="button" class="btn btn-success btn-sm" onclick="tlTcEditar()">Listo</button>
+                </div>
+                <div id="tcHint" class="tl-tc-hint"></div>
+              </div>
             </div>
             <details class="tl-adv">
               <summary>Sobrescribir precio de lista (excepción)</summary>
@@ -1359,5 +1371,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261015"></script><script src="tela-ui.js?v=4"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261015"></script><script src="tela-ui.js?v=5"></script></body>
 </html>

@@ -72,7 +72,34 @@
   var tcUltimaCarga = 0;
   var moneda = 'USD';        // por defecto se cotiza en dólares; el selector activa Quetzales
   function leerTcLocal() { try { return JSON.parse(localStorage.getItem(TC_KEY)); } catch (e) { return null; } }
+  function pintarTcChip() {
+    var c = $('tcChip'); if (!c) return;
+    var v = parseFloat($('cotTC').value);
+    var ic = function (n) { return typeof _ic === 'function' ? _ic(n) : ''; };
+    if (!(v > 0)) { c.className = 'opt-chip alerta'; c.innerHTML = ic('warn') + ' Definir tipo de cambio'; }
+    else if (tcManual) { c.className = 'opt-chip dark'; c.innerHTML = ic('edit') + ' TC Q' + v + ' · manual'; }
+    else { c.className = 'opt-chip ok'; c.innerHTML = ic('check') + ' TC Q' + v + ' · Banguat'; }
+  }
+  window.tlTcEditar = function () {
+    var ed = $('tcEditor'), abrir = ed.style.display === 'none';
+    ed.style.display = abrir ? 'block' : 'none';
+    $('tcChip').setAttribute('aria-expanded', abrir);
+    if (abrir) setTimeout(function () { $('cotTC').focus(); }, 30);
+  };
+  window.tlToggleIva = function () {
+    var cb = $('cotDesglosarIVA'); cb.checked = !cb.checked;
+    cotCalcTela(); if (typeof cotCalcSaco === 'function') cotCalcSaco();
+    pintarIvaChip();
+  };
+  function pintarIvaChip() {
+    var c = $('ivaChip'); if (!c) return;
+    var sin = $('cotDesglosarIVA').checked;
+    c.className = 'opt-chip' + (sin ? ' dark' : '');
+    c.setAttribute('aria-pressed', sin);
+    c.innerHTML = (typeof _ic === 'function' ? _ic(sin ? 'x' : 'check') : '') + (sin ? ' Sin IVA' : ' IVA incluido');
+  }
   function pintarTcHint() {
+    pintarTcChip();
     var h = $('tcHint'); if (!h) return;
     var v = parseFloat($('cotTC').value);
     var ic = function (n) { return typeof _ic === 'function' ? _ic(n) : ''; };
@@ -102,8 +129,8 @@
   window.tlMoneda = function (m) {
     if (moneda === m) return;
     moneda = m;
-    if (m === 'Q') { $('tcBox').style.display = 'block'; tcManual = false; tcVacio = false; aplicarTcOficial(true); if (!tcOficial) $('cotTC').focus(); }
-    else { $('tcBox').style.display = 'none'; $('cotTC').value = ''; }
+    if (m === 'Q') { $('tcBox').style.display = 'block'; tcManual = false; tcVacio = false; aplicarTcOficial(true); if (!tcOficial && $('tcEditor').style.display === 'none') tlTcEditar(); }
+    else { $('tcBox').style.display = 'none'; $('tcEditor').style.display = 'none'; $('cotTC').value = ''; }
     cotCalcTela();
   };
   window.tlCargarTcOficial = async function () {
@@ -161,7 +188,7 @@
     if (listo) {
       var modo = (document.querySelector('input[name="cotModoTela"]:checked') || {}).value === 'master' ? 'Master' : 'Confeccionado';
       var cant = Math.max(1, parseInt($('cotCantTela').value, 10) || 1);
-      $('tlBarSum').textContent = modo + ' · ' + (ua === 'm' ? fmt(a, 2) : fmt(aFt, 1)) + ua + ' × ' + (ul === 'm' ? fmt(l, 2) : fmt(lFt, 1)) + ul + ' · ' + cant + (cant === 1 ? ' corte' : ' cortes');
+      $('tlBarSum').textContent = modo + ' · ' + (ua === 'm' ? fmt(a, 2) : fmt(aFt, 1)) + ua + ' × ' + (ul === 'm' ? fmt(l, 2) : fmt(lFt, 1)) + ul + ' · ' + cant + (cant === 1 ? ' corte' : ' cortes') + ($('cotDesglosarIVA').checked ? ' · sin IVA' : '');
       var usd = $('rUsd').textContent + ' USD';
       var q = $('rQBox').style.display !== 'none' ? $('rQ').textContent : '';
       // La moneda elegida va en grande; la otra, como referencia
@@ -199,7 +226,7 @@
 
   window.addEventListener('load', function () {
     tlRenderModos(null, 'master');
-    tcOficial = leerTcLocal(); pintarTcHint();
+    tcOficial = leerTcLocal(); pintarTcHint(); pintarIvaChip();
     syncTelaUI();
   });
 })();
