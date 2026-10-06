@@ -64,6 +64,54 @@
   window.tlAdjPct = function () { aplicarAdj(); };
   window.tlQuick = function (p) { $('tlAdjPct').value = p; aplicarAdj(); };
 
+  // ── Tipo de cambio: el oficial del PFS (Banguat) se precarga; se puede escribir uno manual ──
+  var TC_KEY = 'TC_OFICIAL';
+  var tcOficial = null;      // { valor, fecha, stale }
+  var tcManual = false;      // el vendedor escribió un valor distinto al oficial
+  var tcVacio = false;       // lo dejó vacío a propósito (cotizar solo en USD)
+  var tcUltimaCarga = 0;
+  function leerTcLocal() { try { return JSON.parse(localStorage.getItem(TC_KEY)); } catch (e) { return null; } }
+  function pintarTcHint() {
+    var h = $('tcHint'); if (!h) return;
+    var v = parseFloat($('cotTC').value);
+    var ic = function (n) { return typeof _ic === 'function' ? _ic(n) : ''; };
+    h.className = 'tl-tc-hint';
+    if (!tcOficial) { h.innerHTML = 'Sin tipo de cambio oficial disponible: escríbelo a mano (vacío = solo USD).'; return; }
+    var of = 'Q' + tcOficial.valor + (tcOficial.fecha ? ' · ' + tcOficial.fecha : '');
+    if (tcVacio || !(v > 0)) h.innerHTML = 'Sin TC: se cotiza solo en USD. <a onclick="tlUsarOficial()">Usar oficial ' + of + '</a>';
+    else if (tcManual) h.innerHTML = ic('edit') + ' Manual · oficial ' + of + ' <a onclick="tlUsarOficial()">Usar oficial</a>';
+    else { h.className += ' ok'; h.innerHTML = ic('check') + ' Oficial Banguat · ' + of + (tcOficial.stale ? ' (último disponible)' : ''); }
+  }
+  function aplicarTcOficial(forzar) {
+    var inp = $('cotTC');
+    if (tcOficial && (forzar || (!tcManual && !tcVacio))) {
+      if (forzar) { tcManual = false; tcVacio = false; }
+      if (String(inp.value) !== String(tcOficial.valor)) { inp.value = String(tcOficial.valor); cotCalcTela(); }
+    }
+    pintarTcHint();
+  }
+  window.tlTcInput = function () {
+    var v = parseFloat($('cotTC').value);
+    tcVacio = !(v > 0);
+    tcManual = !tcVacio && !!(tcOficial ? v !== tcOficial.valor : true);
+    pintarTcHint();
+  };
+  window.tlUsarOficial = function () { aplicarTcOficial(true); };
+  window.tlCargarTcOficial = async function () {
+    if (typeof _api !== 'function') return;
+    try {
+      var r = await _api('/tipo-cambio');
+      if (r.ok && r.data.valor > 0) {
+        tcOficial = { valor: r.data.valor, fecha: r.data.fecha || '', stale: !!r.data.stale };
+        try { localStorage.setItem(TC_KEY, JSON.stringify(tcOficial)); } catch (e) {}
+        tcUltimaCarga = Date.now();
+      }
+    } catch (e) { /* sin sesión o sin red: se usa el último guardado */ }
+    aplicarTcOficial(false);
+  };
+  setInterval(function () { tlCargarTcOficial(); }, 30 * 60 * 1000);
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && Date.now() - tcUltimaCarga > 30 * 60 * 1000) tlCargarTcOficial(); });
+
   // ── Sincroniza toda la interfaz con los valores actuales de los campos ──
   function setOn(id, on) { var e = $(id); if (e) e.classList.toggle('on', !!on); }
   window.syncTelaUI = function () {
@@ -106,14 +154,11 @@
     }
   };
 
-  // El TC se recuerda: el último usado queda precargado en el siguiente ítem
   var _agregarTela = window.agregarTela;
   window.agregarTela = function () {
-    var tc = $('cotTC').value;
     var antes = (typeof CARRITO !== 'undefined') ? CARRITO.length : 0;
     _agregarTela.apply(this, arguments);
     if (CARRITO.length > antes) {
-      if (tc) { try { localStorage.setItem('TC_ULTIMO', tc); } catch (e) {} }
       // El formulario se limpia tras agregar (pdf-share.js): se reinician también las tarjetas y el ajuste
       adjTipo = 'none'; $('tlAdjPct').value = '';
       var m = document.querySelector('input[name="cotModoTela"]:checked');
@@ -128,6 +173,8 @@
     if (typeof f !== 'function') return;
     window[nombre] = function () { var r = f.apply(this, arguments); syncTelaUI(); return r; };
   });
+  var _mApp = window._mostrarApp;
+  if (typeof _mApp === 'function') window._mostrarApp = function () { var r = _mApp.apply(this, arguments); tlCargarTcOficial(); return r; };
   ['_mostrarApp', '_mostrarLogin'].forEach(function (nombre) {
     var f = window[nombre];
     if (typeof f !== 'function') return;
@@ -135,8 +182,8 @@
   });
 
   window.addEventListener('load', function () {
-    try { var tc = localStorage.getItem('TC_ULTIMO'); if (tc && !$('cotTC').value) $('cotTC').value = tc; } catch (e) {}
     tlRenderModos(null, 'master');
+    tcOficial = leerTcLocal(); aplicarTcOficial(false);
     syncTelaUI();
   });
 })();

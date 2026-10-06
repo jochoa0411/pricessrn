@@ -319,6 +319,10 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 .tl-bar-tot span { font-size:14px; font-weight:800; color:#1a6b45; font-variant-numeric:tabular-nums; }
 .tl-bar .btn { min-height:46px; padding:0 18px; flex-shrink:0; }
 body.tl-bar-on .content { padding-bottom:104px; }
+.tl-tc-hint { font-size:12px; margin-top:6px; color:#555; display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+.tl-tc-hint .ic svg { width:14px; height:14px; }
+.tl-tc-hint.ok { color:#1a6b45; font-weight:600; }
+.tl-tc-hint a { color:#1a6b45; font-weight:700; text-decoration:underline; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -546,8 +550,9 @@ body.tl-bar-on .content { padding-bottom:104px; }
           </div>
 
           <div class="tl-sec">
-            <div class="tl-h"><span class="tl-n">6</span> Tipo de cambio <small>opcional · vacío cotiza en USD</small></div>
-            <input type="number" id="cotTC" placeholder="7.80" step="0.01" min="0" inputmode="decimal" oninput="cotCalcTela()">
+            <div class="tl-h"><span class="tl-n">6</span> Tipo de cambio <small>oficial Banguat · editable</small></div>
+            <input type="number" id="cotTC" placeholder="Sin TC = solo USD" step="any" min="0" inputmode="decimal" oninput="tlTcInput();cotCalcTela()">
+            <div id="tcHint" class="tl-tc-hint"></div>
             <details class="tl-adv">
               <summary>Sobrescribir precio de lista (excepción)</summary>
               <label for="cotPrecioManual">Precio base manual USD / pie²</label>
@@ -1345,5 +1350,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261015"></script><script src="tela-ui.js?v=2"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261015"></script><script src="tela-ui.js?v=3"></script></body>
 </html>
