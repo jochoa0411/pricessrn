@@ -1000,6 +1000,17 @@ function init(){
   });
 }
 
+// Texto de cada saco en la lista: nombre · peso · color (si el nombre no lo dice ya) · impresión (si está definida)
+function etiquetaSaco(s){
+  const esc = t => String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const partes = [s.nombre];
+  if (s.gm && !String(s.nombre).toLowerCase().includes(s.gm + ' gm')) partes.push(s.gm + ' gm');
+  if (s.color && !String(s.nombre).toLowerCase().includes(String(s.color).toLowerCase())) partes.push(s.color);
+  if (s.impresion === 'CON') partes.push('con impresión');
+  else if (s.impresion === 'SIN') partes.push('sin impresión');
+  return esc(partes.join(' · '));
+}
+
 function loadSelects(){
   const tS = document.getElementById('cotTelaSelect');
   const sv = tS.value;
@@ -1010,7 +1021,7 @@ function loadSelects(){
   const sS = document.getElementById('cotSacoSelect');
   const sv2 = sS.value;
   sS.innerHTML = '<option value="">Selecciona un saco…</option>';
-  SACOS.forEach(s => sS.innerHTML += `<option value="${s.id}">${s.nombre}</option>`);
+  SACOS.forEach(s => sS.innerHTML += `<option value="${s.id}">${etiquetaSaco(s)}</option>`);
   if(sv2) sS.value = sv2;
 }
 
@@ -1455,5 +1466,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261018"></script><script src="tela-ui.js?v=5"></script><script src="carrito-ui.js?v=3"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261020"></script><script src="tela-ui.js?v=5"></script><script src="carrito-ui.js?v=3"></script></body>
 </html>
