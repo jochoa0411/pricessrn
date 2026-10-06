@@ -373,6 +373,28 @@ body.tl-bar-on .content { padding-bottom:104px; }
 .toast-undo { position:fixed; left:50%; bottom:max(86px, calc(78px + env(safe-area-inset-bottom))); transform:translateX(-50%) translateY(14px); z-index:1200; background:#1c1c1e; color:#fff; border-radius:12px; padding:8px 8px 8px 16px; display:flex; align-items:center; gap:14px; font-size:13px; font-weight:600; box-shadow:0 8px 24px rgba(0,0,0,.3); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; max-width:92vw; }
 .toast-undo.show { opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; }
 .toast-undo button { background:#fff; color:#1a6b45; border:none; border-radius:8px; padding:8px 14px; font-weight:800; font-size:12px; cursor:pointer; }
+
+/* ── Barra lateral: perfil, buscador de cotizaciones y menú con descripción ── */
+.sidebar { display:flex; flex-direction:column; }
+.sidebar.open { width:min(300px, 86vw); }
+.nv-user { display:flex; align-items:center; gap:12px; padding:16px 16px 12px; }
+.nv-av { width:42px; height:42px; border-radius:50%; background:#1a6b45; color:#fff; font-weight:800; font-size:15px; display:flex; align-items:center; justify-content:center; flex-shrink:0; letter-spacing:.02em; }
+.nv-ut { min-width:0; } .nv-ut b { display:block; font-size:14px; color:#111; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .nv-ut small { display:block; font-size:11px; color:#777; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nv-search { position:relative; margin:0 14px 10px; }
+.nv-search .ic { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#8e8e93; pointer-events:none; }
+.nv-search .ic svg { width:16px; height:16px; }
+.nv-search input { width:100%; padding:11px 12px 11px 36px; font-size:14px; border-radius:12px; background:#f4f4f5; border:1px solid transparent; -webkit-appearance:none; }
+.nv-search input:focus { background:#fff; border-color:#1a6b45; box-shadow:0 0 0 3px rgba(26,107,69,.10); }
+.nv-sec { padding:10px 18px 6px; font-size:10px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:#8e8e93; }
+.nav-item.nv-item { display:flex; align-items:center; gap:12px; padding:12px 16px 12px 14px; white-space:normal; border-bottom:none; border-left:4px solid transparent; }
+.nav-item.nv-item.active { padding-left:14px; border-left-color:#1a6b45; }
+.nv-item .ic { margin-right:0; flex-shrink:0; } .nv-item .ic svg { width:22px; height:22px; }
+.nv-t { flex:1; min-width:0; } .nv-t b { display:block; font-size:15px; font-weight:700; color:inherit; } .nv-t small { display:block; font-size:11px; font-weight:400; color:#8e8e93; margin-top:1px; }
+.nav-item.nv-item.active .nv-t small { color:#4d7f65; }
+.nv-badge { background:#1a6b45; color:#fff; font-size:11px; font-weight:800; min-width:22px; height:22px; border-radius:99px; display:inline-flex; align-items:center; justify-content:center; padding:0 7px; }
+.nv-foot { margin-top:auto; border-top:1px solid #efeff4; padding:10px 12px max(12px, env(safe-area-inset-bottom)); }
+.nv-salir { width:100%; display:flex; align-items:center; gap:10px; background:none; border:none; padding:12px 8px; border-radius:10px; color:#b91c1c; font-weight:700; font-size:14px; cursor:pointer; }
+.nv-salir:active { background:#fef2f2; } .nv-salir .ic svg { width:20px; height:20px; }
 </style>
 </head>
 <body>
@@ -472,9 +494,28 @@ body.tl-bar-on .content { padding-bottom:104px; }
 
 <div class="main">
   <div id="sidebarOverlay" onclick="cerrarMenu()" style="position:fixed;inset:0;z-index:49;display:none;background:rgba(0,0,0,0.3);"></div><div class="sidebar" id="sidebar">
-    <div class="nav-item active" onclick="abrirSeccion('cotizar',this)"><span class="ic" data-ic="calc"></span> Cotizar</div>
-    <div class="nav-item" onclick="abrirSeccion('historial',this)"><span class="ic" data-ic="history"></span> Historial</div>
-    <div class="nav-item" onclick="cerrarSesionManual()" style="color:#d32f2f;"><span class="ic" data-ic="user"></span> <span id="navSesionNombre"></span> · Salir</div>
+    <div class="nv-user">
+      <div class="nv-av" id="navUserIni">?</div>
+      <div class="nv-ut"><b id="navUserNombre"></b><small id="navUserCorreo"></small></div>
+    </div>
+    <form class="nv-search" onsubmit="buscarDesdeMenu(event)" role="search">
+      <span class="ic" data-ic="search"></span>
+      <input type="search" id="navBuscar" placeholder="Buscar mis cotizaciones…" enterkeyhint="search" autocomplete="off" aria-label="Buscar mis cotizaciones por cliente o folio">
+    </form>
+    <div class="nv-sec">Menú</div>
+    <div class="nav-item nv-item active" onclick="abrirSeccion('cotizar',this)">
+      <span class="ic" data-ic="calc"></span>
+      <div class="nv-t"><b>Nueva cotización</b><small>Calculadora y presupuesto</small></div>
+      <span class="nv-badge" id="navBadgeCarrito" style="display:none"></span>
+    </div>
+    <div class="nav-item nv-item" onclick="abrirSeccion('historial',this)">
+      <span class="ic" data-ic="file"></span>
+      <div class="nv-t"><b>Mis cotizaciones</b><small>Buscar, editar y reenviar</small></div>
+      <span class="nv-badge" id="navBadgeMis" style="display:none"></span>
+    </div>
+    <div class="nv-foot">
+      <button type="button" class="nv-salir" onclick="cerrarSesionManual()"><span class="ic" data-ic="logout"></span> Cerrar sesión</button>
+    </div>
   </div>
 
   <div class="content">
@@ -1413,5 +1454,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261016"></script><script src="tela-ui.js?v=5"></script><script src="carrito-ui.js?v=2"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js"></script><script src="real-quote.js?v=20261017"></script><script src="tela-ui.js?v=5"></script><script src="carrito-ui.js?v=3"></script></body>
 </html>

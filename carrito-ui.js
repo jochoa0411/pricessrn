@@ -79,12 +79,19 @@
       + '</div></div>';
   }
 
+  function badgeCarrito() {
+    var b = $('navBadgeCarrito'); if (!b) return;
+    b.style.display = CARRITO.length ? 'inline-flex' : 'none';
+    b.textContent = CARRITO.length;
+  }
+
   window.renderCarrito = function () {
     var list = $('cartList'), footer = $('cartFooter'), badge = $('cartBadge'), total = $('cartTotal');
     badge.textContent = CARRITO.length + (CARRITO.length === 1 ? ' ítem' : ' ítems');
     if (!CARRITO.length) {
       list.innerHTML = '<div class="cx-vacio">' + ic('clipboard') + '<div>Aún no hay ítems</div><small>Configura una tela o un saco arriba y toca «Agregar».</small></div>';
       footer.style.display = 'none';
+      badgeCarrito();
       return;
     }
     list.innerHTML = CARRITO.map(fila).join('')
@@ -105,6 +112,7 @@
     }
     footer.style.display = 'block';
     if (typeof syncTelaUI === 'function') syncTelaUI();
+    badgeCarrito();
   };
 
   // ── Cantidad en la fila ──
