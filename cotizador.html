@@ -556,6 +556,13 @@ body.tl-bar-on .content { padding-bottom: 180px; }
 .pr-cot { width: 100%; min-height: 52px; border: none; border-radius: 12px; background: #1a6b45; color: #fff; font-size: 17px; font-weight: 700; }
 .pr-cot:active { opacity: .9; }
 .pr-r.abierta .pr-v { visibility: hidden; }
+.pr-cols.c1, .pr-rb.c1 { grid-template-columns: minmax(0,1fr) auto; }
+.pr-rb.c1 .pr-v { padding-left: 8px; font-size: 16px; }
+.pr-jg { margin: 10px 0 4px; font-size: 14px; font-weight: 700; color: #555; }
+.pr-jp { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; margin-bottom: 4px; background: #fff; border: 1px solid #d7e7de; border-radius: 10px; font-size: 16px; }
+.pr-jp b { font-size: 18px; color: #1a6b45; font-variant-numeric: tabular-nums; }
+.pr-jp.no b { color: #888; font-size: 15px; font-weight: 600; }
+.pr-jp.sel { border-color: #1a6b45; box-shadow: 0 0 0 2px rgba(26,107,69,.18); }
 @media (max-width: 380px) {
   .pr-cols, .pr-rb { grid-template-columns: minmax(0,1fr) repeat(3, 58px); }
   .pr-cols.c2, .pr-rb.c2 { grid-template-columns: minmax(0,1fr) repeat(2, 70px); }
@@ -979,6 +986,11 @@ body.tl-bar-on .content { padding-bottom: 180px; }
         <div id="prVistaBox" class="pr-seg" role="group" aria-label="Qué ver">
           <button type="button" id="prSegSacos" class="on" onclick="prVista('sacos')">Sacos</button>
           <button type="button" id="prSegTelas" onclick="prVista('telas')">Telas</button>
+          <button type="button" id="prSegJumbos" onclick="prVista('jumbos')">Jumbos</button>
+        </div>
+        <div id="prPaisBox" style="display:none;margin-top:12px">
+          <label for="prPaisBtn" style="margin-top:0">País</label>
+          <button type="button" id="prPaisBtn" class="pk-btn" aria-haspopup="dialog" onclick="elegirPaisJumbos()"><span class="pk-btn-v" id="prPaisV">Todos los países</span><span class="pk-btn-i"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></span></button>
         </div>
         <input type="search" id="prBuscar" placeholder="Buscar saco (medida, color…)" oninput="prBuscar(this.value)" autocomplete="off" style="margin-top:12px">
       </div>
@@ -1780,5 +1792,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=5"></script><script src="listas-ui.js?v=4"></script><script src="precios-ui.js?v=3"></script><script src="real-quote.js?v=20261029"></script><script src="tela-ui.js?v=10"></script><script src="carrito-ui.js?v=7"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=6"></script><script src="listas-ui.js?v=4"></script><script src="precios-ui.js?v=4"></script><script src="real-quote.js?v=20261029"></script><script src="tela-ui.js?v=10"></script><script src="carrito-ui.js?v=7"></script></body>
 </html>

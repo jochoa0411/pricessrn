@@ -210,7 +210,7 @@ async function _syncPreciosCore(manual){
     var sesion = typeof _cargarSesion === 'function' ? _cargarSesion() : null;
     if(!sesion || !sesion.token){ if(manual) toast('Inicia sesion para actualizar los precios','err'); return; }
     // Se manda la versión local: si no cambió, el servidor responde {unchanged:true} sin reenviar la lista
-    var resp = await _api('/precios?v=' + (parseInt(localStorage.getItem('PRECIOS_VERSION')||'0') || 0) + '&l=' + (window.LISTAS_REV || 0));
+    var resp = await _api('/precios?v=' + (parseInt(localStorage.getItem('PRECIOS_VERSION')||'0') || 0) + '&l=' + (window.LISTAS_REV || 0) + '&j=' + (window.JUMBOS_REV || 0));
     if(!resp.ok) throw new Error(resp.data && resp.data.error || ('HTTP '+resp.status));
     _ultimaSyncPrecios = Date.now();
     var data = resp.data;
@@ -218,6 +218,8 @@ async function _syncPreciosCore(manual){
     // Listas por cliente: se guardan aunque la lista general no haya cambiado
     if(data.listas_cliente && window.guardarListasCliente && data.listas_rev !== window.LISTAS_REV){ guardarListasCliente(data.listas_rev, data.listas_cliente); if(manual) toast('Listas por cliente actualizadas'); }
 
+    // Jumbos export: se guardan aunque la lista general no haya cambiado
+    if(data.jumbos && window.guardarJumbos && data.jumbos_rev !== window.JUMBOS_REV){ guardarJumbos(data.jumbos); if(manual) toast('Lista de Jumbos actualizada'); }
     var vLocal = parseInt(localStorage.getItem('PRECIOS_VERSION')||'0');
     if(!data.telas) return;
     if(data.version > vLocal){

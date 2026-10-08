@@ -128,8 +128,17 @@
     pkSyncLista();
   }
 
+  // ───────────────────────── Jumbos export (producto × país) ─────────────────────────
+  window.JUMBOS = null; window.JUMBOS_REV = 0;
+  try { var jj = JSON.parse(localStorage.getItem('JUMBOS') || 'null'); if (jj && jj.productos) { window.JUMBOS = jj; window.JUMBOS_REV = jj.rev || 0; } } catch (e) {}
+  window.guardarJumbos = function (j) {
+    window.JUMBOS = j; window.JUMBOS_REV = j.rev || 0;
+    try { localStorage.setItem('JUMBOS', JSON.stringify(j)); } catch (e) {}
+    var s = $('precios'); if (s && s.classList.contains('active')) renderPrecios();
+  };
+
   // ───────────────────────── Sección «Listas de precios» ─────────────────────────
-  var ST = { lista: '', vista: 'sacos', q: '' };
+  var ST = { lista: '', vista: 'sacos', q: '', pais: '' };
   try { var g = JSON.parse(localStorage.getItem('PRECIOS_VISTA') || 'null'); if (g) { ST.lista = g.lista || ''; ST.vista = g.vista || 'sacos'; } } catch (e) {}
   function guardarVista() { try { localStorage.setItem('PRECIOS_VISTA', JSON.stringify({ lista: ST.lista, vista: ST.vista })); } catch (e) {} }
   function Q(v, d) { return v == null ? '—' : 'Q' + Number(v).toFixed(d == null ? 2 : d); }
@@ -191,6 +200,34 @@
     document.querySelectorAll('#preciosCuerpo .pr-r').forEach(function (f) { f.classList.remove('abierta'); f.querySelector('.pr-x').hidden = true; f.querySelector('.pr-rb').setAttribute('aria-expanded', 'false'); });
     if (abrir) { fila.classList.add('abierta'); fila.querySelector('.pr-x').hidden = false; fila.querySelector('.pr-rb').setAttribute('aria-expanded', 'true'); }
   };
+  function cuerpoJumbos(q) {
+    var J = window.JUMBOS;
+    if (!J || !J.productos || !J.productos.length) return '<div class="pr-vacio">Aún no se ha descargado la lista de Jumbos.<br>Toca el botón de actualizar (arriba a la derecha) con internet.</div>';
+    var ps = J.paises, pais = ST.pais;
+    var arr = J.productos.filter(function (p) { return !q || (p.nombre + ' ' + (p.detalle || '')).toLowerCase().indexOf(q) >= 0; });
+    if (!arr.length) return '<div class="pr-vacio">No hay jumbos que coincidan con “' + esc(q) + '”.</div>';
+    var nom = pais ? (ps.filter(function (c) { return c.k === pais; })[0] || {}).n : 'Precio';
+    var html = '<div class="pr-cols c1"><span>' + arr.length + (arr.length === 1 ? ' producto' : ' productos') + '</span><span>' + esc(pais ? nom : 'Desde – hasta') + '</span></div><div class="pr-bloque">';
+    arr.forEach(function (p) {
+      var vals = ps.map(function (c) { return p.precios[c.k]; }).filter(function (v) { return v != null; });
+      var resumen = pais ? (p.precios[pais] != null ? 'US$' + Number(p.precios[pais]).toFixed(2) : '—') : (vals.length ? (Math.min.apply(null, vals) === Math.max.apply(null, vals) ? 'US$' + Math.min.apply(null, vals).toFixed(2) : 'US$' + Math.min.apply(null, vals).toFixed(2) + ' – ' + Math.max.apply(null, vals).toFixed(2)) : '—');
+      var grp = '', det = '';
+      ps.forEach(function (c) {
+        if (c.g !== grp) { grp = c.g; det += '<div class="pr-jg">' + esc(c.g) + '</div>'; }
+        var v = p.precios[c.k];
+        det += '<div class="pr-jp' + (pais === c.k ? ' sel' : '') + (v == null ? ' no' : '') + '"><span>' + esc(c.n) + '</span><b>' + (v == null ? 'No se cotiza' : 'US$' + Number(v).toFixed(2)) + '</b></div>';
+      });
+      html += '<div class="pr-r" id="prrj' + p.id + '"><button type="button" class="pr-rb c1" aria-expanded="false" onclick="prAbrir(\'j' + p.id + '\')"><span class="pr-rn"><b>' + esc(p.nombre) + '</b>' + (p.detalle ? '<small>' + esc(p.detalle) + '</small>' : '') + '</span><span class="pr-v">' + resumen + '</span></button>'
+        + '<div class="pr-x" hidden>' + det + '</div></div>';
+    });
+    return html + '</div>' + (J.nota ? '<p class="pr-pie">' + esc(J.nota) + '</p>' : '');
+  }
+  window.elegirPaisJumbos = function () {
+    var J = window.JUMBOS; if (!J) return;
+    var ops = [{ valor: '', texto: 'Todos los países', sub: 'Muestra el rango de precios', grupo: 'Ver' }]
+      .concat(J.paises.map(function (c) { return { valor: c.k, texto: c.n, sub: c.g, grupo: c.g }; }));
+    LGM.picker({ titulo: 'País', opciones: ops, valor: ST.pais, buscar: false, alElegir: function (v) { ST.pais = v; renderPrecios(); } });
+  };
   window.renderPrecios = function () {
     var box = $('preciosCuerpo'); if (!box) return;
     var lista = listaActual();
@@ -198,12 +235,16 @@
     var q = ST.q.toLowerCase().trim();
     $('prListaV').textContent = textoLista(ST.lista ? Number(ST.lista) : null);
     $('prVistaBox').style.display = lista ? 'none' : 'flex';
-    $('prSegSacos').classList.toggle('on', ST.vista === 'sacos' || !!lista);
-    $('prSegTelas').classList.toggle('on', ST.vista === 'telas' && !lista);
-    var enTelas = ST.vista === 'telas' && !lista;
-    $('prBuscar').placeholder = enTelas ? 'Buscar tela' : 'Buscar saco (medida, color…)';
-    box.innerHTML = enTelas ? cuerpoTelas(q) : cuerpoSacos(lista, q);
+    var enJumbos = ST.vista === 'jumbos' && !lista, enTelas = ST.vista === 'telas' && !lista;
+    $('prSegSacos').classList.toggle('on', (ST.vista === 'sacos') || !!lista);
+    $('prSegTelas').classList.toggle('on', enTelas);
+    $('prSegJumbos').classList.toggle('on', enJumbos);
+    $('prPaisBox').style.display = enJumbos ? '' : 'none';
+    if (enJumbos) { var pj = window.JUMBOS && window.JUMBOS.paises.filter(function (c) { return c.k === ST.pais; })[0]; $('prPaisV').textContent = pj ? pj.n : 'Todos los países'; }
+    $('prBuscar').placeholder = enJumbos ? 'Buscar jumbo' : enTelas ? 'Buscar tela' : 'Buscar saco (medida, color…)';
+    box.innerHTML = enJumbos ? cuerpoJumbos(q) : enTelas ? cuerpoTelas(q) : cuerpoSacos(lista, q);
     var v = localStorage.getItem('PRECIOS_VERSION') || '';
+    if (enJumbos) { $('prPie').textContent = window.JUMBOS ? 'Precios en dólares (US$) por unidad · lista de Jumbos export' : ''; return; }
     $('prPie').textContent = (v ? 'Precios vigentes · versión ' + v : 'Precios guardados en este teléfono') + (lista ? ' · lista de ' + lista.nombre : '');
   };
   window.elegirListaPrecios = function () {
