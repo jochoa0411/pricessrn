@@ -734,7 +734,7 @@ function _renderResumenEnvio(){
   var cliente = document.getElementById('cotCliente').value.trim();
   var nit = document.getElementById('cotNit').value.trim();
   var html = '<h4>Revisa antes de enviar</h4>'
-    + '<div style="font-size:13px;margin-bottom:6px"><strong>Cliente:</strong> ' + _esc(cliente) + (nit ? ' · NIT ' + _esc(nit) : '') + '</div>';
+    + '<div style="font-size:15px;margin-bottom:6px"><strong>Cliente:</strong> ' + _esc(cliente) + (nit ? ' · NIT ' + _esc(nit) : '') + '</div>';
 
   est.pend.forEach(function(p){
     html += '<div class="res-warn"><strong>' + _ic('warn') + ' Tienes un cálculo SIN agregar al presupuesto:</strong><br>' + _esc(p.desc)
@@ -919,7 +919,7 @@ function abrirModalEnviarReal(){
   if (!CARRITO.length) { toast('El presupuesto está vacío', 'err'); return; }
   var sesion = _cargarSesion();
   if (!sesion || !sesion.token) {
-    toast('Inicia sesión para generar la cotización real', 'err');
+    toast('Inicia sesión para enviar la cotización', 'err');
     _mostrarLogin();
     return;
   }
@@ -948,19 +948,19 @@ function _mostrarConfirmacionCotReal(estado, info){
   if (estado === 'ok'){
     titleEl.textContent = info.titulo || 'Cotización enviada';
     bodyEl.innerHTML =
-        '<p><strong>Folio:</strong> ' + info.no_cotizacion + '</p>'
+        '<p><strong>Número de cotización:</strong> ' + info.no_cotizacion + '</p>'
       + '<p><strong>Enviada a:</strong> ' + info.vendedorCorreo + '</p>'
       + (info.clienteCorreo ? '<p><strong>Copia a:</strong> ' + info.clienteCorreo + '</p>' : '')
       + '<p style="margin-top:10px;padding:10px;background:#f0f9f5;border-radius:6px;color:#1a6b45;font-weight:700;">Revisa tu correo — debería llegar en segundos. Queda en Historial › Mis cotizaciones, donde puedes editarla o reenviarla.</p>';
   } else if (estado === 'creada_sin_correo'){
     titleEl.textContent = 'Cotización guardada, correo falló';
     bodyEl.innerHTML =
-        '<p><strong>Folio:</strong> ' + info.no_cotizacion + ' (ya quedó guardada en el sistema)</p>'
+        '<p><strong>Número de cotización:</strong> ' + info.no_cotizacion + ' (ya quedó guardada en el sistema)</p>'
       + '<p style="margin-top:8px;padding:10px;background:#fef9ec;border-radius:6px;color:#92400e;">' + (info.aviso || 'No se pudo enviar el correo automáticamente. Avisa a soporte con este folio para que te la reenvíen.') + '</p>';
   } else {
     titleEl.textContent = 'No se generó la cotización';
     bodyEl.innerHTML = '<p style="color:#d32f2f">' + (info.error || 'Error desconocido') + '</p>'
-      + '<p style="margin-top:8px;font-size:12px;color:#888;">El presupuesto no se perdió — corrige e intenta de nuevo.</p>';
+      + '<p style="margin-top:8px;font-size:14px;color:#888;">El presupuesto no se perdió — corrige e intenta de nuevo.</p>';
   }
   document.getElementById('modalCotReal').classList.remove('hidden');
 }
@@ -971,7 +971,7 @@ async function generarCotizacionReal(){
   var sesion = _cargarSesion();
   if (!sesion || !sesion.token) {
     cerrarModalEnviarReal();
-    toast('Inicia sesión para generar la cotización real', 'err');
+    toast('Inicia sesión para enviar la cotización', 'err');
     _mostrarLogin();
     return;
   }
@@ -998,7 +998,7 @@ async function generarCotizacionReal(){
   ];
   for (var fi = 0; fi < entregaCampos.length; fi++) {
     if (!entregaCampos[fi][1]) {
-      toast('Completa ' + entregaCampos[fi][2] + ' — lo necesita la cotización real', 'err');
+      toast('Completa ' + entregaCampos[fi][2] + ' — lo necesita la cotización', 'err');
       document.getElementById(entregaCampos[fi][0]).focus();
       return;
     }
@@ -1020,7 +1020,7 @@ async function generarCotizacionReal(){
   var btn = document.getElementById('btnCotReal');
   var textoOriginal = btn.textContent;
   btn.disabled = true;
-  btn.textContent = 'Generando...';
+  btn.textContent = 'Enviando…';
 
   // Cliente que no está en el catálogo (y no es consumidor final): se registra en la BD junto con la cotización
   var esNuevoCliente = !!(_cliCache && _cliCache.puede_crear && !(_clienteSel && _clienteSel.nombre === cliente && _clienteSel.codigo)
@@ -1062,7 +1062,7 @@ async function generarCotizacionReal(){
     }
     if (!r.ok || !data.ok) {
       cerrarModalEnviarReal();
-      _mostrarConfirmacionCotReal('error', { error: data.error || 'No se pudo generar la cotización real' });
+      _mostrarConfirmacionCotReal('error', { error: data.error || 'No se pudo enviar la cotización' });
       return;
     }
 

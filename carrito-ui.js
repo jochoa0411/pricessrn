@@ -84,6 +84,7 @@
     var b = $('navBadgeCarrito'); if (!b) return;
     b.style.display = CARRITO.length ? 'inline-flex' : 'none';
     b.textContent = CARRITO.length;
+    var bn = $('bnBadgeCarrito'); if (bn) { bn.style.display = CARRITO.length ? 'block' : 'none'; bn.textContent = CARRITO.length; }
   }
 
   window.renderCarrito = function () {

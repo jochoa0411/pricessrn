@@ -60,7 +60,7 @@ var _listaManual = false;      // el vendedor eligió la lista a mano: ya no se 
       var on = seleccion ? seleccion === o[0] : i === 0;
       return '<label class="tier-opt"><input type="radio" name="cotTierSaco" value="' + o[0] + '"' + (on ? ' checked' : '') + ' onchange="cotCalcSaco()"><span>' + o[1] + '</span></label>';
     }).join('');
-    var lb = $('tierLabel'); if (lb) lb.textContent = listaId ? 'Precio de la lista' : 'Tipo de cliente';
+    var lb = $('tierLabel'); if (lb) lb.textContent = listaId ? 'Precio de la lista' : 'Nivel de precio (A = más bajo · C = más alto)';
   };
 
   window.renderListasSelect = function () {

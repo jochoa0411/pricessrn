@@ -273,7 +273,7 @@ if(window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App){
 (function(){
   var badge = document.createElement('div');
   badge.id = 'preciosVersion';
-  badge.style.cssText = 'background:rgba(255,255,255,0.2);color:white;font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;';
+  badge.style.cssText = 'background:rgba(255,255,255,0.2);color:white;font-size:14px;font-weight:700;padding:6px 12px;border-radius:99px;';
   badge.textContent = 'v' + (localStorage.getItem('PRECIOS_VERSION') || '...');
   var header = document.querySelector('header');
   if(header){ var h1 = header.querySelector('h1'); if(h1) h1.insertAdjacentElement('afterend', badge); }
