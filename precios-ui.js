@@ -230,7 +230,7 @@
     var s = $('cotTelaSelect'); s.value = String(id); actTelaPreview();
   };
 
-  LGM.on('vista:cambio', function () { var s = $('precios'); if (s && s.classList.contains('active')) renderPrecios(); var b = $('bnPrecios'); if (b) b.classList.toggle('on', !!(s && s.classList.contains('active'))); });
+  LGM.on('vista:cambio', function () { var s = $('precios'); if (s && s.classList.contains('active')) renderPrecios();  });
   LGM.on('precios:sync', function () { var s = $('precios'); if (s && s.classList.contains('active')) renderPrecios(); pkSyncLista(); });
 
   window.addEventListener('load', function () { montarBotonLista(); pkSyncLista(); });

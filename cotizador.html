@@ -678,7 +678,6 @@ body.tl-bar-on .content { padding-bottom: 180px; }
 
 <nav id="bottomNav" aria-label="Navegación principal">
   <button type="button" id="bnCotizar" class="on" onclick="irSeccion('cotizar')"><span class="ic" data-ic="calc"></span>Cotizar<span class="bn-badge" id="bnBadgeCarrito" style="display:none"></span></button>
-  <button type="button" id="bnPrecios" onclick="irSeccion('precios')"><span class="ic" data-ic="clipboard"></span>Precios</button>
   <button type="button" id="bnMis" onclick="irSeccion('historial')"><span class="ic" data-ic="file"></span>Mis cotizaciones</button>
   <button type="button" id="bnMas" onclick="toggleMenu()"><span class="ic" data-ic="menu"></span>Más</button>
 </nav>
@@ -1234,10 +1233,11 @@ function irSeccion(sec){
 LGM.on('vista:cambio', function(){
   const act = document.querySelector('.seccion.active');
   const sec = act ? act.id : 'cotizar';
-  const c = document.getElementById('bnCotizar'), m = document.getElementById('bnMis'), pr = document.getElementById('bnPrecios');
+  const c = document.getElementById('bnCotizar'), m = document.getElementById('bnMis');
   if(c) c.classList.toggle('on', sec === 'cotizar');
   if(m) m.classList.toggle('on', sec === 'historial');
-  if(pr) pr.classList.toggle('on', sec === 'precios');
+  const mas = document.getElementById('bnMas');
+  if(mas) mas.classList.toggle('on', sec === 'precios');   // «Precios» vive dentro de «Más»
 });
 function cambiarTab(btn, tabId){
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -1780,5 +1780,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=5"></script><script src="listas-ui.js?v=4"></script><script src="precios-ui.js?v=2"></script><script src="real-quote.js?v=20261029"></script><script src="tela-ui.js?v=10"></script><script src="carrito-ui.js?v=7"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=5"></script><script src="listas-ui.js?v=4"></script><script src="precios-ui.js?v=3"></script><script src="real-quote.js?v=20261029"></script><script src="tela-ui.js?v=10"></script><script src="carrito-ui.js?v=7"></script></body>
 </html>
