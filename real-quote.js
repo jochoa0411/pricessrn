@@ -861,16 +861,50 @@ async function guardarClienteFrecuente(){
   }
 }
 
-// Precarga lo último usado: datos de entrega/pago (con sugerencias) y el correo del cliente elegido.
-function _prellenarModalEnvio(){
+// ── Condiciones de entrega y pago: las mismas sugerencias que el sistema (Ventas › Cotizaciones). ──
+// Por defecto «Express»: cliente que recoge/recibe rápido y paga de contado.
+var _SUG_TERMINOS = {
+  forma_entrega: ['Terrestre / Inland Freight', 'Marítima / Ocean Freight', 'Aérea / Air Freight'],
+  lugar_entrega: ['Bodega Central / Main Warehouse', 'Planta LGM / LGM Plant', 'Dirección del Cliente / Customer Address'],
+  tiempo_entrega: ['Inmediata / Immediate', '24-48 horas / 24-48 hours', '3-5 días hábiles / 3-5 business days', 'Según cronograma acordado / As per agreed schedule'],
+  forma_pago: ['Contado / Cash', 'Crédito 30 días / 30-day credit', 'Crédito 60 días / 60-day credit', 'Anticipo 50% / 50% advance']
+};
+var _PRESETS_TERMINOS = [
+  { id: 'express', nombre: 'Express', t: { forma_entrega: 'Terrestre / Inland Freight', lugar_entrega: 'Bodega Central / Main Warehouse', tiempo_entrega: '24-48 horas / 24-48 hours', forma_pago: 'Contado / Cash' } },
+  { id: 'credito', nombre: 'Crédito 30 días', t: { forma_entrega: 'Terrestre / Inland Freight', lugar_entrega: 'Dirección del Cliente / Customer Address', tiempo_entrega: '3-5 días hábiles / 3-5 business days', forma_pago: 'Crédito 30 días / 30-day credit' } }
+];
+function _valTermino(k){ return (document.getElementById(_CAMPOS_TERMINOS[k]).value || '').trim(); }
+function aplicarPresetTerminos(id){
+  var p = _PRESETS_TERMINOS.filter(function(x){ return x.id === id; })[0]; if (!p) return;
+  Object.keys(_CAMPOS_TERMINOS).forEach(function(k){ document.getElementById(_CAMPOS_TERMINOS[k]).value = p.t[k]; });
+  renderSugTerminos();
+}
+function elegirTermino(k, v){ document.getElementById(_CAMPOS_TERMINOS[k]).value = v; renderSugTerminos(); }
+function renderSugTerminos(){
   var cur = _lsGet('cotTerminos', {});
+  var pr = document.getElementById('merPresets');
+  if (pr) pr.innerHTML = _PRESETS_TERMINOS.map(function(p){
+    var on = Object.keys(_CAMPOS_TERMINOS).every(function(k){ return _valTermino(k) === p.t[k]; });
+    return '<button type="button" class="sug-chip preset' + (on ? ' on' : '') + '" onclick="aplicarPresetTerminos(\'' + p.id + '\')">' + _esc(p.nombre) + '</button>';
+  }).join('');
   Object.keys(_CAMPOS_TERMINOS).forEach(function(k){
-    var id = _CAMPOS_TERMINOS[k];
-    var dl = document.getElementById('dl_' + id);
-    if (dl) dl.innerHTML = (cur[k] || []).map(function(v){ return '<option value="' + _esc(v) + '">'; }).join('');
-    var el = document.getElementById(id);
-    if (el && !el.value.trim() && cur[k] && cur[k][0]) el.value = cur[k][0];
+    var box = document.getElementById('sug_' + _CAMPOS_TERMINOS[k]); if (!box) return;
+    var fijas = _SUG_TERMINOS[k];
+    var recientes = (cur[k] || []).filter(function(v){ return fijas.indexOf(v) < 0; }).slice(0, 2);   // lo que ya escribió antes
+    var actual = _valTermino(k);
+    box.innerHTML = fijas.map(function(v){ return [v, '']; }).concat(recientes.map(function(v){ return [v, ' reciente']; })).map(function(x){
+      return '<button type="button" class="sug-chip' + x[1] + (actual === x[0] ? ' on' : '') + '" data-k="' + k + '" data-v="' + _esc(x[0]) + '" onclick="elegirTermino(this.dataset.k, this.dataset.v)">' + _esc(x[0].split(' / ')[0]) + (x[1] ? '' : '') + '</button>';
+    }).join('');
   });
+}
+
+// Precarga las condiciones Express (si están vacías) y el correo del cliente elegido.
+function _prellenarModalEnvio(){
+  Object.keys(_CAMPOS_TERMINOS).forEach(function(k){
+    var el = document.getElementById(_CAMPOS_TERMINOS[k]);
+    if (el && !el.value.trim()) el.value = _PRESETS_TERMINOS[0].t[k];
+  });
+  renderSugTerminos();
   var cliente = document.getElementById('cotCliente').value.trim();
   var correoEl = document.getElementById('merClienteCorreo');
   if (correoEl.dataset.cliente !== cliente) {
@@ -1038,6 +1072,7 @@ async function generarCotizacionReal(){
     if (data.cliente_guardado) { _agregarClienteACache(data.cliente_guardado, cliente, clienteNit, clienteCorreo); _olvidarReciente(cliente); }
     else _recordarCliente({ nombre: cliente, nit: clienteNit, correo: clienteCorreo, codigo: payload.cod_cliente });
     _recordarTerminos({ forma_entrega: formaEntrega, lugar_entrega: lugarEntrega, tiempo_entrega: tiempoEntrega, forma_pago: formaPago });
+    aplicarPresetTerminos('express');   // la siguiente cotización empieza otra vez con las condiciones Express
     _renderRecientes();
     _misCot = null;
     CARRITO = [];

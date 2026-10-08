@@ -259,6 +259,12 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 
 /* ── Formulario de telas (estilo HIG: secciones numeradas, tarjetas de modalidad, unidades segmentadas) ── */
 .tl-card { padding:14px 14px 16px; }
+.sug-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.sug-row:empty { display:none; }
+.sug-chip { padding:7px 12px; border:1.5px solid #d1d1d6; border-radius:999px; background:#fff; font-size:13px; font-weight:600; color:#3a3a3c; line-height:1.2; }
+.sug-chip.on { background:#1a6b45; border-color:#1a6b45; color:#fff; }
+.sug-chip.reciente { border-style:dashed; font-weight:500; }
+.sug-chip.preset { padding:9px 14px; font-size:14px; }
 .tl-or { display:flex; align-items:center; gap:6px; margin-top:10px; flex-wrap:wrap; }
 .tl-or-l { font-size:12.5px; color:#3a3a3c; }
 .tl-or-in { display:flex; align-items:center; gap:6px; }
@@ -813,12 +819,14 @@ body.tl-bar-on .content { padding-bottom:104px; }
     <div id="merResumen" class="resumen"></div>
     <div class="field"><label>Se enviará a</label><div id="merVendedorCorreoDisplay" style="padding:12px;background:#f4f4f5;border-radius:10px;font-weight:600;color:#1a6b45;"></div></div>
     <div class="field"><label>Correo del cliente (opcional, copia)</label><input type="email" id="merClienteCorreo" placeholder="cliente@empresa.com"></div>
-    <div class="field"><label>Forma de entrega *</label><input type="text" id="merFormaEntrega" list="dl_merFormaEntrega" autocomplete="off" placeholder="Ej: Terrestre, Marítima, Aérea"></div>
-    <div class="field"><label>Lugar de entrega *</label><input type="text" id="merLugarEntrega" list="dl_merLugarEntrega" autocomplete="off" placeholder="Dirección o bodega de entrega"></div>
-    <div class="field"><label>Tiempo de entrega *</label><input type="text" id="merTiempoEntrega" list="dl_merTiempoEntrega" autocomplete="off" placeholder="Ej: 3 días hábiles después de la OC"></div>
-    <div class="field"><label>Forma de pago *</label><input type="text" id="merFormaPago" list="dl_merFormaPago" autocomplete="off" placeholder="Ej: Contado, Crédito 30 días"></div>
+    <div class="field"><label>Condiciones</label>
+      <div id="merPresets" class="sug-row" role="group" aria-label="Condiciones rápidas"></div>
+    </div>
+    <div class="field"><label>Forma de entrega *</label><input type="text" id="merFormaEntrega" autocomplete="off" placeholder="Ej: Terrestre, Marítima, Aérea" oninput="renderSugTerminos()"><div id="sug_merFormaEntrega" class="sug-row"></div></div>
+    <div class="field"><label>Lugar de entrega *</label><input type="text" id="merLugarEntrega" autocomplete="off" placeholder="Dirección o bodega de entrega" oninput="renderSugTerminos()"><div id="sug_merLugarEntrega" class="sug-row"></div></div>
+    <div class="field"><label>Tiempo de entrega *</label><input type="text" id="merTiempoEntrega" autocomplete="off" placeholder="Ej: 3 días hábiles después de la OC" oninput="renderSugTerminos()"><div id="sug_merTiempoEntrega" class="sug-row"></div></div>
+    <div class="field"><label>Forma de pago *</label><input type="text" id="merFormaPago" autocomplete="off" placeholder="Ej: Contado, Crédito 30 días" oninput="renderSugTerminos()"><div id="sug_merFormaPago" class="sug-row"></div></div>
     <div class="field"><label>Comentarios adicionales (opcional)</label><textarea id="merComentarios" rows="2" placeholder="Condiciones especiales, instrucciones…" style="width:100%;padding:12px;border:1px solid #d1d1d6;border-radius:10px;font-size:16px;font-family:inherit;resize:vertical"></textarea></div>
-    <datalist id="dl_merFormaEntrega"></datalist><datalist id="dl_merLugarEntrega"></datalist><datalist id="dl_merTiempoEntrega"></datalist><datalist id="dl_merFormaPago"></datalist>
     <div class="modal-btns">
       <button class="btn btn-success btn-block" id="btnCotReal" onclick="generarCotizacionReal()">Enviar cotización real</button>
     </div>
@@ -1566,5 +1574,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=4"></script><script src="listas-ui.js?v=2"></script><script src="real-quote.js?v=20261027"></script><script src="tela-ui.js?v=9"></script><script src="carrito-ui.js?v=6"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=4"></script><script src="listas-ui.js?v=2"></script><script src="real-quote.js?v=20261028"></script><script src="tela-ui.js?v=9"></script><script src="carrito-ui.js?v=6"></script></body>
 </html>
