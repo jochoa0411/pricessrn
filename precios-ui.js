@@ -135,37 +135,62 @@
   function Q(v, d) { return v == null ? '—' : 'Q' + Number(v).toFixed(d == null ? 2 : d); }
   function listaActual() { return ST.lista ? (window.listaPorId ? listaPorId(ST.lista) : null) : null; }
 
+  function metaSaco(s) {
+    var n = String(s.nombre).toLowerCase(), m = [];
+    if (s.gm && n.indexOf(s.gm + ' gm') < 0) m.push(s.gm + ' gm');
+    if (s.color && n.indexOf(String(s.color).toLowerCase()) < 0) m.push(s.color);
+    if (s.impresion === 'CON') m.push('con impresión'); else if (s.impresion === 'SIN') m.push('sin impresión');
+    return m.join(' · ');
+  }
+  // Fila compacta: nombre a la izquierda y precios alineados en columnas; al tocarla se abre el detalle con «Cotizar»
+  function fila(id, nombre, meta, precios, boton) {
+    var n = precios.length;
+    return '<div class="pr-r" id="prr' + id + '">'
+      + '<button type="button" class="pr-rb c' + n + '" aria-expanded="false" onclick="prAbrir(' + id + ')">'
+      + '<span class="pr-rn"><b>' + esc(nombre) + '</b>' + (meta ? '<small>' + esc(meta) + '</small>' : '') + '</span>'
+      + precios.map(function (p) { return '<span class="pr-v">' + p.v + '</span>'; }).join('') + '</button>'
+      + '<div class="pr-x" hidden><div class="pr-big c' + n + '">' + precios.map(function (p) { return '<div><small>' + esc(p.t) + '</small><b>' + p.v + '</b></div>'; }).join('') + '</div>'
+      + boton + '</div></div>';
+  }
   function cuerpoSacos(lista, q) {
-    var html = '', n = 0;
+    var cab = lista ? ['Base', '+10 %'] : ['A', 'B', 'C'];
+    var html = '', total = 0;
     gruposSacos().forEach(function (arr, medida) {
       var filas = arr.filter(function (s) {
         if (lista) { var p = lista.precios && lista.precios[s.id]; if (!p || (p.base == null && p.mas10 == null)) return false; }
         return !q || (etiquetaSaco(s) + ' ' + s.medidas).toLowerCase().indexOf(q) >= 0;
       });
       if (!filas.length) return;
-      html += '<div class="pr-grp">' + esc(medida) + '</div>';
+      html += '<div class="pr-grp">' + esc(medida) + '<small>' + filas.length + (filas.length === 1 ? ' saco' : ' sacos') + '</small></div><div class="pr-bloque">';
       filas.forEach(function (s) {
-        n++;
-        var precios = lista
-          ? [['Base', lista.precios[s.id].base], ['+10 %', lista.precios[s.id].mas10]]
-          : [['A', s.pA], ['B', s.pB], ['C', s.pC]];
-        html += '<div class="pr-row"><div class="pr-top"><div class="pr-n">' + etiquetaSaco(s) + '</div>'
-          + '<button type="button" class="pr-go" onclick="cotizarSacoDesde(' + s.id + ')">Cotizar</button></div>'
-          + '<div class="pr-pp cols' + precios.length + '">' + precios.map(function (p) { return '<div><small>' + p[0] + '</small><b>' + Q(p[1]) + '</b></div>'; }).join('') + '</div></div>';
+        total++;
+        var vals = lista ? [lista.precios[s.id].base, lista.precios[s.id].mas10] : [s.pA, s.pB, s.pC];
+        var precios = vals.map(function (v, k) { return { t: cab[k], v: Q(v) }; });
+        html += fila(s.id, s.nombre, metaSaco(s), precios, '<button type="button" class="pr-cot" onclick="cotizarSacoDesde(' + s.id + ')">Cotizar este saco</button>');
       });
+      html += '</div>';
     });
-    return n ? html : '<div class="pr-vacio">' + (q ? 'No hay sacos que coincidan con “' + esc(q) + '”.' : 'Esta lista no tiene sacos con precio.') + '</div>';
+    if (!total) return '<div class="pr-vacio">' + (q ? 'No hay sacos que coincidan con “' + esc(q) + '”.' : 'Esta lista no tiene sacos con precio.') + '</div>';
+    var enc = '<div class="pr-cols c' + cab.length + '"><span>' + total + (total === 1 ? ' saco' : ' sacos') + '</span>' + cab.map(function (c) { return '<span>' + esc(c) + '</span>'; }).join('') + '</div>';
+    return enc + html;
   }
   function cuerpoTelas(q) {
     var arr = TELAS.filter(function (t) { return !q || (t.nombre + ' ' + (t.cat || '') + ' ' + (t.sombra || '')).toLowerCase().indexOf(q) >= 0; });
     if (!arr.length) return '<div class="pr-vacio">' + (q ? 'No hay telas que coincidan.' : 'No hay telas en la lista.') + '</div>';
-    return arr.map(function (t) {
-      return '<div class="pr-row"><div class="pr-top"><div class="pr-n">' + esc(t.nombre) + '<small>' + esc([t.cat, t.sombra, t.rollo ? 'rollo ' + t.rollo : ''].filter(Boolean).join(' · ')) + '</small></div>'
-        + '<button type="button" class="pr-go" onclick="cotizarTelaDesde(' + t.id + ')">Cotizar</button></div>'
-        + '<div class="pr-pp cols2"><div><small>Rollo master</small><b>$' + Number(t.pm).toFixed(3)+ '</b></div><div><small>Confeccionado</small><b>$' + Number(t.pc).toFixed(3) + '</b></div></div>'
-        + '<div class="pr-nota">Dólares por pie²</div></div>';
-    }).join('');
+    var html = '<div class="pr-cols c2"><span>' + arr.length + (arr.length === 1 ? ' tela' : ' telas') + '</span><span>Master</span><span>Confec.</span></div><div class="pr-bloque">';
+    arr.forEach(function (t) {
+      var meta = [t.cat, t.sombra, t.rollo ? 'rollo ' + t.rollo : ''].filter(Boolean).join(' · ');
+      html += fila('t' + t.id, t.nombre, meta, [{ t: 'Rollo master', v: '$' + Number(t.pm).toFixed(3) }, { t: 'Confeccionado', v: '$' + Number(t.pc).toFixed(3) }],
+        '<div class="pr-nota">Precios en dólares por pie²</div><button type="button" class="pr-cot" onclick="cotizarTelaDesde(' + t.id + ')">Cotizar esta tela</button>');
+    });
+    return html + '</div>';
   }
+  window.prAbrir = function (id) {
+    var fila = $('prr' + id); if (!fila) return;
+    var abrir = fila.querySelector('.pr-x').hidden;
+    document.querySelectorAll('#preciosCuerpo .pr-r').forEach(function (f) { f.classList.remove('abierta'); f.querySelector('.pr-x').hidden = true; f.querySelector('.pr-rb').setAttribute('aria-expanded', 'false'); });
+    if (abrir) { fila.classList.add('abierta'); fila.querySelector('.pr-x').hidden = false; fila.querySelector('.pr-rb').setAttribute('aria-expanded', 'true'); }
+  };
   window.renderPrecios = function () {
     var box = $('preciosCuerpo'); if (!box) return;
     var lista = listaActual();
