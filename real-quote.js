@@ -44,6 +44,7 @@ function _cargarSesion(){
 function _guardarSesion(sesion){ localStorage.setItem(COT_SESSION_KEY, JSON.stringify(sesion)); }
 
 function _mostrarLogin(){
+  setTimeout(function(){ LGM.emit('sesion:cambio'); }, 0);
   document.getElementById('loginGate').classList.remove('hidden');
   document.getElementById('appShell').classList.add('hidden');
   var passEl = document.getElementById('loginPassword');
@@ -142,6 +143,7 @@ function _toggleLoginPass(){
   else { passEl.type = 'password'; toggleBtn.innerHTML = _EYE_SVG; toggleBtn.setAttribute('aria-label', 'Mostrar contraseña'); }
 }
 function _mostrarApp(sesion){
+  setTimeout(function(){ LGM.emit('sesion:cambio'); LGM.emit('sesion:iniciada'); }, 0);
   document.getElementById('loginGate').classList.add('hidden');
   document.getElementById('appShell').classList.remove('hidden');
   var nom = (sesion.nombre || '').trim();

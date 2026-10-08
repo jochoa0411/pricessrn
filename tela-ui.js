@@ -249,39 +249,29 @@
     }
   };
 
-  var _agregarTela = window.agregarTela;
-  window.agregarTela = function () {
-    var antes = (typeof CARRITO !== 'undefined') ? CARRITO.length : 0;
+  // Antes de agregar: si lleva OR debe indicar cada cuántos pies
+  LGM.on('item:antes', function (tipo) {
+    if (tipo !== 'tela') return;
     var esConf = (document.querySelector('input[name="cotModoTela"]:checked') || {}).value === 'conf';
-    if (esConf && orSi && !(orCada > 0)) { toast('Indica cada cuántos pies van los ojetes (o elige Sin OR)', 'err'); $('tlOrCada').focus(); return; }
-    var ac = esConf ? tlAcabadoDe() : null;
-    _agregarTela.apply(this, arguments);
-    if (CARRITO.length > antes) {
-      if (ac) Object.assign(CARRITO[CARRITO.length - 1], ac);
-      if (typeof saveCarrito === 'function') saveCarrito();
-      if (typeof renderCarrito === 'function') renderCarrito();
-      orSi = true; orCada = 2; fuelle = false;
-      // El formulario se limpia tras agregar (pdf-share.js): se reinician también las tarjetas y el ajuste
-      adjTipo = 'none'; $('tlAdjPct').value = '';
-      var m = document.querySelector('input[name="cotModoTela"]:checked');
-      tlRenderModos(null, m ? m.value : 'master');
-    }
+    if (esConf && orSi && !(orCada > 0)) { toast('Indica cada cuántos pies van los ojetes (o elige Sin OR)', 'err'); $('tlOrCada').focus(); return false; }
+  });
+  // El ítem confeccionado lleva su acabado (OR / fuelle)
+  LGM.on('item:armado', function (item) {
+    if (item.tipo === 'tela' && item.modo === 'conf') Object.assign(item, tlAcabadoDe());
+  });
+  // Tras agregar: el formulario de telas vuelve a su estado inicial
+  LGM.on('item:agregado', function (ev) {
+    if (ev.tipo !== 'tela') return;
+    orSi = true; orCada = 2; fuelle = false;
+    adjTipo = 'none'; $('tlAdjPct').value = '';
+    var m = document.querySelector('input[name="cotModoTela"]:checked');
+    tlRenderModos(null, m ? m.value : 'master');
     syncTelaUI();
-  };
-
-  // Barra fija: se actualiza al cambiar de pestaña / sección
-  ['cambiarTab', 'abrirSeccion'].forEach(function (nombre) {
-    var f = window[nombre];
-    if (typeof f !== 'function') return;
-    window[nombre] = function () { var r = f.apply(this, arguments); syncTelaUI(); return r; };
   });
-  var _mApp = window._mostrarApp;
-  if (typeof _mApp === 'function') window._mostrarApp = function () { var r = _mApp.apply(this, arguments); tlCargarTcOficial(); return r; };
-  ['_mostrarApp', '_mostrarLogin'].forEach(function (nombre) {
-    var f = window[nombre];
-    if (typeof f !== 'function') return;
-    window[nombre] = function () { var r = f.apply(this, arguments); syncTelaUI(); return r; };
-  });
+  // Barra fija / tarjetas: se actualizan al cambiar de pestaña, sección, sesión o precios
+  LGM.on('vista:cambio', function () { syncTelaUI(); });
+  LGM.on('sesion:cambio', function () { syncTelaUI(); });
+  LGM.on('sesion:iniciada', function () { tlCargarTcOficial(); });
 
   window.addEventListener('load', function () {
     tlRenderModos(null, 'master'); pintarAcabado();

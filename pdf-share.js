@@ -130,11 +130,8 @@ async function generarPDF(){
 }
 
 // ── Limpiar inputs después de agregar al presupuesto ──
-const _agregarTelaOrig = agregarTela;
-agregarTela = function(){
-  const antes = CARRITO.length;
-  _agregarTelaOrig();
-  if(CARRITO.length > antes){
+LGM.on('item:agregado', function(ev){
+  if(ev.tipo === 'tela'){
     document.getElementById('cotAncho').value = '';
     document.getElementById('cotLargo').value = '';
     document.getElementById('cotCantTela').value = 1;
@@ -144,14 +141,7 @@ agregarTela = function(){
     document.getElementById('cotTelaPreview').style.display = 'none';
     document.getElementById('cotModoDesc').textContent = '';
     document.getElementById('cotResTela').classList.remove('show');
-  }
-};
-
-const _agregarSacoOrig = agregarSaco;
-agregarSaco = function(){
-  const antes = CARRITO.length;
-  _agregarSacoOrig();
-  if(CARRITO.length > antes){
+  } else {
     document.getElementById('cotCantSaco').value = '';
     document.getElementById('cotRecargoSaco').value = 0;
     document.getElementById('cotPMSaco').value = '';
@@ -159,7 +149,7 @@ agregarSaco = function(){
     document.getElementById('cotSacoPreview').style.display = 'none';
     document.getElementById('cotResSaco').classList.remove('show');
   }
-};
+});
 
 // ── Botón ± para recargo/descuento ──
 window.addEventListener('load', function(){
@@ -212,6 +202,9 @@ var _ultimaSyncPrecios = 0;
 var SYNC_PRECIOS_MS = 5 * 60 * 1000;
 
 async function syncPrecios(manual){
+  try { await _syncPreciosCore(manual); } finally { LGM.emit('precios:sync'); }
+}
+async function _syncPreciosCore(manual){
   try {
     if(!manual && Date.now() - _ultimaSyncPrecios < SYNC_PRECIOS_MS) return;
     var sesion = typeof _cargarSesion === 'function' ? _cargarSesion() : null;
@@ -284,8 +277,7 @@ if(window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App){
   badge.textContent = 'v' + (localStorage.getItem('PRECIOS_VERSION') || '...');
   var header = document.querySelector('header');
   if(header){ var h1 = header.querySelector('h1'); if(h1) h1.insertAdjacentElement('afterend', badge); }
-  var _origSync = syncPrecios;
-  syncPrecios = async function(manual){ await _origSync(manual); var el = document.getElementById('preciosVersion'); if(el) el.textContent = 'v' + (localStorage.getItem('PRECIOS_VERSION') || '?'); };
+  LGM.on('precios:sync', function(){ var el = document.getElementById('preciosVersion'); if(el) el.textContent = 'v' + (localStorage.getItem('PRECIOS_VERSION') || '?'); });
 })();
 
 // ===== PASO 2: Historial completo + numeracion correlativa =====

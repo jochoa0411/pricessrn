@@ -249,24 +249,17 @@
   };
 
   // Al «agregar» en modo edición, el ítem nuevo reemplaza al original en su misma posición
-  ['agregarTela', 'agregarSaco'].forEach(function (nombre) {
-    var f = window[nombre];
-    window[nombre] = function () {
-      var uid = editUid;
-      var idx = uid !== null ? CARRITO.findIndex(function (x) { return x.uid === uid; }) : -1;
-      var antes = CARRITO.length;
-      f.apply(this, arguments);
-      if (CARRITO.length > antes) {
-        if (idx >= 0) {
-          var nuevo = CARRITO.pop();
-          nuevo.uid = uid;
-          CARRITO[idx] = nuevo;
-          guardar();
-          toast('Ítem actualizado');
-        }
-        if (editUid !== null) { editUid = null; bannerEl().style.display = 'none'; etiquetasAgregar(false); renderCarrito(); }
-      }
-    };
+  LGM.on('item:agregado', function (ev) {
+    if (editUid === null) return;
+    var idx = CARRITO.findIndex(function (x) { return x.uid === editUid; });
+    if (idx >= 0) {
+      var nuevo = CARRITO.pop();         // el recién agregado
+      idx = CARRITO.findIndex(function (x) { return x.uid === editUid; });
+      nuevo.uid = editUid;
+      CARRITO[idx] = nuevo;
+      ev.actualizado = true;
+    }
+    editUid = null; bannerEl().style.display = 'none'; etiquetasAgregar(false);
   });
 
   window.addEventListener('load', function () { renderCarrito(); });
