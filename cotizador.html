@@ -472,7 +472,80 @@ body.tl-bar-on .content { padding-bottom: 180px; }
 #preciosVersion { font-size: 14px !important; }
 .tl-modos { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
 .tl-modo-top { font-size: 17px; flex-wrap: wrap; }
-.tl-seg button { min-width: 48px; }
+.tl-seg button { min-width: 44px; }
+/* ── Ajustes de ancho: nada se sale de la pantalla en celulares de 360 px ── */
+.content, .card, .tl-sec, .cx-item, .modal-box { min-width: 0; }
+.tl-dims, .tl-2col { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+.tl-dim { min-width: 0; padding: 10px; }
+.tl-dim-top { flex-wrap: wrap; gap: 6px; justify-content: flex-start; font-size: 16px; }
+.tl-dim input { font-size: 24px; min-width: 0; width: 100%; }
+.tl-seg { max-width: 100%; }
+.tl-seg-w { width: 100%; }
+.tl-seg-w button { min-width: 0; padding: 8px 2px; font-size: 15px; }
+.tl-adj { grid-template-columns: repeat(3, minmax(0,1fr)); }
+.tl-step button { width: 44px; height: 48px; }
+.cx-item button { min-width: 44px; min-height: 44px; }
+.cx-bot { flex-wrap: wrap; justify-content: flex-end; }
+.cx-step { flex: 1 1 auto; justify-content: space-between; }
+.cx-step button { width: 46px; height: 48px; }
+.cx-step span { min-width: 60px; font-size: 15px; }
+.cx-acc { gap: 6px; }
+.cx-acc button { width: 46px; height: 46px; }
+.cx-tot { font-size: 17px; }
+.cx-d { color: #555; font-size: 15px; }
+/* ── Selector tipo iPhone (hoja inferior) ── */
+.pk-btn { width: 100%; min-height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 16px; border: 1px solid #d1d1d6; border-radius: 14px; background: #fff; font-size: 17px; font-weight: 600; color: #1d1d1f; text-align: left; cursor: pointer; }
+.pk-btn:active { background: #f2f2f7; }
+.pk-btn-v { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pk-btn-i { color: #8e8e93; display: inline-flex; flex: none; }
+.pk-ov { position: fixed; inset: 0; z-index: 1200; background: rgba(0,0,0,0); display: flex; align-items: flex-end; justify-content: center; transition: background .25s ease; -webkit-tap-highlight-color: transparent; }
+.pk-ov.on { background: rgba(0,0,0,.38); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.pk-sheet { width: 100%; max-width: 520px; max-height: 82vh; display: flex; flex-direction: column; background: rgba(248,248,250,.97); -webkit-backdrop-filter: saturate(180%) blur(24px); backdrop-filter: saturate(180%) blur(24px);
+  border-radius: 22px 22px 0 0; padding: 8px 0 max(14px, env(safe-area-inset-bottom)); transform: translateY(100%); transition: transform .32s cubic-bezier(.32,.72,0,1); box-shadow: 0 -10px 40px rgba(0,0,0,.22); }
+.pk-ov.on .pk-sheet { transform: translateY(0); }
+.pk-grab { width: 40px; height: 5px; border-radius: 3px; background: #c7c7cc; margin: 2px auto 8px; }
+.pk-head { padding: 4px 20px 10px; text-align: center; }
+.pk-title { font-size: 18px; font-weight: 700; color: #1d1d1f; }
+.pk-search { display: flex; align-items: center; gap: 8px; margin: 0 16px 10px; padding: 0 12px; background: #e9e9ed; border-radius: 12px; color: #6b6b70; }
+.pk-search input { flex: 1; min-height: 44px; border: none; background: transparent; font-size: 17px; padding: 0; box-shadow: none; min-width: 0; }
+.pk-search input:focus { box-shadow: none; }
+.pk-list { overflow-y: auto; margin: 0 16px; background: #fff; border-radius: 14px; -webkit-overflow-scrolling: touch; }
+.pk-grp { padding: 14px 16px 6px; font-size: 14px; font-weight: 700; color: #6b6b70; background: #f2f2f7; }
+.pk-grp:first-child { border-radius: 14px 14px 0 0; }
+.pk-op { width: 100%; min-height: 60px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px; border: none; border-bottom: 1px solid #ececf0; background: #fff; text-align: left; cursor: pointer; font-family: inherit; }
+.pk-op:last-child { border-bottom: none; }
+.pk-op:active, .pk-op:focus-visible { background: #e9f3ee; outline: none; }
+.pk-tx { display: flex; flex-direction: column; min-width: 0; }
+.pk-tx b { font-size: 17px; font-weight: 500; color: #1d1d1f; }
+.pk-tx small { font-size: 14px; color: #6b6b70; margin-top: 2px; }
+.pk-op.on .pk-tx b { font-weight: 700; color: #1a6b45; }
+.pk-ck { color: #1a6b45; display: inline-flex; width: 24px; justify-content: center; flex: none; }
+.pk-vacio { padding: 24px; text-align: center; color: #6b6b70; font-size: 16px; }
+.pk-cancel { margin: 12px 16px 0; min-height: 56px; border: none; border-radius: 14px; background: #fff; color: #1a6b45; font-size: 18px; font-weight: 700; cursor: pointer; }
+.pk-cancel:active { background: #e9f3ee; }
+@media (min-width: 701px) { .pk-ov { align-items: center; } .pk-sheet { border-radius: 22px; padding-top: 14px; transform: translateY(24px) scale(.97); opacity: 0; transition: transform .25s ease, opacity .2s ease; } .pk-ov.on .pk-sheet { transform: none; opacity: 1; } .pk-grab { display: none; } }
+@media (prefers-reduced-motion: reduce) { .pk-sheet, .pk-ov { transition: none; } }
+
+/* ── Listas de precios (consulta) ── */
+.pr-seg { display: flex; gap: 4px; margin-top: 12px; padding: 4px; background: #e9e9ed; border-radius: 12px; }
+.pr-seg button { flex: 1; min-height: 48px; border: none; border-radius: 9px; background: transparent; font-size: 17px; font-weight: 700; color: #555; }
+.pr-seg button.on { background: #fff; color: #1a6b45; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+.pr-grp { margin: 18px 4px 8px; font-size: 15px; font-weight: 800; color: #3a3a3c; }
+.pr-row { background: #fff; border: 1px solid #efeff4; border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; box-shadow: 0 1px 6px rgba(0,0,0,.04); }
+.pr-top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.pr-n { font-size: 16px; font-weight: 700; color: #1d1d1f; line-height: 1.3; min-width: 0; }
+.pr-n small { display: block; font-size: 14px; font-weight: 500; color: #555; margin-top: 2px; }
+.pr-go { flex: none; min-height: 44px; padding: 0 14px; border: 1.5px solid #1a6b45; border-radius: 22px; background: #fff; color: #1a6b45; font-size: 15px; font-weight: 700; }
+.pr-go:active { background: #e9f3ee; }
+.pr-pp { display: grid; gap: 8px; margin-top: 10px; }
+.pr-pp.cols2 { grid-template-columns: 1fr 1fr; } .pr-pp.cols3 { grid-template-columns: repeat(3, 1fr); }
+.pr-pp > div { background: #f4f8f6; border-radius: 10px; padding: 8px 6px; text-align: center; min-width: 0; }
+.pr-pp small { display: block; font-size: 14px; color: #555; font-weight: 600; }
+.pr-pp b { display: block; font-size: 19px; font-weight: 800; color: #1a6b45; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.pr-nota { font-size: 14px; color: #555; margin-top: 6px; }
+.pr-vacio { text-align: center; color: #555; padding: 32px 12px; font-size: 16px; }
+.pr-pie { text-align: center; color: #555; font-size: 14px; margin: 12px 0 8px; }
+#bottomNav button { padding: 8px 2px 6px; line-height: 1.15; text-align: center; justify-content: flex-start; min-height: 72px; }
 </style>
 </head>
 <body>
@@ -572,6 +645,7 @@ body.tl-bar-on .content { padding-bottom: 180px; }
 
 <nav id="bottomNav" aria-label="Navegación principal">
   <button type="button" id="bnCotizar" class="on" onclick="irSeccion('cotizar')"><span class="ic" data-ic="calc"></span>Cotizar<span class="bn-badge" id="bnBadgeCarrito" style="display:none"></span></button>
+  <button type="button" id="bnPrecios" onclick="irSeccion('precios')"><span class="ic" data-ic="clipboard"></span>Precios</button>
   <button type="button" id="bnMis" onclick="irSeccion('historial')"><span class="ic" data-ic="file"></span>Mis cotizaciones</button>
   <button type="button" id="bnMas" onclick="toggleMenu()"><span class="ic" data-ic="menu"></span>Más</button>
 </nav>
@@ -590,6 +664,10 @@ body.tl-bar-on .content { padding-bottom: 180px; }
       <span class="ic" data-ic="calc"></span>
       <div class="nv-t"><b>Nueva cotización</b><small>Calculadora y presupuesto</small></div>
       <span class="nv-badge" id="navBadgeCarrito" style="display:none"></span>
+    </div>
+    <div class="nav-item nv-item" onclick="abrirSeccion('precios',this)">
+      <span class="ic" data-ic="clipboard"></span>
+      <div class="nv-t"><b>Listas de precios</b><small>Consultar sin cotizar</small></div>
     </div>
     <div class="nav-item nv-item" onclick="abrirSeccion('historial',this)">
       <span class="ic" data-ic="file"></span>
@@ -860,6 +938,22 @@ body.tl-bar-on .content { padding-bottom: 180px; }
     </div>
 
     <!-- ===== HISTORIAL ===== -->
+    <div id="precios" class="seccion">
+      <div class="card">
+        <div class="card-title">Listas de precios</div>
+        <p class="info-text" style="margin-top:0">Consulta los precios cuando quieras, sin armar una cotización.</p>
+        <label for="prListaBtn">Lista</label>
+        <button type="button" id="prListaBtn" class="pk-btn" aria-haspopup="dialog" onclick="elegirListaPrecios()"><span class="pk-btn-v" id="prListaV"></span><span class="pk-btn-i"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></span></button>
+        <div id="prVistaBox" class="pr-seg" role="group" aria-label="Qué ver">
+          <button type="button" id="prSegSacos" class="on" onclick="prVista('sacos')">Sacos</button>
+          <button type="button" id="prSegTelas" onclick="prVista('telas')">Telas</button>
+        </div>
+        <input type="search" id="prBuscar" placeholder="Buscar saco (medida, color…)" oninput="prBuscar(this.value)" autocomplete="off" style="margin-top:12px">
+      </div>
+      <div id="preciosCuerpo"></div>
+      <p id="prPie" class="pr-pie"></p>
+    </div>
+
     <div id="historial" class="seccion">
       <div class="card">
         <div class="card-title">Mis cotizaciones <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="cargarMisCotizaciones(true)"><span class="ic" data-ic="refresh"></span> Actualizar</button></div>
@@ -1107,9 +1201,10 @@ function irSeccion(sec){
 LGM.on('vista:cambio', function(){
   const act = document.querySelector('.seccion.active');
   const sec = act ? act.id : 'cotizar';
-  const c = document.getElementById('bnCotizar'), m = document.getElementById('bnMis');
-  if(c) c.classList.toggle('on', sec !== 'historial');
+  const c = document.getElementById('bnCotizar'), m = document.getElementById('bnMis'), pr = document.getElementById('bnPrecios');
+  if(c) c.classList.toggle('on', sec === 'cotizar');
   if(m) m.classList.toggle('on', sec === 'historial');
+  if(pr) pr.classList.toggle('on', sec === 'precios');
 });
 function cambiarTab(btn, tabId){
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -1652,5 +1747,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=5"></script><script src="listas-ui.js?v=3"></script><script src="real-quote.js?v=20261029"></script><script src="tela-ui.js?v=10"></script><script src="carrito-ui.js?v=7"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=5"></script><script src="listas-ui.js?v=4"></script><script src="precios-ui.js?v=1"></script><script src="real-quote.js?v=20261029"></script><script src="tela-ui.js?v=10"></script><script src="carrito-ui.js?v=7"></script></body>
 </html>

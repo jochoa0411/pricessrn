@@ -72,6 +72,7 @@ var _listaManual = false;      // el vendedor eligió la lista a mano: ya no se 
     }).join('');
     if (actual && listaPorId(actual)) sel.value = actual; else sel.value = '';
     renderTiers(listaSacoId(), null);
+    if (window.pkSyncLista) pkSyncLista();
   };
 
   window.cambiarListaSaco = function (manual) {
@@ -85,6 +86,7 @@ var _listaManual = false;      // el vendedor eligió la lista a mano: ya no se 
     var ss = $('cotSacoSelect'); if (ss && ss.value && !ss.querySelector('option[value="' + ss.value + '"]')) ss.value = '';
     if (typeof actSacoPreview === 'function') actSacoPreview(); else cotCalcSaco();
     pintarChipLista();
+    if (window.pkSyncLista) pkSyncLista();
   };
   window.setListaSaco = function (id, tier) {     // al editar un ítem del presupuesto
     var sel = $('cotListaSaco'); if (!sel) return;
@@ -93,6 +95,7 @@ var _listaManual = false;      // el vendedor eligió la lista a mano: ya no se 
     renderTiers(listaSacoId(), tier || null);
     if (typeof loadSelects === 'function') loadSelects();
     pintarChipLista();
+    if (window.pkSyncLista) pkSyncLista();
   };
 
   window.pintarChipLista = function () {
