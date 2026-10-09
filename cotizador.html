@@ -563,6 +563,24 @@ body.tl-bar-on .content { padding-bottom: 180px; }
 .pr-jp b { font-size: 18px; color: #1a6b45; font-variant-numeric: tabular-nums; }
 .pr-jp.no b { color: #888; font-size: 15px; font-weight: 600; }
 .pr-jp.sel { border-color: #1a6b45; box-shadow: 0 0 0 2px rgba(26,107,69,.18); }
+
+/* ── Pantalla completa en iPhone (isla dinámica y barra inferior) ──
+   Encabezado, contenido y barra inferior son una columna de altura completa (100dvh) en vez de piezas «fixed»:
+   así no queda franja vacía bajo la barra y iOS no difumina el borde superior. */
+html, body { height: 100%; background: #fff; overscroll-behavior: none; }
+#appShell:not(.hidden) { display: flex; flex-direction: column; height: 100vh; height: 100dvh; background: #f5f5f5; overflow: hidden; }
+#appShell header { position: relative; top: auto; left: auto; right: auto; flex: none; order: 1; box-shadow: none; }
+#appShell .main { order: 2; flex: 1 1 auto; min-height: 0; height: auto; padding-top: 0; display: flex; width: 100%; }
+#appShell .content { overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding-bottom: 20px; }
+body.tl-bar-on #appShell .content { padding-bottom: 118px; }
+#bottomNav { position: relative; order: 3; flex: none; left: auto; right: auto; bottom: auto; }
+.sidebar { top: var(--hdr-h, 80px); }
+.toast { top: calc(var(--hdr-h, 80px) + 8px); }
+.tl-bar { bottom: var(--nav-h, 72px); }
+.toast-undo { bottom: calc(var(--nav-h, 72px) + 14px); }
+.tl-or-l { width: 100%; }
+.tl-or-q { min-width: 46px; padding: 8px 10px; }
+
 @media (max-width: 380px) {
   .pr-cols, .pr-rb { grid-template-columns: minmax(0,1fr) repeat(3, 58px); }
   .pr-cols.c2, .pr-rb.c2 { grid-template-columns: minmax(0,1fr) repeat(2, 70px); }
@@ -1238,6 +1256,17 @@ function abrirSeccion(sec, el){
   LGM.emit('vista:cambio');
 }
 
+// Alturas reales del encabezado y de la barra inferior (para el menú lateral, los avisos y la barra de totales)
+(function(){
+  const r = document.documentElement;
+  function med(){
+    const hd = document.querySelector('#appShell header'), nv = document.getElementById('bottomNav');
+    if(hd && hd.offsetHeight) r.style.setProperty('--hdr-h', hd.offsetHeight + 'px');
+    if(nv && nv.offsetHeight) r.style.setProperty('--nav-h', nv.offsetHeight + 'px');
+  }
+  window.addEventListener('load', med); window.addEventListener('resize', med); window.addEventListener('orientationchange', med);
+  if(window.ResizeObserver){ window.addEventListener('load', function(){ const ro = new ResizeObserver(med); const hd = document.querySelector('#appShell header'), nv = document.getElementById('bottomNav'); if(hd) ro.observe(hd); if(nv) ro.observe(nv); }); }
+})();
 function irSeccion(sec){
   const item = [...document.querySelectorAll('.nav-item')].find(n => (n.getAttribute('onclick')||'').includes("'"+sec+"'"));
   if(item) abrirSeccion(sec, item);
