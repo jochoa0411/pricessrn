@@ -587,6 +587,11 @@ body.tl-bar-on .content { padding-bottom: 180px; }
 html { background: linear-gradient(#14432a 0, #14432a 50%, #fff 50%, #fff 100%); }
 html, body { height: 100%; overscroll-behavior: none; }
 body { background: transparent; }
+/* Safari (no instalada): iOS pone un cristal translúcido sobre la franja de la isla dinámica. Sobre un fondo claro liso no se nota
+   (la hora queda oscura sobre claro); el encabezado verde empieza justo debajo. Instalada: el verde llega hasta arriba. */
+html.es-web { background: linear-gradient(#f5f5f5 0, #f5f5f5 50%, #fff 50%, #fff 100%); }
+html.es-web #appShell:not(.hidden) { padding-top: env(safe-area-inset-top); }
+html.es-web #appShell header { padding-top: 12px; }
 #appShell:not(.hidden) { display: flex; flex-direction: column; height: 100vh; height: 100dvh; background: #f5f5f5; overflow: hidden; }
 #appShell header { position: relative; top: auto; left: auto; right: auto; flex: none; order: 1; box-shadow: none; }
 #appShell .main { order: 2; flex: 1 1 auto; min-height: 0; height: auto; padding-top: 0; display: flex; width: 100%; }
@@ -1281,7 +1286,7 @@ function abrirSeccion(sec, el){
   const r = document.documentElement;
   function med(){
     const hd = document.querySelector('#appShell header'), nv = document.getElementById('bottomNav');
-    if(hd && hd.offsetHeight) r.style.setProperty('--hdr-h', hd.offsetHeight + 'px');
+    if(hd && hd.offsetHeight) r.style.setProperty('--hdr-h', Math.round(hd.getBoundingClientRect().bottom) + 'px');   // incluye la franja segura superior en Safari
     if(nv && nv.offsetHeight) r.style.setProperty('--nav-h', nv.offsetHeight + 'px');
   }
   // ¿Está abierta como app (pantalla de inicio) o dentro de Safari? Y, si el navegador ya deja fuera la zona inferior
