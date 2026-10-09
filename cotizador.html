@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cotizador LGM">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1a6b45">
 <title>Cotizador LGM</title>
@@ -440,7 +445,7 @@ input, select, textarea { min-height: 52px; font-size: 17px; color: #1d1d1f; }
 .toast { bottom: auto; top: calc(max(80px, calc(56px + env(safe-area-inset-top))) + 8px); transform: translateX(-50%) translateY(-16px); font-size: 16px; padding: 14px 20px; max-width: 92vw; text-align: center; }
 .toast.show { transform: translateX(-50%) translateY(0); }
 /* navegación inferior con texto */
-#bottomNav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 45; display: flex; background: #fff; border-top: 1px solid #d1d1d6; padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -4px 16px rgba(0,0,0,.08); }
+#bottomNav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 45; display: flex; background: #fff; border-top: 1px solid #d1d1d6; padding-bottom: var(--safe-b, env(safe-area-inset-bottom)); box-shadow: 0 -4px 16px rgba(0,0,0,.08); }
 #bottomNav button { flex: 1; min-height: 64px; border: none; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 14px; font-weight: 700; color: #555; position: relative; }
 #bottomNav button .ic { width: 26px; height: 26px; }
 #bottomNav button.on { color: #1a6b45; }
@@ -732,6 +737,7 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
       <span class="nv-badge" id="navBadgeMis" style="display:none"></span>
     </div>
     <div class="nv-foot">
+      <div id="navModo" style="font-size:14px;color:#555;padding:0 4px 10px"></div>
       <button type="button" class="nv-salir" onclick="cerrarSesionManual()"><span class="ic" data-ic="logout"></span> Cerrar sesión</button>
     </div>
   </div>
@@ -1264,6 +1270,17 @@ function abrirSeccion(sec, el){
     if(hd && hd.offsetHeight) r.style.setProperty('--hdr-h', hd.offsetHeight + 'px');
     if(nv && nv.offsetHeight) r.style.setProperty('--nav-h', nv.offsetHeight + 'px');
   }
+  // ¿Está abierta como app (pantalla de inicio) o dentro de Safari? Y, si el navegador ya deja fuera la zona inferior
+  // (barra de Safari), no se suma otro relleno de la zona segura para no desperdiciar pantalla.
+  const standalone = !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches));
+  function zona(){
+    const hueco = Math.round((screen.height || 0) - window.innerHeight);
+    const sinBorde = !standalone && hueco > 40;
+    r.style.setProperty('--safe-b', sinBorde ? '0px' : 'env(safe-area-inset-bottom)');
+    const t = document.getElementById('navModo');
+    if(t) t.textContent = (standalone ? 'Abierta como app' : 'Abierta en el navegador') + ' · ' + window.innerWidth + '×' + window.innerHeight;
+  }
+  window.addEventListener('load', zona); window.addEventListener('resize', zona); window.addEventListener('orientationchange', zona);
   window.addEventListener('load', med); window.addEventListener('resize', med); window.addEventListener('orientationchange', med);
   if(window.ResizeObserver){ window.addEventListener('load', function(){ const ro = new ResizeObserver(med); const hd = document.querySelector('#appShell header'), nv = document.getElementById('bottomNav'); if(hd) ro.observe(hd); if(nv) ro.observe(nv); }); }
 })();
