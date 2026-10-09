@@ -3,6 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="color-scheme" content="light">
+<script>
+// En Safari (no instalada) la página NO se dibuja bajo la isla dinámica: iOS 26 difumina ahí lo que haya. Sin «viewport-fit=cover»
+// el contenido empieza bajo la zona segura y la franja superior se pinta del verde del encabezado (ver html.es-web).
+// Instalada en la pantalla de inicio sí ocupa toda la pantalla (cover) y el encabezado llega hasta arriba.
+(function(){
+  var st = !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches));
+  var m = document.querySelector('meta[name=viewport]');
+  if (!st && m) m.setAttribute('content', 'width=device-width, initial-scale=1.0, user-scalable=no');
+  document.documentElement.className += st ? ' es-app' : ' es-web';
+})();
+</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Cotizador LGM">
@@ -572,7 +584,9 @@ body.tl-bar-on .content { padding-bottom: 180px; }
 /* ── Pantalla completa en iPhone (isla dinámica y barra inferior) ──
    Encabezado, contenido y barra inferior son una columna de altura completa (100dvh) en vez de piezas «fixed»:
    así no queda franja vacía bajo la barra y iOS no difumina el borde superior. */
-html, body { height: 100%; background: #fff; overscroll-behavior: none; }
+html { background: linear-gradient(#14432a 0, #14432a 50%, #fff 50%, #fff 100%); }
+html, body { height: 100%; overscroll-behavior: none; }
+body { background: transparent; }
 #appShell:not(.hidden) { display: flex; flex-direction: column; height: 100vh; height: 100dvh; background: #f5f5f5; overflow: hidden; }
 #appShell header { position: relative; top: auto; left: auto; right: auto; flex: none; order: 1; box-shadow: none; }
 #appShell .main { order: 2; flex: 1 1 auto; min-height: 0; height: auto; padding-top: 0; display: flex; width: 100%; }
