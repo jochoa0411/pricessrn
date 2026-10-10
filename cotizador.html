@@ -585,10 +585,18 @@ html, body { height: 100%; overscroll-behavior: none; }
 body { background: transparent; }
 /* Safari (no instalada): iOS pone un cristal translúcido sobre la franja de la isla dinámica. Sobre un fondo claro liso no se nota
    (la hora queda oscura sobre claro); el encabezado verde empieza justo debajo. Instalada: el verde llega hasta arriba. */
-html { background: linear-gradient(#f5f5f5 0, #f5f5f5 50%, #fff 50%, #fff 100%); }
-#appShell:not(.hidden) { padding-top: env(safe-area-inset-top); }
-#appShell header { padding-top: 12px; }
-#appShell:not(.hidden) { display: flex; flex-direction: column; height: 100vh; height: 100dvh; background: #f5f5f5; overflow: hidden; }
+html { background: #fff; }
+/* iOS 26 difumina el borde superior (franja de la hora e isla dinámica) con un cristal claro. Sobre un encabezado verde se veía como
+   degradado; con encabezado BLANCO liso el cristal es invisible. Franja superior + encabezado = mismo blanco. */
+#appShell:not(.hidden) { padding-top: env(safe-area-inset-top); background: #fff; }
+#appShell header { padding-top: 12px; background: #fff; color: #14432a; border-bottom: 1px solid #e5e5ea; }
+#appShell header h1 { color: #14432a; }
+#appShell .toggle-menu { background: #eef3f0; color: #1a6b45; }
+#appShell .toggle-menu:active { background: #dfe9e3; }
+#appShell #preciosVersion { background: #e8f1ec !important; color: #1a6b45 !important; }
+#appShell .main { background: #f5f5f5; }
+#bottomNav button { min-height: 62px; justify-content: center; padding: 6px 2px; }
+#appShell:not(.hidden) { display: flex; flex-direction: column; height: 100vh; height: 100dvh; background: #fff; overflow: hidden; }
 #appShell header { position: relative; top: auto; left: auto; right: auto; flex: none; order: 1; box-shadow: none; }
 #appShell .main { order: 2; flex: 1 1 auto; min-height: 0; height: auto; padding-top: 0; display: flex; width: 100%; }
 #appShell .content { overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding-bottom: 20px; }
@@ -623,7 +631,7 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
 .pr-nota { font-size: 14px; color: #555; margin-top: 6px; }
 .pr-vacio { text-align: center; color: #555; padding: 32px 12px; font-size: 16px; }
 .pr-pie { text-align: center; color: #555; font-size: 14px; margin: 12px 0 8px; }
-#bottomNav button { padding: 8px 2px 6px; line-height: 1.15; text-align: center; justify-content: flex-start; min-height: 72px; }
+#bottomNav button { line-height: 1.15; text-align: center; }
 </style>
 </head>
 <body>
@@ -1293,7 +1301,7 @@ function abrirSeccion(sec, el){
     const sinBorde = !standalone && hueco > 40;
     r.style.setProperty('--safe-b', sinBorde ? '0px' : 'env(safe-area-inset-bottom)');
     const t = document.getElementById('navModo');
-    if(t) t.textContent = (standalone ? 'Abierta como app' : 'Abierta en el navegador') + ' · ' + window.innerWidth + '×' + window.innerHeight + ' · versión de pantalla 9-oct-C';
+    if(t) t.textContent = (standalone ? 'Abierta como app' : 'Abierta en el navegador') + ' · ' + window.innerWidth + '×' + window.innerHeight + ' · versión de pantalla 10-oct-D';
   }
   window.addEventListener('load', zona); window.addEventListener('resize', zona); window.addEventListener('orientationchange', zona);
   window.addEventListener('load', med); window.addEventListener('resize', med); window.addEventListener('orientationchange', med);
