@@ -273,6 +273,11 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 
 /* ── Formulario de telas (estilo HIG: secciones numeradas, tarjetas de modalidad, unidades segmentadas) ── */
 .tl-card { padding:14px 14px 16px; }
+.chk-envio { display:flex; gap:12px; align-items:flex-start; margin:14px 0 6px; padding:14px; border:1.5px solid #d1d1d6; border-radius:12px; background:#fafafa; cursor:pointer; text-transform:none; letter-spacing:0; }
+.chk-envio input { width:26px; height:26px; min-height:0; margin:2px 0 0; flex:none; accent-color:#1a6b45; }
+.chk-envio span { display:flex; flex-direction:column; gap:4px; font-size:16px; color:#1d1d1f; }
+.chk-envio small { font-size:14px; font-weight:500; color:#555; line-height:1.4; }
+.pill.sin-enviar { background:#fff3e0; color:#8a4b00; border:1px solid #f0c987; }
 .sug-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
 .sug-row:empty { display:none; }
 .sug-chip { padding:7px 12px; border:1.5px solid #d1d1d6; border-radius:999px; background:#fff; font-size:15px; font-weight:600; color:#3a3a3c; line-height:1.2; }
@@ -1072,7 +1077,8 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
     <div class="field"><label>Se enviará a</label><div id="merVendedorCorreoDisplay" style="padding:12px;background:#f4f4f5;border-radius:10px;font-weight:600;color:#1a6b45;"></div></div>
     <div class="field"><label>Atención (con quién se cotiza) *</label><input type="text" id="merContacto" autocomplete="off" placeholder="Nombre de la persona"></div>
     <div class="field"><label>Teléfono del contacto</label><input type="tel" id="merTelefono" autocomplete="off" placeholder="Ej: 5555 1234"></div>
-    <div class="field"><label>Correo del cliente (copia) — correo o teléfono es obligatorio *</label><input type="email" id="merClienteCorreo" placeholder="cliente@empresa.com"></div>
+    <div class="field"><label>Correo del contacto — correo o teléfono es obligatorio *</label><input type="email" id="merClienteCorreo" placeholder="cliente@empresa.com"></div>
+    <label class="chk-envio" for="merEnviarCliente"><input type="checkbox" id="merEnviarCliente" onchange="actualizarAvisoEnvio()"><span><b>Enviar también al cliente ahora</b><small id="merEnvioTxt"></small></span></label>
     <div class="field"><label>Condiciones</label>
       <div id="merPresets" class="sug-row" role="group" aria-label="Condiciones rápidas"></div>
     </div>
@@ -1137,8 +1143,8 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
       <span class="modal-close" onclick="cerrarModalReenviar()">×</span>
     </div>
     <div class="field"><label>Se enviará a</label><div id="mreVendedor" style="padding:12px;background:#f4f4f5;border-radius:10px;font-weight:600;color:#1a6b45;"></div></div>
-    <div class="field"><label>Copia al cliente (opcional)</label><input type="email" id="mreClienteCorreo" placeholder="cliente@empresa.com"></div>
-    <div class="modal-btns"><button class="btn btn-success btn-block" id="btnMreEnviar" onclick="confirmarReenvio()"><span class="ic" data-ic="mail"></span> Reenviar</button></div>
+    <div class="field"><label>Enviar también al cliente (déjalo vacío para recibirla solo tú)</label><input type="email" id="mreClienteCorreo" placeholder="cliente@empresa.com"></div>
+    <div class="modal-btns"><button class="btn btn-success btn-block" id="btnMreEnviar" onclick="confirmarReenvio()"><span class="ic" data-ic="mail"></span> Enviar</button></div>
   </div>
 </div>
 
@@ -1865,5 +1871,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=8"></script><script src="listas-ui.js?v=4"></script><script src="precios-ui.js?v=4"></script><script src="real-quote.js?v=20261030"></script><script src="tela-ui.js?v=10"></script><script src="carrito-ui.js?v=7"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=9"></script><script src="listas-ui.js?v=4"></script><script src="precios-ui.js?v=4"></script><script src="real-quote.js?v=20261030"></script><script src="tela-ui.js?v=10"></script><script src="carrito-ui.js?v=7"></script></body>
 </html>

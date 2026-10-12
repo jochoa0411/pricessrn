@@ -21,18 +21,21 @@ async function imprimirPdfLocal(pdfHtml, ref, btn){
   if(!_esMovilTactil()){ window.print(); return; }
   var textoOrig = btn.textContent;
   btn.disabled = true; btn.textContent = 'Generando PDF…';
-  // Se genera desde la propia vista previa (un contenedor fuera de pantalla o con posición fija sale en blanco en html2canvas).
-  // En la copia que se dibuja se fuerza el ancho de 800 px para que la tabla quepa completa aunque el teléfono sea angosto.
+  // Se genera desde la propia vista previa (un contenedor fuera de pantalla o fijo sale en blanco en html2canvas). Mientras se captura se
+  // cambia su contenido por la tabla de escritorio a 800 px (sin las tarjetas del celular) y después se restaura tal cual.
   var cont = document.querySelector('#pdfOverlay > div:last-child');
   var overlay = document.getElementById('pdfOverlay'), st = overlay ? overlay.scrollTop : 0;
+  var htmlPantalla = cont.innerHTML, estiloPantalla = cont.getAttribute('style') || '';
+  var restaurar = function(){ cont.innerHTML = htmlPantalla; cont.setAttribute('style', estiloPantalla); if(overlay) overlay.scrollTop = st; };
   try {
     if(overlay) overlay.scrollTop = 0;
+    cont.innerHTML = pdfHtml;
     var opt = { margin: 8, filename: ref + '.pdf', image: { type: 'jpeg', quality: 0.92 },
       html2canvas: { scale: 1.6, useCORS: true, scrollX: 0, scrollY: 0, width: 800, windowWidth: 820,
         onclone: function(doc){ var el = doc.querySelector('#pdfOverlay > div:last-child'); if(el){ el.style.width = '800px'; el.style.maxWidth = 'none'; el.style.margin = '0'; el.style.boxShadow = 'none'; } } },
       jsPDF: { orientation: 'p', unit: 'mm', format: 'a4' } };
     var blob = await html2pdf().set(opt).from(cont).outputPdf('blob');
-    if(overlay) overlay.scrollTop = st;
+    restaurar();
     var nombre = ref.replace(/[^a-zA-Z0-9_-]/g, '_') + '.pdf';
     _pdfListo = { blob: blob, file: new File([blob], nombre, { type: 'application/pdf' }), nombre: nombre };
     btn.disabled = false; btn.textContent = textoOrig;
@@ -43,11 +46,44 @@ async function imprimirPdfLocal(pdfHtml, ref, btn){
       btn.onclick = async function(){ try { await _compartirPdfListo(ref); } catch(err){ toast('No se pudo abrir el PDF', 'err'); } };
     }
   } catch(e){
-    if(overlay) overlay.scrollTop = st;
+    restaurar();
     btn.disabled = false; btn.textContent = textoOrig;
     toast('No se pudo generar el PDF', 'err'); console.error(e);
   }
 }
+
+// En pantallas angostas la tabla de 7 columnas no cabe: cada renglón se muestra como tarjeta (etiqueta a la izquierda, valor a la derecha).
+// El PDF se arma a 800 px de ancho, por eso conserva la tabla normal.
+function _etiquetarFilasPv(trHtml){
+  var t = document.createElement('tbody'); t.innerHTML = trHtml;
+  var L = ['', '', 'Dimensiones y cálculo', 'Precio / pie²', 'Precio unitario', 'USD', 'Total Q'];
+  [].forEach.call(t.querySelectorAll('tr'), function(tr){
+    if(tr.children.length !== 7) return;
+    [].forEach.call(tr.children, function(td, i){
+      if(i === 0) td.className = 'pv-i';
+      else if(i === 1) td.className = 'pv-d';
+      else { td.setAttribute('data-l', L[i]); if(i === 2) td.className = 'pv-c'; td.innerHTML = '<span class="pv-v">' + td.innerHTML + '</span>'; }
+    });
+  });
+  return t.innerHTML;
+}
+var _PV_CSS = '<style>'
+  + '.pv-wrap{padding:36px}'
+  + '@media (max-width:700px){'
+  + '.pv-wrap{padding:14px 12px}'
+  + '.pv-wrap .pv-t,.pv-wrap .pv-t tbody,.pv-wrap .pv-t tr,.pv-wrap .pv-t td{display:block;width:100%}'
+  + '.pv-wrap .pv-t thead{display:none}'
+  + '.pv-wrap .pv-t tr{padding:10px 0;border-bottom:1px solid #e3e3e3}'
+  + '.pv-wrap .pv-t td{border:none!important;padding:4px 0!important;text-align:right!important;display:flex;justify-content:space-between;align-items:baseline;gap:14px;font-size:14px!important}'
+  + '.pv-wrap .pv-t td::before{content:attr(data-l);font-weight:700;color:#555;font-size:12px;text-align:left;flex:none}'
+  + '.pv-wrap .pv-t td.pv-i{display:none}'
+  + '.pv-wrap .pv-t td.pv-d{display:block;text-align:left!important;font-size:16px!important}'
+  + '.pv-wrap .pv-t td .pv-v{text-align:right}'
+  + '.pv-wrap .pv-t td.pv-c{display:block;text-align:left!important;line-height:1.6!important}\n'
+  + '.pv-wrap .pv-t td.pv-c .pv-v{display:block;text-align:left}'
+  + '.pv-wrap .pv-t td.pv-c::before{display:block;margin-bottom:2px}'
+  + '.pv-wrap .pv-t tr.pv-tot td{display:block;text-align:right!important}'
+  + '}</style>';
 
 async function generarPDF(){
   if(!CARRITO.length){ toast('El presupuesto est\u00e1 vac\u00edo','err'); return; }
@@ -106,18 +142,21 @@ async function generarPDF(){
   var qi = document.getElementById('cotDesglosarIVA') && document.getElementById('cotDesglosarIVA').checked;
   var gf = qi ? gran/1.12 : gran;
   var labelIva = qi ? 'SIN IVA' : 'CON IVA';
-  var totalHtml = '<tr style="background:#e8f5e9;font-weight:700;"><td colspan="6" style="padding:16px 8px;text-align:right;font-size:14px;">TOTAL '+labelIva+(haySinTC?' *':'')+'</td>'
+  var totalHtml = '<tr class="pv-tot" style="background:#e8f5e9;font-weight:700;"><td colspan="6" style="padding:16px 8px;text-align:right;font-size:14px;">TOTAL '+labelIva+(haySinTC?' *':'')+'</td>'
     + '<td style="padding:16px 8px;text-align:right;font-size:20px;color:#1a6b45;font-weight:900;">'+(soloUSD ? '$'+granUSD.toFixed(2)+' USD' : 'Q'+gf.toFixed(2))+'</td></tr>'
-    + (haySinTC?'<tr><td colspan="7" style="font-size:10px;color:#d97706;padding-top:10px;">* Items de tela sin tipo de cambio no incluidos en el total Q.</td></tr>':'');
+     + (haySinTC?'<tr class="pv-tot"><td colspan="7" style="font-size:10px;color:#d97706;padding-top:10px;">* Items de tela sin tipo de cambio no incluidos en el total Q.</td></tr>':'');
 
-  var pdfHtml = '<div style="padding:36px;background:white;font-family:Arial,sans-serif;color:#1a1a1a;">'
+  var filasDesk = filas, totalDesk = totalHtml;
+  var armarHtml = function(movil){
+  var filas_ = movil ? _etiquetarFilasPv(filasDesk) : filasDesk;
+  return (movil ? _PV_CSS : '') + '<div class="' + (movil ? 'pv-wrap' : '') + '" style="' + (movil ? '' : 'padding:36px;') + 'background:white;font-family:Arial,sans-serif;color:#1a1a1a;">'
     + '<div style="display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:14px;border-bottom:4px solid #1a6b45;margin-bottom:22px;">'
     + '<div style="font-size:32px;font-weight:900;color:#1a6b45;">LGM<small style="display:block;font-size:12px;font-weight:400;color:#888;margin-top:4px;">La Gran Monta\u00f1a \u00b7 Cotizaci\u00f3n comercial</small></div>'
     + '<div style="text-align:right;"><div style="font-size:20px;font-weight:800;color:#1a6b45;">'+ref+'</div><div style="font-size:11px;color:#888;margin-top:5px;">Fecha: '+fecha+'<br>Hora: '+hora+'</div></div></div>'
     + '<div style="background:#f0f9f5;border-left:5px solid #1a6b45;padding:14px;margin-bottom:20px;"><div style="font-size:10px;color:#888;font-weight:700;text-transform:uppercase;">CLIENTE</div><div style="font-size:17px;font-weight:700;color:#1a6b45;margin-top:3px;">'+cliente+'</div></div>'
     + '<div style="background:#fef9ec;border:1px solid #d97706;border-radius:7px;padding:10px;margin-bottom:14px;font-size:11px;color:#92400e;">Los anchos cobrados corresponden al m\u00faltiplo de 6 pies superior al solicitado. El \u00e1rea de facturaci\u00f3n incluye el desperdicio de corte.</div>'
     + '<div style="font-size:11px;color:#1a6b45;font-weight:700;margin-bottom:14px;">Cotizaci\u00f3n v\u00e1lida por 15 d\u00edas a partir de la fecha de emisi\u00f3n.</div>'
-    + '<table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:12px;"><thead><tr>'
+    + '<table class="pv-t" style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:12px;"><thead><tr>'
     + '<th style="background:#1a6b45;color:#fff;padding:10px 8px;text-align:left;font-size:10px;">#</th>'
     + '<th style="background:#1a6b45;color:#fff;padding:10px 8px;text-align:left;font-size:10px;">DESCRIPCION</th>'
     + '<th style="background:#1a6b45;color:#fff;padding:10px 8px;text-align:left;font-size:10px;">DIMENSIONES Y C\u00c1LCULO (m / ft)</th>'
@@ -125,9 +164,11 @@ async function generarPDF(){
     + '<th style="background:#1a6b45;color:#fff;padding:10px 8px;text-align:right;font-size:10px;">PRECIO UNITARIO</th>'
     + '<th style="background:#1a6b45;color:#fff;padding:10px 8px;text-align:right;font-size:10px;">USD</th>'
     + '<th style="background:#1a6b45;color:#fff;padding:10px 8px;text-align:right;font-size:10px;">TOTAL Q</th>'
-    + '</tr></thead><tbody>'+filas+totalHtml+'</tbody></table>'
+    + '</tr></thead><tbody>'+filas_+totalHtml+'</tbody></table>'
     + '<div style="margin-top:40px;font-size:11px;color:#bbb;border-top:1px solid #eee;padding-top:16px;">LGM \u00b7 La Gran Monta\u00f1a \u00b7 Pal\u00edn, Escuintla, Guatemala</div>'
     + '</div>';
+  };
+  var pdfHtml = armarHtml(true), pdfHtmlDesk = armarHtml(false);   // pantalla (tarjetas en celular) y PDF (tabla a 800 px)
 
   // ===== WEB: overlay + print nativo =====
   if(typeof Capacitor === 'undefined' || !Capacitor.isNativePlatform || !Capacitor.isNativePlatform()){
@@ -143,11 +184,11 @@ async function generarPDF(){
     var bP = document.createElement('button');
     bP.textContent = 'Imprimir / Guardar PDF';
     bP.style.cssText = 'padding:10px 20px;background:white;color:#1a6b45;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;';
-    bP.onclick = function(){ imprimirPdfLocal(pdfHtml, ref, bP); };
+    bP.onclick = function(){ imprimirPdfLocal(pdfHtmlDesk, ref, bP); };
     tb.appendChild(bC); tb.appendChild(bP);
     overlay.appendChild(tb);
     var pbody = document.createElement('div');
-    pbody.style.cssText = 'max-width:820px;margin:16px auto;background:white;box-shadow:0 2px 12px rgba(0,0,0,0.15);';
+    pbody.style.cssText = 'max-width:1000px;margin:16px auto;background:white;box-shadow:0 2px 12px rgba(0,0,0,0.15);';
     pbody.innerHTML = pdfHtml;
     overlay.appendChild(pbody);
     document.body.appendChild(overlay);
@@ -157,7 +198,7 @@ async function generarPDF(){
   // ===== APP NATIVA: html2pdf + share sheet =====
   var cont = document.createElement('div');
   cont.style.cssText = 'position:absolute;left:-9999px;top:0;width:800px;background:white;';
-  cont.innerHTML = pdfHtml;
+  cont.innerHTML = pdfHtmlDesk;
   document.body.appendChild(cont);
 
   toast('Generando PDF...');
