@@ -1070,7 +1070,9 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
     </div>
     <div id="merResumen" class="resumen"></div>
     <div class="field"><label>Se enviará a</label><div id="merVendedorCorreoDisplay" style="padding:12px;background:#f4f4f5;border-radius:10px;font-weight:600;color:#1a6b45;"></div></div>
-    <div class="field"><label>Correo del cliente (opcional, copia)</label><input type="email" id="merClienteCorreo" placeholder="cliente@empresa.com"></div>
+    <div class="field"><label>Atención (con quién se cotiza) *</label><input type="text" id="merContacto" autocomplete="off" placeholder="Nombre de la persona"></div>
+    <div class="field"><label>Teléfono del contacto</label><input type="tel" id="merTelefono" autocomplete="off" placeholder="Ej: 5555 1234"></div>
+    <div class="field"><label>Correo del cliente (copia) — correo o teléfono es obligatorio *</label><input type="email" id="merClienteCorreo" placeholder="cliente@empresa.com"></div>
     <div class="field"><label>Condiciones</label>
       <div id="merPresets" class="sug-row" role="group" aria-label="Condiciones rápidas"></div>
     </div>
@@ -1095,7 +1097,9 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
     <div id="medAviso"></div>
     <div class="field"><label>Cliente *</label><input type="text" id="medCliente"></div>
     <div class="field"><label>NIT</label><input type="text" id="medNit"></div>
-    <div class="field"><label>Correo del cliente (copia al reenviar)</label><input type="email" id="medClienteCorreo"></div>
+    <div class="field"><label>Atención (con quién se cotiza) *</label><input type="text" id="medContacto" autocomplete="off"></div>
+    <div class="field"><label>Teléfono del contacto</label><input type="tel" id="medTelefono" autocomplete="off"></div>
+    <div class="field"><label>Correo del cliente (copia al reenviar) — correo o teléfono es obligatorio *</label><input type="email" id="medClienteCorreo"></div>
     <div class="field"><label>Ítems</label><div id="medItems"></div>
       <button type="button" class="btn btn-ghost btn-sm" id="medAddLinea" onclick="medAgregarLinea()" style="margin-top:6px"><span class="ic" data-ic="plus"></span> Agregar línea</button>
     </div>
@@ -1861,5 +1865,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=6"></script><script src="listas-ui.js?v=4"></script><script src="precios-ui.js?v=4"></script><script src="real-quote.js?v=20261029"></script><script src="tela-ui.js?v=10"></script><script src="carrito-ui.js?v=7"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=7"></script><script src="listas-ui.js?v=4"></script><script src="precios-ui.js?v=4"></script><script src="real-quote.js?v=20261030"></script><script src="tela-ui.js?v=10"></script><script src="carrito-ui.js?v=7"></script></body>
 </html>

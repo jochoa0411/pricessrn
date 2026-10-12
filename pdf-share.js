@@ -1,3 +1,54 @@
+// ── Vista previa › «Imprimir / Guardar PDF» ──
+// En el iPhone (sobre todo con la app instalada) window.print() no hace nada: se genera un PDF de verdad y se manda a la hoja de
+// compartir del teléfono (ahí están Imprimir, Guardar en Archivos, WhatsApp, Correo…). En computadora se sigue usando el diálogo de imprimir.
+var _pdfListo = null;
+function _esMovilTactil(){
+  var ua = navigator.userAgent || '';
+  return ((navigator.maxTouchPoints || 0) > 0 && /iPhone|iPad|iPod|Android/i.test(ua)) || (navigator.platform === 'MacIntel' && (navigator.maxTouchPoints || 0) > 1);
+}
+async function _compartirPdfListo(ref){
+  var f = _pdfListo && _pdfListo.file; if(!f) return false;
+  if(navigator.canShare && navigator.canShare({ files: [f] })){
+    try { await navigator.share({ files: [f], title: 'Cotización ' + ref }); return true; }
+    catch(e){ if(e && e.name === 'AbortError') return true; throw e; }
+  }
+  var url = URL.createObjectURL(_pdfListo.blob);              // sin hoja de compartir: se abre el PDF en el visor
+  var w = window.open(url, '_blank'); if(!w) location.href = url;
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 120000);
+  return true;
+}
+async function imprimirPdfLocal(pdfHtml, ref, btn){
+  if(!_esMovilTactil()){ window.print(); return; }
+  var textoOrig = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Generando PDF…';
+  // Se genera desde la propia vista previa (un contenedor fuera de pantalla o con posición fija sale en blanco en html2canvas).
+  // En la copia que se dibuja se fuerza el ancho de 800 px para que la tabla quepa completa aunque el teléfono sea angosto.
+  var cont = document.querySelector('#pdfOverlay > div:last-child');
+  var overlay = document.getElementById('pdfOverlay'), st = overlay ? overlay.scrollTop : 0;
+  try {
+    if(overlay) overlay.scrollTop = 0;
+    var opt = { margin: 8, filename: ref + '.pdf', image: { type: 'jpeg', quality: 0.92 },
+      html2canvas: { scale: 1.6, useCORS: true, scrollX: 0, scrollY: 0, width: 800, windowWidth: 820,
+        onclone: function(doc){ var el = doc.querySelector('#pdfOverlay > div:last-child'); if(el){ el.style.width = '800px'; el.style.maxWidth = 'none'; el.style.margin = '0'; el.style.boxShadow = 'none'; } } },
+      jsPDF: { orientation: 'p', unit: 'mm', format: 'a4' } };
+    var blob = await html2pdf().set(opt).from(cont).outputPdf('blob');
+    if(overlay) overlay.scrollTop = st;
+    var nombre = ref.replace(/[^a-zA-Z0-9_-]/g, '_') + '.pdf';
+    _pdfListo = { blob: blob, file: new File([blob], nombre, { type: 'application/pdf' }), nombre: nombre };
+    btn.disabled = false; btn.textContent = textoOrig;
+    try { await _compartirPdfListo(ref); }
+    catch(e){
+      // iOS exige un toque del usuario para compartir: si ya pasó mucho tiempo, se pide un toque más
+      btn.textContent = 'PDF listo · toca para compartir';
+      btn.onclick = async function(){ try { await _compartirPdfListo(ref); } catch(err){ toast('No se pudo abrir el PDF', 'err'); } };
+    }
+  } catch(e){
+    if(overlay) overlay.scrollTop = st;
+    btn.disabled = false; btn.textContent = textoOrig;
+    toast('No se pudo generar el PDF', 'err'); console.error(e);
+  }
+}
+
 async function generarPDF(){
   if(!CARRITO.length){ toast('El presupuesto est\u00e1 vac\u00edo','err'); return; }
 
@@ -82,7 +133,7 @@ async function generarPDF(){
     var bP = document.createElement('button');
     bP.textContent = 'Imprimir / Guardar PDF';
     bP.style.cssText = 'padding:10px 20px;background:white;color:#1a6b45;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;';
-    bP.onclick = function(){ window.print(); };
+    bP.onclick = function(){ imprimirPdfLocal(pdfHtml, ref, bP); };
     tb.appendChild(bC); tb.appendChild(bP);
     overlay.appendChild(tb);
     var pbody = document.createElement('div');

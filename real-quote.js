@@ -912,6 +912,11 @@ function _prellenarModalEnvio(){
       : _lsGet('cotClientesRecientes', []).filter(function(x){ return x.nombre.toLowerCase() === cliente.toLowerCase(); })[0];
     correoEl.value = (conocido && conocido.correo) || '';
     correoEl.dataset.cliente = cliente;
+    // Atención y teléfono: de la ficha del catálogo (si ya los tiene); si no, se piden aquí.
+    var ficha = _filaCatalogo(cliente, document.getElementById('cotNit').value);
+    document.getElementById('merContacto').value = (ficha && ficha[4]) || '';
+    document.getElementById('merTelefono').value = (ficha && ficha[5]) || '';
+    if (!correoEl.value && ficha && ficha[3]) correoEl.value = ficha[3];
   }
 }
 
@@ -985,6 +990,21 @@ async function generarCotizacionReal(){
     return;
   }
 
+  var contactoEl = document.getElementById('merContacto');
+  var telefonoEl = document.getElementById('merTelefono');
+  var contacto = (contactoEl.value || '').trim();
+  var telefono = (telefonoEl.value || '').trim();
+  if (!contacto) {
+    toast('Ingresa la atención: con quién se cotiza', 'err');
+    contactoEl.focus();
+    return;
+  }
+  if (!clienteCorreo && !telefono) {
+    toast('Ingresa el correo o el teléfono del contacto', 'err');
+    (telefonoEl).focus();
+    return;
+  }
+
   var formaEntrega  = document.getElementById('merFormaEntrega').value.trim();
   var lugarEntrega  = document.getElementById('merLugarEntrega').value.trim();
   var tiempoEntrega = document.getElementById('merTiempoEntrega').value.trim();
@@ -1034,6 +1054,8 @@ async function generarCotizacionReal(){
     precios_version: parseInt(localStorage.getItem('PRECIOS_VERSION') || '0', 10) || undefined,
     calculo: CARRITO.map(function(i){ var o = {}; Object.keys(i).forEach(function(k){ if (k !== 'uid' && k !== 'addedAt') o[k] = i[k]; }); return o; }),
     cliente_correo: clienteCorreo,
+    cliente_contacto: contacto,
+    cliente_telefono: telefono,
     moneda: armado.moneda,
     con_iva: conIva,
     items: armado.items,
@@ -1327,13 +1349,15 @@ async function abrirEditar(id){
     document.getElementById('medCliente').value = q.cliente || '';
     document.getElementById('medNit').value = q.cliente_nit || '';
     document.getElementById('medClienteCorreo').value = q.cliente_correo || '';
+    document.getElementById('medContacto').value = q.cliente_contacto || '';
+    document.getElementById('medTelefono').value = q.cliente_telefono || '';
     document.getElementById('medConIva').checked = q.con_iva !== false;
     document.getElementById('medFormaEntrega').value = q.forma_entrega || '';
     document.getElementById('medLugarEntrega').value = q.lugar_entrega || '';
     document.getElementById('medTiempoEntrega').value = q.tiempo_entrega || '';
     document.getElementById('medFormaPago').value = q.forma_pago || '';
     document.getElementById('medComentarios').value = q.comentarios_adicionales || '';
-    ['medCliente', 'medNit', 'medClienteCorreo', 'medConIva', 'medFormaEntrega', 'medLugarEntrega', 'medTiempoEntrega', 'medFormaPago', 'medComentarios']
+    ['medCliente', 'medNit', 'medContacto', 'medTelefono', 'medClienteCorreo', 'medConIva', 'medFormaEntrega', 'medLugarEntrega', 'medTiempoEntrega', 'medFormaPago', 'medComentarios']
       .forEach(function(i){ document.getElementById(i).disabled = ro; });
     document.getElementById('medAddLinea').classList.toggle('hidden', ro);
     document.getElementById('btnMedGuardarEnviar').classList.toggle('hidden', ro);
@@ -1385,6 +1409,10 @@ async function guardarEdicion(reenviar){
   var correo = document.getElementById('medClienteCorreo').value.trim();
   if (!cliente) { toast('Ingresa el nombre del cliente', 'err'); return; }
   if (correo && !_emailValido(correo)) { toast('El correo del cliente no es válido', 'err'); return; }
+  var contacto = document.getElementById('medContacto').value.trim();
+  var telefono = document.getElementById('medTelefono').value.trim();
+  if (!contacto) { toast('Ingresa la atención: con quién se cotiza', 'err'); document.getElementById('medContacto').focus(); return; }
+  if (!correo && !telefono) { toast('Ingresa el correo o el teléfono del contacto', 'err'); document.getElementById('medTelefono').focus(); return; }
   var items = _edit.items.filter(function(it){ return String(it.descripcion).trim() && it.cantidad > 0; });
   if (!items.length) { toast('Agrega al menos un ítem con descripción y cantidad', 'err'); return; }
   if (items.length !== _edit.items.length && !confirm('Hay líneas vacías o con cantidad 0; se descartarán al guardar. ¿Continuar?')) return;
@@ -1394,7 +1422,8 @@ async function guardarEdicion(reenviar){
   try {
     var r = await _api('/mis/' + _edit.id + '/editar', { method: 'POST', body: {
       cliente: cliente, cliente_nit: _nitONormal(document.getElementById('medNit').value), cod_cliente: _edit.codCliente || undefined,
-      cliente_correo: correo, moneda: _edit.moneda, con_iva: document.getElementById('medConIva').checked,
+      cliente_correo: correo, cliente_contacto: contacto, cliente_telefono: telefono,
+      moneda: _edit.moneda, con_iva: document.getElementById('medConIva').checked,
       items: items,
       forma_entrega: document.getElementById('medFormaEntrega').value.trim(),
       lugar_entrega: document.getElementById('medLugarEntrega').value.trim(),
