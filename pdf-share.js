@@ -65,20 +65,30 @@ async function generarPDF(){
   let filas = '';
   CARRITO.forEach((item, idx) => {
     if(item.tipo === 'tela'){
-      var dimsSol = (item.lFt||item.lM||0).toFixed ? (item.ul==='ft'? item.lFt.toFixed(1)+' ft' : item.lM.toFixed(1)+' m') : '';
-      var anchoSol = item.ua==='ft' ? (item.aSolFt||0).toFixed(1)+' ft' : (item.aSolM||0).toFixed(1)+' m';
-      var largoSol = item.ul==='ft' ? (item.lFt||0).toFixed(1)+' ft' : (item.lM||0).toFixed(1)+' m';
-      var dimsTxt = anchoSol + ' x ' + largoSol + (item.cant>1?' (x'+item.cant+' cortes)':'');
-      var anchoCob = item.ua==='ft' ? (item.aCobFt||0).toFixed(1)+' ft' : (item.aCobM||0).toFixed(1)+' m';
-      var dimsCob = (item.aCobFt && Math.abs(item.aCobFt - item.aSolFt) > 0.01) ? anchoCob+' x '+largoSol : null;
+      // Medidas y cálculo en metros y en pies (el ancho cobrado es el múltiplo de 6 ft superior al solicitado)
+      var n1 = function(v,d){ return Number(v||0).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}); };
+      var M2 = 10.7639, FT = 3.28084;
+      var aSolFt = item.aSolFt || 0, aSolM = item.aSolM || aSolFt/FT, lFt = item.lFt || (item.lM||0)*FT, lM = item.lM || lFt/FT;
+      var aCobFt = item.aCobFt || aSolFt, aCobM = item.aCobM || aCobFt/FT;
+      var cant = Math.max(1, item.cant || 1);
+      var arCorte = item.arCorte || ((item.ar || 0) / cant);
+      var arTot = item.ar || arCorte * cant;
+      var difiere = Math.abs(aCobFt - aSolFt) > 0.01;
+      var par = function(a_m,l_m,a_ft,l_ft){ return n1(a_m,2)+' m × '+n1(l_m,2)+' m <span style="color:#888;">('+n1(a_ft,1)+' ft × '+n1(l_ft,1)+' ft)</span>'; };
+      var calcTxt = n1(aCobFt,1)+' ft × '+n1(lFt,1)+' ft = <b>'+n1(arCorte,1)+' pie²</b> <span style="color:#888;">('+n1(arCorte/M2,2)+' m²)</span>'
+        + (cant>1 ? '<br>× '+cant+' cortes = <b>'+n1(arTot,1)+' pie²</b> <span style="color:#888;">('+n1(arTot/M2,2)+' m²)</span>' : '');
+      var unitUsd = arCorte * (item.p || 0);
+      var unitTxt = '<b>$'+n1(unitUsd,2)+'</b>'+(item.tc ? '<br><span style="color:#555;">Q'+n1(unitUsd*item.tc,2)+'</span>' : '')+'<br><span style="font-size:9px;color:#888;">por corte</span>';
       filas += '<tr>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;color:#bbb;font-size:10px;">'+(idx+1)+'</td>'
-        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;"><strong style="color:#1a6b45;">'+(item.cant>1?item.cant+'\u00d7 ':'')+item.nombre+'</strong><br><small style="color:#888;">'+(item.modo==='master'?'Rollo Master':'Confeccionado'+(window.tlAcabadoTxt&&tlAcabadoTxt(item)?' \u00b7 '+tlAcabadoTxt(item):''))+(item.recargo?' \u00b7 Rec/Desc '+item.recargo+'%':'')+'</small></td>'
-        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;font-size:11px;"><span style="font-weight:700;color:#555;">Solicitado:</span> '+dimsTxt+(dimsCob?'<br><span style="font-weight:700;color:#d97706;">Cobrado: '+dimsCob+'</span>':'')+'</td>'
-        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">'+(item.ar||0).toFixed(1)+' pie\u00b2</td>'
-        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">$'+(item.p||0).toFixed(3)+'</td>'
-        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">$'+(item.tu||0).toFixed(2)+'</td>'
-        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;font-weight:700;">'+(item.totalQ!==null?'Q'+item.totalQ.toFixed(2):'\u2014')+'</td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;"><strong style="color:#1a6b45;">'+(cant>1?cant+'× ':'')+item.nombre+'</strong><br><small style="color:#888;">'+(item.modo==='master'?'Rollo Master':'Confeccionado'+(window.tlAcabadoTxt&&tlAcabadoTxt(item)?' · '+tlAcabadoTxt(item):''))+(item.recargo?' · Rec/Desc '+item.recargo+'%':'')+'</small></td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;font-size:11px;line-height:1.55;"><span style="font-weight:700;color:#555;">Solicitado:</span> '+par(aSolM,lM,aSolFt,lFt)
+          +(difiere?'<br><span style="font-weight:700;color:#d97706;">Cobrado: '+par(aCobM,lM,aCobFt,lFt)+'</span>':'')
+          +'<br><span style="font-weight:700;color:#555;">Cálculo:</span> '+calcTxt+'</td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">$'+(item.p||0).toFixed(3)+'<br><span style="font-size:9px;color:#888;">por pie²</span></td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">'+unitTxt+'</td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">$'+n1(item.tu||0,2)+'</td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;font-weight:700;">'+(item.totalQ!==null?'Q'+n1(item.totalQ,2):'—')+'</td>'
         + '</tr>';
     } else {
       filas += '<tr>'
@@ -86,7 +96,7 @@ async function generarPDF(){
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;"><strong style="color:#1a6b45;">'+item.nombre+'</strong><br><small style="color:#888;">Saco \u00b7 '+etiquetaTierItem(item)+(item.recargo?' \u00b7 Rec/Desc '+item.recargo+'%':'')+'</small></td>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;font-size:11px;">'+(item.medidas||'')+' \u00b7 '+item.cantidad+' unidades</td>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">\u2014</td>'
-        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">Q'+(item.precioUnit||0).toFixed(2)+'</td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;"><b>Q'+(item.precioUnit||0).toFixed(2)+'</b><br><span style="font-size:9px;color:#888;">por unidad</span></td>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">\u2014</td>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;font-weight:700;">Q'+(item.totalQ||0).toFixed(2)+'</td>'
         + '</tr>';
@@ -110,9 +120,9 @@ async function generarPDF(){
     + '<table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:12px;"><thead><tr>'
     + '<th style="background:#1a6b45;color:#fff;padding:10px 8px;text-align:left;font-size:10px;">#</th>'
     + '<th style="background:#1a6b45;color:#fff;padding:10px 8px;text-align:left;font-size:10px;">DESCRIPCION</th>'
-    + '<th style="background:#1a6b45;color:#fff;padding:10px 8px;text-align:left;font-size:10px;">DIMENSIONES</th>'
-    + '<th style="background:#1a6b45;color:#fff;padding:10px 8px;text-align:right;font-size:10px;">AREA</th>'
-    + '<th style="background:#1a6b45;color:#fff;padding:10px 8px;text-align:right;font-size:10px;">PRECIO</th>'
+    + '<th style="background:#1a6b45;color:#fff;padding:10px 8px;text-align:left;font-size:10px;">DIMENSIONES Y C\u00c1LCULO (m / ft)</th>'
+    + '<th style="background:#1a6b45;color:#fff;padding:10px 8px;text-align:right;font-size:10px;">PRECIO / PIE\u00b2</th>'
+    + '<th style="background:#1a6b45;color:#fff;padding:10px 8px;text-align:right;font-size:10px;">PRECIO UNITARIO</th>'
     + '<th style="background:#1a6b45;color:#fff;padding:10px 8px;text-align:right;font-size:10px;">USD</th>'
     + '<th style="background:#1a6b45;color:#fff;padding:10px 8px;text-align:right;font-size:10px;">TOTAL Q</th>'
     + '</tr></thead><tbody>'+filas+totalHtml+'</tbody></table>'
