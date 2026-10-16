@@ -82,6 +82,8 @@
 
   window.addEventListener('load', function () {
     montarResumen(); montarBarra();
+    var tb = $('tlBar'), shell = $('appShell');
+    if (tb && shell && tb.parentNode !== shell) shell.appendChild(tb);   // la barra de totales de la tela también va dentro de la columna
     var w = document.querySelector('#cotizar .cart-wrap'), root = document.querySelector('.content');
     if (w && root && window.IntersectionObserver) {
       new IntersectionObserver(function (es) { cartVisible = es[0].isIntersecting; actualizarBarra(); }, { root: root, threshold: 0.25 }).observe(w);
