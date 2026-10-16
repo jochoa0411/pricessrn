@@ -337,6 +337,22 @@ body.cartbar-on #appShell .content, body.tl-bar-on #appShell .content { padding-
 .dest button b { display:block; font-size:18px; } .dest button small { display:block; font-size:16px; color:#555; line-height:1.35; margin-top:2px; overflow-wrap:anywhere; }
 .dest button.on { border-color:#1a6b45; background:#e8f3ec; }
 .dest button.on b::before { content:'● '; color:#1a6b45; } .dest button:not(.on) b::before { content:'○ '; color:#8e8e93; }
+/* Aprovechar el alto de la pantalla: menos aire entre bloques, el cliente compactado no ocupa una tarjeta entera */
+.cli-card.compacto { padding: 0 !important; background: transparent !important; box-shadow: none !important; border: 0 !important; margin: 0 0 4px !important; }
+.cli-card.compacto .opt-row { padding: 2px 2px 0; }
+.tabs { margin-bottom: 8px; }
+.tab-btn { min-height: 50px; }
+.tl-card { padding: 6px 14px 10px; }
+.tl-sec { padding: 8px 0; }
+.pp-head { min-height: 52px; padding: 6px 4px; }
+.pp-sig { min-height: 52px; margin: 4px 0 6px; }
+.tl-dim { padding: 8px 12px; } .tl-dim input { min-height: 40px; height: 40px; padding: 0; line-height: 40px; } .tl-eq { min-height: 0; margin: 0; } .tl-eq:not(:empty) { margin-top: 2px; } .tl-eq:empty { display: none; }
+.tl-dims { gap: 8px; }
+.tl-dim-top { flex-wrap: nowrap; gap: 6px; margin-bottom: 2px; } .tl-dim-top .tl-seg button { min-height: 40px; min-width: 0; padding: 0 9px; font-size: 15px; }
+.tl-modo { padding: 10px; } .tl-modo-p { margin: 2px 0 0; }
+.cx-vacio { padding: 8px 12px; } .cx-vacio .ic { display: none; } .cx-vacio small { display: none; }
+.cart-wrap { padding: 12px 14px; }
+@media (min-height: 800px) { .content { padding-bottom: 12px; } }
 .envio-prog { margin:10px 0 4px; padding:12px 14px; border-radius:12px; background:#e8f3ec; color:#14573a; }
 .envio-prog[hidden] { display:none; }
 .ep-t { font-size:18px; font-weight:700; margin-bottom:8px; }
@@ -967,7 +983,7 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
                 </div>
                 </div>
                 <input type="number" id="cotAncho" placeholder="0" min="0" step="any" inputmode="decimal" oninput="cotCalcTela()">
-                <div class="tl-eq" id="tlEqAncho">&nbsp;</div>
+                <div class="tl-eq" id="tlEqAncho"></div>
                 <select id="cotUAncho" hidden onchange="cotCalcTela()"><option value="m">m</option><option value="ft">ft</option></select>
               </div>
               <div class="tl-dim">
@@ -978,7 +994,7 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
                 </div>
                 </div>
                 <input type="number" id="cotLargo" placeholder="0" min="0" step="any" inputmode="decimal" oninput="cotCalcTela()">
-                <div class="tl-eq" id="tlEqLargo">&nbsp;</div>
+                <div class="tl-eq" id="tlEqLargo"></div>
                 <select id="cotULargo" hidden onchange="cotCalcTela()"><option value="m">m</option><option value="ft">ft</option></select>
               </div>
             </div>
@@ -2034,5 +2050,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="version.js"></script><script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=11"></script><script src="listas-ui.js?v=5"></script><script src="precios-ui.js?v=5"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=6"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="vendedor-ui.js?v=1"></script><script src="real-quote.js?v=20261043"></script><script src="tela-ui.js?v=14"></script><script src="carrito-ui.js?v=14"></script><script src="paso-a-paso.js?v=3"></script><script src="selector-producto.js?v=2"></script><script src="paso-envio.js?v=2"></script><script src="instalar-app.js?v=1"></script></body>
+<script src="version.js"></script><script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=11"></script><script src="listas-ui.js?v=5"></script><script src="precios-ui.js?v=5"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=6"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="vendedor-ui.js?v=1"></script><script src="real-quote.js?v=20261043"></script><script src="tela-ui.js?v=15"></script><script src="carrito-ui.js?v=14"></script><script src="paso-a-paso.js?v=3"></script><script src="selector-producto.js?v=2"></script><script src="paso-envio.js?v=2"></script><script src="instalar-app.js?v=3"></script></body>
 </html>

@@ -16,7 +16,7 @@ self.addEventListener('fetch', function (e) {
   var u = new URL(r.url);
   if (u.origin !== self.location.origin) return;                     // el sistema (API) y otros dominios: directo a la red
   e.respondWith(
-    fetch(r).then(function (resp) {
+    fetch(r, { cache: 'no-cache' }).then(function (resp) {     // no-cache: revalida con el servidor (GitHub Pages deja copias hasta 10 min)
       if (resp && resp.ok) { var copia = resp.clone(); caches.open(CACHE).then(function (c) { c.put(r, copia); }); }
       return resp;
     }).catch(function () {

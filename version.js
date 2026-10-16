@@ -1,2 +1,2 @@
 // Lo escribe publicar.sh en cada publicación: no editar a mano.
-window.APP_VERSION = { version: '2.0', build: 146, fecha: '2026-10-16', nota: 'Arreglo: el cliente vuelve a subir al encabezado al tocar tela o saco' };
+window.APP_VERSION = { version: '2.0', build: 147, fecha: '2026-10-16', nota: 'Actualización automática y mejor uso de la pantalla alta' };

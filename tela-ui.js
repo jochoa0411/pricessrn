@@ -212,8 +212,8 @@
 
     var aFt = ua === 'm' ? a * MT_ : a, aM = ua === 'm' ? a : a / MT_;
     var lFt = ul === 'm' ? l * MT_ : l, lM = ul === 'm' ? l : l / MT_;
-    $('tlEqAncho').textContent = a > 0 ? '≈ ' + (ua === 'ft' ? fmt(aM, 2) + ' m' : fmt(aFt, 2) + ' ft') : ' ';
-    $('tlEqLargo').textContent = l > 0 ? '≈ ' + (ul === 'ft' ? fmt(lM, 2) + ' m' : fmt(lFt, 2) + ' ft') : ' ';
+    $('tlEqAncho').textContent = a > 0 ? '≈ ' + (ua === 'ft' ? fmt(aM, 2) + ' m' : fmt(aFt, 2) + ' ft') : '';
+    $('tlEqLargo').textContent = l > 0 ? '≈ ' + (ul === 'ft' ? fmt(lM, 2) + ' m' : fmt(lFt, 2) + ' ft') : '';
     var norm = $('tlNorm');
     if (a > 0 && l > 0) {
       norm.style.display = 'block';
