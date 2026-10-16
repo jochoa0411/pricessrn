@@ -1361,19 +1361,19 @@ function _htmlCalculoPdf(c){
         + fila('Precio aplicado', 'Q' + _fmtN(i.precioUnit, 2) + ' /u')
         + fila('Total Q', 'Q' + _fmtN(i.totalQ, 2)) + '</table>';
     }
-    return '<div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:12px;page-break-inside:avoid;">' + h + '</div>';
+    return '<div style="border-top:1px solid #ccc;padding:10px 0 4px;margin-bottom:6px;page-break-inside:avoid;">' + h + '</div>';
   }).join('');
   var tot = (hayUsd ? 'Total USD: $' + _fmtN(usd, 2) : '') + (hayUsd && q ? ' &nbsp;·&nbsp; ' : '') + (q ? 'Total Q: Q' + _fmtN(q, 2) : '');
   return '<div style="padding:32px;background:white;font-family:Arial,sans-serif;color:#1a1a1a;-webkit-print-color-adjust:exact;print-color-adjust:exact;">'
-    + '<div style="display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:12px;border-bottom:4px solid #1a6b45;margin-bottom:18px;">'
+    + '<div style="display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:12px;border-bottom:1px solid #111;margin-bottom:14px;">'
     + '<div style="font-size:28px;font-weight:900;color:#1a6b45;">LGM<small style="display:block;font-size:12px;font-weight:400;color:#888;margin-top:4px;">Hoja de cálculo de la cotización</small></div>'
     + '<div style="text-align:right;"><div style="font-size:20px;font-weight:800;color:#1a6b45;">' + _esc(c.no) + '</div><div style="font-size:11px;color:#888;margin-top:4px;">Creada: ' + _fechaCorta(c.creada) + '</div></div></div>'
-    + '<div style="background:#f0f9f5;border-left:5px solid #1a6b45;padding:12px 14px;margin-bottom:16px;font-size:14px;"><b>' + _esc(c.cliente) + '</b>' + (c.nit ? ' · NIT ' + _esc(c.nit) : '')
+    + '<div style="padding:0 0 10px;margin-bottom:14px;border-bottom:1px solid #ccc;font-size:14px;"><b>' + _esc(c.cliente) + '</b>' + (c.nit ? ' · NIT ' + _esc(c.nit) : '')
     + (c.vendedor ? '<br><span style="color:#555;">Vendedor: ' + _esc(c.vendedor) + '</span>' : '')
     + (c.version ? '<br><span style="color:#555;">Lista de precios v' + c.version + '</span>' : '') + '</div>'
     + (c.editada ? '<div style="font-size:12px;color:#92400e;margin-bottom:12px;">La cotización se editó después de crearse: las líneas actuales pueden diferir de este cálculo.</div>' : '')
     + bloques
-    + '<div style="margin-top:8px;padding:12px 14px;border:2px solid #1a6b45;color:#1a6b45;border-radius:8px;font-size:16px;font-weight:800;text-align:right;">' + tot + '</div>'
+    + '<div style="margin-top:8px;padding:8px 0 0;border-top:1px solid #111;color:#111;font-size:16px;font-weight:700;text-align:right;">' + tot + '</div>'
     + '<div style="margin-top:24px;font-size:11px;color:#999;border-top:1px solid #eee;padding-top:10px;">Documento interno de costeo · LGM · La Gran Montaña</div></div>';
 }
 function imprimirCalculo(){
