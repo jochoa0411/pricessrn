@@ -353,6 +353,15 @@ body.cartbar-on #appShell .content, body.tl-bar-on #appShell .content { padding-
 .cx-vacio { padding: 8px 12px; } .cx-vacio .ic { display: none; } .cx-vacio small { display: none; }
 .cart-wrap { padding: 12px 14px; }
 @media (min-height: 800px) { .content { padding-bottom: 12px; } }
+/* Mis cotizaciones: tarjeta apilada (título + total, datos, estado, acciones) para que nada se monte en pantallas angostas */
+.item-card.mc { display: block; padding: 12px 14px; }
+.mc-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 4px 12px; flex-wrap: wrap; }
+.mc-top strong { flex: 1 1 200px; min-width: 0; font-size: 17px; color: #222; overflow-wrap: anywhere; }
+.mc-tot { color: #1a6b45; font-size: 17px; font-weight: 800; white-space: nowrap; }
+.mc-meta { margin-top: 4px; font-size: 15px; color: #6b6b70; line-height: 1.35; overflow-wrap: anywhere; }
+.mc-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.mc-pills .pill { white-space: normal; line-height: 1.25; }
+.mc-acts { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
 .envio-prog { margin:10px 0 4px; padding:12px 14px; border-radius:12px; background:#e8f3ec; color:#14573a; }
 .envio-prog[hidden] { display:none; }
 .ep-t { font-size:18px; font-weight:700; margin-bottom:8px; }
@@ -2046,5 +2055,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="version.js"></script><script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=11"></script><script src="listas-ui.js?v=5"></script><script src="precios-ui.js?v=5"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=6"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="vendedor-ui.js?v=1"></script><script src="real-quote.js?v=20261043"></script><script src="tela-ui.js?v=15"></script><script src="carrito-ui.js?v=14"></script><script src="paso-a-paso.js?v=3"></script><script src="selector-producto.js?v=2"></script><script src="paso-envio.js?v=2"></script><script src="instalar-app.js?v=4"></script></body>
+<script src="version.js"></script><script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=11"></script><script src="listas-ui.js?v=5"></script><script src="precios-ui.js?v=5"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=6"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="vendedor-ui.js?v=1"></script><script src="real-quote.js?v=20261044"></script><script src="tela-ui.js?v=15"></script><script src="carrito-ui.js?v=14"></script><script src="paso-a-paso.js?v=3"></script><script src="selector-producto.js?v=2"></script><script src="paso-envio.js?v=2"></script><script src="instalar-app.js?v=4"></script></body>
 </html>

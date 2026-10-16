@@ -1258,13 +1258,18 @@ function renderMisCotizaciones(){
   el.innerHTML = lista.map(function(c){
     var pill = _ESTATUS_PILL[String(c.estatus || '').toUpperCase()] || [c.estatus, ''];
     var editada = new Date(c.updated_at) - new Date(c.created_at) > 60000;
-    return '<div class="item-card" style="flex-wrap:wrap">'
-      + '<div class="item-info"><strong>' + _esc(c.no_cotizacion) + ' — ' + _esc(c.cliente) + '</strong>'
-      + (c.cliente_enviada_at && c.cliente_enviada_a ? '<small>Enviada a ' + _esc(c.cliente_enviada_a) + '</small>' : '')
-      + '<small>' + _fechaCorta(c.created_at) + ' · ' + c.total_items + ' ítem(s)' + (c.vendedor_nombre ? ' · Vendedor: ' + _esc(c.vendedor_nombre) : '') + (c.precios_version ? ' · precios v' + c.precios_version : '') + (editada ? ' · editada ' + _fechaCorta(c.updated_at) : '') + '</small>'
-      + '<div style="margin-top:4px"><span class="pill ' + pill[1] + '">' + _esc(pill[0]) + '</span>' + (c.vendida ? ' <span class="pill ok">Vendida</span>' : '') + (c.cliente_enviada_at ? ' <span class="pill ok">Enviada al cliente · ' + _fechaCorta(c.cliente_enviada_at) + '</span>' : '') + (c.origen === 'MOVIL' && !c.cliente_enviada_at && !c.vendida && String(c.estatus).toUpperCase() !== 'CONVERTIDA' ? ' <span class="pill sin-enviar">Sin enviar al cliente</span>' : '') + '</div></div>'
-      + '<div style="text-align:right"><strong style="color:#1a6b45;font-size:15px">' + _fmtMoneda(c.total, c.moneda) + '</strong></div>'
-      + '<div style="width:100%;display:flex;gap:6px;justify-content:flex-end">'
+    var corta = function (v) { try { return new Date(v).toLocaleString('es-GT', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; } };
+    var meta = [_fechaCorta(c.created_at), c.total_items + (c.total_items === 1 ? ' ítem' : ' ítems')];
+    if (c.vendedor_nombre) meta.push('Vendedor: ' + _esc(c.vendedor_nombre));
+    if (c.precios_version) meta.push('precios v' + c.precios_version);
+    return '<div class="item-card mc">'
+      + '<div class="mc-top"><strong>' + _esc(c.no_cotizacion) + ' — ' + _esc(c.cliente) + '</strong><span class="mc-tot">' + _fmtMoneda(c.total, c.moneda) + '</span></div>'
+      + '<div class="mc-meta">' + meta.join(' · ') + (editada ? '<br>Editada ' + _fechaCorta(c.updated_at) : '') + '</div>'
+      + (c.cliente_enviada_at && c.cliente_enviada_a ? '<div class="mc-meta">Enviada a ' + _esc(c.cliente_enviada_a) + '</div>' : '')
+      + '<div class="mc-pills"><span class="pill ' + pill[1] + '">' + _esc(pill[0]) + '</span>' + (c.vendida ? '<span class="pill ok">Vendida</span>' : '')
+      + (c.cliente_enviada_at ? '<span class="pill ok">Enviada al cliente · ' + corta(c.cliente_enviada_at) + '</span>' : '')
+      + (c.origen === 'MOVIL' && !c.cliente_enviada_at && !c.vendida && String(c.estatus).toUpperCase() !== 'CONVERTIDA' ? '<span class="pill sin-enviar">Sin enviar al cliente</span>' : '') + '</div>'
+      + '<div class="mc-acts">'
       + '<button class="btn btn-warning btn-sm" onclick="abrirEditar(' + c.id + ')">' + _ic(c.editable ? 'edit' : 'eye') + ' ' + (c.editable ? 'Editar' : 'Ver') + '</button>'
       + '<button class="kebab-m" onclick="abrirAcciones(' + c.id + ')" aria-label="Más acciones">' + _ic('more') + '</button></div></div>';
   }).join('');
