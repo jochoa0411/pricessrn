@@ -97,13 +97,17 @@
   // ── 3) Desplazamiento automático controlado por el usuario ──
   // «Subir al inicio después de agregar un ítem» (menú Más): activado por defecto; apagado, la pantalla se queda donde está.
   function subirActivo() { try { return localStorage.getItem('cotSubirAlAgregar') !== '0'; } catch (e) { return true; } }
-  window.guardarOpcionSubir = function () { var c = $('optSubir'); try { localStorage.setItem('cotSubirAlAgregar', c.checked ? '1' : '0'); } catch (e) {} };
+  window.alternarOpcionSubir = function () {
+    var b = $('optSubir'), on = b.getAttribute('aria-checked') !== 'true';
+    b.setAttribute('aria-checked', on ? 'true' : 'false');
+    try { localStorage.setItem('cotSubirAlAgregar', on ? '1' : '0'); } catch (e) {}
+  };
   function montarOpcionScroll() {
     var foot = document.querySelector('#sidebar .nv-foot'); if (!foot || $('optSubir')) return;
-    var l = document.createElement('label'); l.className = 'nv-opt'; l.setAttribute('for', 'optSubir');
-    l.innerHTML = '<input type="checkbox" id="optSubir" onchange="guardarOpcionSubir()"><span>Subir al inicio después de agregar un ítem</span>';
+    var l = document.createElement('div'); l.className = 'nv-opt';
+    l.innerHTML = '<div class="nv-opt-t"><b id="optSubirT">Volver arriba al agregar</b><small>Después de agregar un producto, la pantalla sube al inicio para agregar el siguiente.</small></div>'
+      + '<button type="button" id="optSubir" class="sw" role="switch" aria-labelledby="optSubirT" aria-checked="' + (subirActivo() ? 'true' : 'false') + '" onclick="alternarOpcionSubir()"><i></i></button>';
     foot.insertBefore(l, foot.firstChild);
-    $('optSubir').checked = subirActivo();
   }
   LGM.on('item:agregado', function (ev) {
     if (ev.actualizado || !subirActivo()) return;

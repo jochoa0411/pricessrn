@@ -280,8 +280,17 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 .hc-s { font-size: 13px; font-weight: 600; color: #555; }
 .hc-n { font-size: 17px; color: #14432a; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hc-n i { font-style: normal; color: #1a6b45; }
-.nv-opt { display: flex; gap: 12px; align-items: flex-start; padding: 12px 18px; font-size: 15px; color: #1d1d1f; cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 500; }
-.nv-opt input { width: 24px; height: 24px; min-height: 0; margin: 0; flex: none; accent-color: #1a6b45; }
+.nv-opt { display: flex; gap: 14px; align-items: center; justify-content: space-between; padding: 14px 18px; color: #1d1d1f; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; border-bottom: 1px solid #ececf0; }
+.nv-opt-t { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.nv-opt-t b { font-size: 16px; font-weight: 700; }
+.nv-opt-t small { font-size: 14px; color: #555; line-height: 1.35; }
+.sw { position: relative; flex: none; width: 56px; height: 34px; min-height: 0; padding: 0; border: none; border-radius: 17px; background: #c7c7cc; cursor: pointer; transition: background .2s; -webkit-appearance: none; appearance: none; }
+.sw i { position: absolute; top: 3px; left: 3px; width: 28px; height: 28px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.3); transition: transform .2s; }
+.sw[aria-checked="true"] { background: #1a6b45; }
+.sw[aria-checked="true"] i { transform: translateX(22px); }
+.nv-ver { display: block; width: 100%; padding: 10px 18px 2px; border: none; background: none; text-align: left; font-family: inherit; color: #3a3a3c; cursor: pointer; }
+.nv-ver b { display: block; font-size: 15px; } .nv-ver small { display: block; font-size: 14px; color: #6b6b70; margin-top: 2px; }
+.nv-det { padding: 4px 18px 10px; font-size: 13px; color: #6b6b70; }
 .cli-resumen { display: none; align-items: center; gap: 12px; padding: 2px 0 8px; }
 .cli-card.compacto .cli-resumen { display: flex; }
 .cli-card.compacto { padding-top: 12px; padding-bottom: 12px; }
@@ -809,7 +818,8 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
       <span class="nv-badge" id="navBadgeMis" style="display:none"></span>
     </div>
     <div class="nv-foot">
-      <div id="navModo" style="font-size:14px;color:#555;padding:0 4px 10px"></div>
+      <button type="button" class="nv-ver" id="navVersion" onclick="document.getElementById('navModo').hidden=!document.getElementById('navModo').hidden" aria-label="Versión de la aplicación. Toca para ver detalles técnicos"><b id="navVerT"></b><small id="navVerF"></small></button>
+      <div id="navModo" class="nv-det" hidden></div>
       <button type="button" class="nv-salir" onclick="cerrarSesionManual()"><span class="ic" data-ic="logout"></span> Cerrar sesión</button>
     </div>
   </div>
@@ -1392,7 +1402,10 @@ function abrirSeccion(sec, el){
     const sinBorde = !standalone && hueco > 40;
     r.style.setProperty('--safe-b', sinBorde ? '0px' : 'env(safe-area-inset-bottom)');
     const t = document.getElementById('navModo');
-    if(t) t.textContent = (standalone ? 'Abierta como app' : 'Abierta en el navegador') + ' · ' + window.innerWidth + '×' + window.innerHeight + ' · versión de pantalla 10-oct-D';
+    if(t) t.textContent = (standalone ? 'Abierta como app' : 'Abierta en el navegador') + ' · pantalla ' + window.innerWidth + '×' + window.innerHeight;
+    const V = window.APP_VERSION || {}, vt = document.getElementById('navVerT'), vf = document.getElementById('navVerF');
+    if(vt) vt.textContent = 'Versión ' + (V.version || '—') + ' · compilación ' + (V.build || '—');
+    if(vf) vf.textContent = (V.fecha ? new Date(V.fecha + 'T12:00:00').toLocaleDateString('es-GT', { day: 'numeric', month: 'short', year: 'numeric' }) : '') + (V.nota ? ' · ' + V.nota : '');
   }
   window.addEventListener('load', zona); window.addEventListener('resize', zona); window.addEventListener('orientationchange', zona);
   window.addEventListener('load', med); window.addEventListener('resize', med); window.addEventListener('orientationchange', med);
@@ -1952,5 +1965,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=10"></script><script src="listas-ui.js?v=4"></script><script src="precios-ui.js?v=4"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=3"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="vendedor-ui.js?v=1"></script><script src="real-quote.js?v=20261037"></script><script src="tela-ui.js?v=12"></script><script src="carrito-ui.js?v=13"></script></body>
+<script src="version.js"></script><script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=10"></script><script src="listas-ui.js?v=4"></script><script src="precios-ui.js?v=4"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=4"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="vendedor-ui.js?v=1"></script><script src="real-quote.js?v=20261037"></script><script src="tela-ui.js?v=12"></script><script src="carrito-ui.js?v=13"></script></body>
 </html>
