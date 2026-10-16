@@ -1319,13 +1319,15 @@ async function accionPdf(id, modo){
   try {
     var r = await _api('/mis/' + id + '/pdf-link', { method: 'POST' });
     if (!r.ok) { toast(r.data.error || 'No se pudo preparar el PDF', 'err'); return; }
-    var url = COT_API_BASE + '/api/ventas/cotizaciones-publicas/pdf/' + r.data.token;
+    // El nombre del archivo va como último tramo del enlace (igual al que se descarga en el PFS): el visor del teléfono y «Guardar» lo usan
+    var url = COT_API_BASE + '/api/ventas/cotizaciones-publicas/pdf/' + r.data.token + (r.data.archivo ? '/' + encodeURIComponent(r.data.archivo) : '');
     var imprimir = modo === 'imprimir';
     document.getElementById('mpdfTitle').textContent = (imprimir ? 'Imprimir ' : 'Descargar ') + (c.no_cotizacion || 'cotización');
     var abrir = document.getElementById('mpdfAbrir'), desc = document.getElementById('mpdfDescargar');
     abrir.href = url;
     abrir.innerHTML = imprimir ? _ic('print') + ' Abrir para imprimir' : _ic('eye') + ' Abrir PDF';
     desc.href = url + '?descargar=1';
+    if (r.data.archivo) desc.setAttribute('download', r.data.archivo);
     desc.innerHTML = _ic('download') + ' Descargar PDF';
     // La acción pedida va primero y resaltada
     abrir.className = 'btn btn-block ' + (imprimir ? 'btn-success' : 'btn-ghost');
