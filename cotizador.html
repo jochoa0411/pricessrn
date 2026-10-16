@@ -273,6 +273,22 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 
 /* ── Formulario de telas (estilo HIG: secciones numeradas, tarjetas de modalidad, unidades segmentadas) ── */
 .tl-card { padding:14px 14px 16px; }
+.cli-card.compacto > *:not(.cli-resumen):not(.opt-row) { display: none !important; }
+.cli-resumen { display: none; align-items: center; gap: 12px; padding: 2px 0 8px; }
+.cli-card.compacto .cli-resumen { display: flex; }
+.cli-card.compacto { padding-top: 12px; padding-bottom: 12px; }
+.cli-resumen .ic svg { width: 24px; height: 24px; color: #1a6b45; }
+.cli-res-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cli-res-n { font-size: 18px; color: #14432a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cli-res-d { font-size: 14px; color: #555; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cli-res-b { min-height: 48px; padding: 0 16px; border: 1.5px solid #1a6b45; border-radius: 12px; background: #fff; color: #1a6b45; font-size: 16px; font-weight: 700; }
+.cart-bar { position: fixed; left: 0; right: 0; bottom: var(--nav-h, 72px); z-index: 41; align-items: center; gap: 12px; padding: 10px 14px; background: rgba(255,255,255,.97); border-top: 1px solid #e5e5ea; box-shadow: 0 -6px 20px rgba(0,0,0,.08); }
+.cart-bar-i { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cart-bar-n { font-size: 14px; color: #555; }
+.cart-bar-t { font-size: 20px; color: #14432a; font-variant-numeric: tabular-nums; }
+.cart-bar-b { min-height: 52px; padding: 0 18px; border: none; border-radius: 12px; background: #1a6b45; color: #fff; font-size: 17px; font-weight: 700; flex: none; }
+body.cartbar-on #appShell .content { padding-bottom: 100px; }
+@media (min-width: 701px) { .cart-bar { max-width: 700px; margin: 0 auto; } }
 .cx-igual { margin-top:8px; padding:10px 12px; border:1.5px solid #e0a23a; background:#fff8ea; border-radius:10px; font-size:15px; line-height:1.45; color:#5b3a00; }
 .cx-igual .ic svg { width:15px; height:15px; vertical-align:-2px; }
 .cx-igual-b { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
@@ -1876,5 +1892,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=9"></script><script src="listas-ui.js?v=4"></script><script src="precios-ui.js?v=4"></script><script src="medidas-iguales.js?v=1"></script><script src="real-quote.js?v=20261031"></script><script src="tela-ui.js?v=10"></script><script src="carrito-ui.js?v=8"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=9"></script><script src="listas-ui.js?v=4"></script><script src="precios-ui.js?v=4"></script><script src="medidas-iguales.js?v=1"></script><script src="flujo-compacto.js?v=1"></script><script src="real-quote.js?v=20261032"></script><script src="tela-ui.js?v=10"></script><script src="carrito-ui.js?v=9"></script></body>
 </html>

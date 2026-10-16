@@ -95,6 +95,7 @@
       list.innerHTML = '<div class="cx-vacio">' + ic('clipboard') + '<div>Aún no hay ítems</div><small>Configura una tela o un saco arriba y toca «Agregar».</small></div>';
       footer.style.display = 'none';
       badgeCarrito();
+      LGM.emit('carrito:render');
       return;
     }
     list.innerHTML = CARRITO.map(fila).join('')
@@ -116,6 +117,7 @@
     footer.style.display = 'block';
     if (typeof syncTelaUI === 'function') syncTelaUI();
     badgeCarrito();
+    LGM.emit('carrito:render');
   };
 
   // ── Cantidad en la fila ──

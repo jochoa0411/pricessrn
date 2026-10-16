@@ -523,7 +523,7 @@ async function consultarNit(){
     nitEl.value = 'CF';
     _actualizarGuardarClienteCard();
     toast(document.getElementById('cotCliente').value.trim() ? 'Consumidor final (CF) — se conserva el nombre' : 'Consumidor final (CF) — escribe el nombre del cliente');
-    if (!document.getElementById('cotCliente').value.trim()) document.getElementById('cotCliente').focus();
+    if (!document.getElementById('cotCliente').value.trim()) { if (window.expandirCliente) expandirCliente(); document.getElementById('cotCliente').focus(); }
     return;
   }
 
@@ -945,6 +945,7 @@ function abrirModalEnviarReal(){
   var clienteEl = document.getElementById('cotCliente');
   if (!clienteEl.value.trim()) {
     toast('Ingresa el nombre del cliente — no podemos cotizarle a nadie', 'err');
+    if (window.expandirCliente) expandirCliente(true);
     clienteEl.focus();
     return;
   }
@@ -1053,6 +1054,7 @@ async function generarCotizacionReal(){
   var cliente = document.getElementById('cotCliente').value.trim();
   if (!cliente) {
     toast('Ingresa el nombre del cliente — no podemos cotizarle a nadie', 'err');
+    if (window.expandirCliente) expandirCliente(true);
     document.getElementById('cotCliente').focus();
     return;
   }
