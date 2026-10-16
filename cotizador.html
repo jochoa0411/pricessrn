@@ -273,7 +273,15 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 
 /* ── Formulario de telas (estilo HIG: secciones numeradas, tarjetas de modalidad, unidades segmentadas) ── */
 .tl-card { padding:14px 14px 16px; }
-.cli-card.compacto > *:not(.cli-resumen):not(.opt-row) { display: none !important; }
+.cli-card.compacto > *:not(.opt-row) { display: none !important; }
+.cli-card.compacto { padding: 8px 12px; margin-bottom: 8px; }
+.cli-card.compacto .opt-row { margin: 0; }
+#appShell header h1.hc-cli { cursor: pointer; line-height: 1.15; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.hc-s { font-size: 13px; font-weight: 600; color: #555; }
+.hc-n { font-size: 17px; color: #14432a; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hc-n i { font-style: normal; color: #1a6b45; }
+.nv-opt { display: flex; gap: 12px; align-items: flex-start; padding: 12px 18px; font-size: 15px; color: #1d1d1f; cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 500; }
+.nv-opt input { width: 24px; height: 24px; min-height: 0; margin: 0; flex: none; accent-color: #1a6b45; }
 .cli-resumen { display: none; align-items: center; gap: 12px; padding: 2px 0 8px; }
 .cli-card.compacto .cli-resumen { display: flex; }
 .cli-card.compacto { padding-top: 12px; padding-bottom: 12px; }
@@ -1942,5 +1950,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=10"></script><script src="listas-ui.js?v=4"></script><script src="precios-ui.js?v=4"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=2"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="real-quote.js?v=20261035"></script><script src="tela-ui.js?v=12"></script><script src="carrito-ui.js?v=13"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=10"></script><script src="listas-ui.js?v=4"></script><script src="precios-ui.js?v=4"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=3"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="real-quote.js?v=20261035"></script><script src="tela-ui.js?v=12"></script><script src="carrito-ui.js?v=13"></script></body>
 </html>

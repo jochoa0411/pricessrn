@@ -10,37 +10,57 @@
   var card = function () { return document.querySelector('#cotizar .cli-card'); };
 
   // ── 1) Cliente compacto ──
-  function pintarResumen() {
-    var c = card(), r = $('cliResumen'); if (!c || !r) return;
-    var nombre = $('cotCliente').value.trim(), nit = $('cotNit').value.trim();
-    var est = $('cliEstado'), estTxt = est && est.style.display !== 'none' ? est.textContent.trim() : '';
-    r.querySelector('.cli-res-n').textContent = nombre;
-    r.querySelector('.cli-res-d').textContent = [nit ? 'NIT ' + nit : 'Sin NIT', estTxt].filter(Boolean).join(' · ');
+  // El nombre del cliente pasa al ENCABEZADO («Cotizando a · NOMBRE ✎») y la tarjeta se reduce a la fila del IVA: todo el espacio
+  // de la pantalla queda para la cotización. Tocar el encabezado la vuelve a abrir.
+  var TITULO = 'Cotizador LGM';
+  function titulo() { return document.querySelector('#appShell header h1'); }
+  function pintarTitulo(compacto) {
+    var h1 = titulo(); if (!h1) return;
+    if (compacto) {
+      var nombre = $('cotCliente').value.trim();
+      h1.innerHTML = '<span class="hc-s">Cotizando a</span><b class="hc-n">' + esc(nombre) + ' <i aria-hidden="true">✎</i></b>';
+      h1.classList.add('hc-cli'); h1.setAttribute('role', 'button'); h1.setAttribute('tabindex', '0');
+      h1.setAttribute('aria-label', 'Cotizando a ' + nombre + '. Toca para cambiar el cliente');
+    } else {
+      h1.textContent = TITULO; h1.classList.remove('hc-cli'); h1.removeAttribute('role'); h1.removeAttribute('tabindex'); h1.removeAttribute('aria-label');
+    }
+  }
+  // Mantiene en su sitio lo que el usuario está mirando cuando la tarjeta cambia de alto (iOS no tiene «scroll anchoring»)
+  function conservarPosicion(fn, ancla) {
+    var cont = document.querySelector('.content');
+    var a = ancla || (document.activeElement && document.activeElement !== document.body ? document.activeElement : document.querySelector('#cotizar .tabs'));
+    var antes = a && a.getBoundingClientRect ? a.getBoundingClientRect().top : null;
+    fn();
+    if (antes != null && cont) { var desp = a.getBoundingClientRect().top - antes; if (Math.abs(desp) > 1) cont.scrollTop += desp; }
   }
   window.compactarCliente = function () {
-    var c = card(); if (!c || !$('cotCliente').value.trim()) return;
-    pintarResumen(); c.classList.add('compacto');
+    var c = card(); if (!c || !$('cotCliente').value.trim() || c.classList.contains('compacto')) { if (c && c.classList.contains('compacto')) pintarTitulo(true); return; }
+    conservarPosicion(function () { c.classList.add('compacto'); });
+    pintarTitulo(true);
   };
   window.expandirCliente = function (enfocar) {
     var c = card(); if (!c) return;
+    pintarTitulo(false);
     c.classList.remove('compacto');
-    if (enfocar) { var i = $('cotCliente'); if (i) { c.scrollIntoView({ block: 'start', behavior: 'smooth' }); setTimeout(function () { i.focus(); }, 120); } }
+    if (enfocar) {
+      var i = $('cotCliente'), cont = document.querySelector('.content');
+      if (cont) cont.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(function () { if (i) i.focus({ preventScroll: true }); }, 150);
+    }
   };
-  function montarResumen() {
-    var c = card(); if (!c || $('cliResumen')) return;
-    var r = document.createElement('div');
-    r.id = 'cliResumen'; r.className = 'cli-resumen';
-    r.innerHTML = '<span class="ic" data-ic="user"></span><div class="cli-res-t"><b class="cli-res-n"></b><small class="cli-res-d"></small></div>'
-      + '<button type="button" class="cli-res-b" onclick="expandirCliente(true)">Cambiar</button>';
-    c.insertBefore(r, c.firstChild);
-    if (typeof _hidratarIconos === 'function') _hidratarIconos();
-  }
+  document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('#appShell header h1.hc-cli')) expandirCliente(true); });
+  document.addEventListener('keydown', function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('hc-cli')) { e.preventDefault(); expandirCliente(true); } });
   // «Avanzar» = tocar algo del formulario de la cotización (material, saco, pestañas…) estando el cliente ya escrito
   document.addEventListener('focusin', function (e) {
     var t = e.target, c = card(); if (!c || !t || c.contains(t)) return;
     if (t.closest && (t.closest('#cot-tela') || t.closest('#cot-saco') || t.closest('.tabs'))) compactarCliente();
   });
-  LGM.on('vista:cambio', function () { var s = $('cotizar'); if (s && s.classList.contains('active')) compactarCliente(); });
+  // En otras secciones el encabezado vuelve a decir «Cotizador LGM»; al regresar a Cotizar se vuelve a mostrar el cliente
+  LGM.on('vista:cambio', function () {
+    var s = $('cotizar'), c = card(); if (!s || !c) return;
+    if (s.classList.contains('active')) { if (c.classList.contains('compacto')) pintarTitulo(true); else compactarCliente(); }
+    else pintarTitulo(false);
+  });
   LGM.on('item:agregado', function () { compactarCliente(); });
 
   // ── 2) Barra del presupuesto ──
@@ -74,14 +94,24 @@
   LGM.on('vista:cambio', actualizarBarra);
   new MutationObserver(actualizarBarra).observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
-  // ── 3) Tras agregar, volver al inicio para el siguiente ítem ──
+  // ── 3) Desplazamiento automático controlado por el usuario ──
+  // «Subir al inicio después de agregar un ítem» (menú Más): activado por defecto; apagado, la pantalla se queda donde está.
+  function subirActivo() { try { return localStorage.getItem('cotSubirAlAgregar') !== '0'; } catch (e) { return true; } }
+  window.guardarOpcionSubir = function () { var c = $('optSubir'); try { localStorage.setItem('cotSubirAlAgregar', c.checked ? '1' : '0'); } catch (e) {} };
+  function montarOpcionScroll() {
+    var foot = document.querySelector('#sidebar .nv-foot'); if (!foot || $('optSubir')) return;
+    var l = document.createElement('label'); l.className = 'nv-opt'; l.setAttribute('for', 'optSubir');
+    l.innerHTML = '<input type="checkbox" id="optSubir" onchange="guardarOpcionSubir()"><span>Subir al inicio después de agregar un ítem</span>';
+    foot.insertBefore(l, foot.firstChild);
+    $('optSubir').checked = subirActivo();
+  }
   LGM.on('item:agregado', function (ev) {
-    if (ev.actualizado) return;
+    if (ev.actualizado || !subirActivo()) return;
     setTimeout(function () { var c = document.querySelector('.content'); if (c) c.scrollTo({ top: 0, behavior: 'smooth' }); }, 60);
   });
 
   window.addEventListener('load', function () {
-    montarResumen(); montarBarra();
+    montarBarra(); montarOpcionScroll();
     var tb = $('tlBar'), shell = $('appShell');
     if (tb && shell && tb.parentNode !== shell) shell.appendChild(tb);   // la barra de totales de la tela también va dentro de la columna
     var w = document.querySelector('#cotizar .cart-wrap'), root = document.querySelector('.content');
