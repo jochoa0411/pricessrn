@@ -176,14 +176,14 @@ async function generarPDF(){
     overlay.id = 'pdfOverlay';
     overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#e8e8e8;overflow-y:auto;';
     var tb = document.createElement('div');
-    tb.style.cssText = 'display:flex;gap:10px;padding:12px 16px;position:sticky;top:0;background:#1a6b45;z-index:1;';
+    tb.style.cssText = 'display:flex;gap:10px;align-items:center;padding:calc(env(safe-area-inset-top, 0px) + 10px) 16px 10px;position:sticky;top:0;background:#1a6b45;z-index:2;';
     var bC = document.createElement('button');
     bC.textContent = '\u2190 Volver';
-    bC.style.cssText = 'padding:10px 20px;background:rgba(255,255,255,0.2);color:white;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;';
+    bC.style.cssText = 'min-height:48px;padding:0 20px;background:rgba(255,255,255,0.2);color:white;border:none;border-radius:10px;font-weight:700;font-size:16px;cursor:pointer;';
     bC.onclick = function(){ overlay.remove(); };
     var bP = document.createElement('button');
     bP.textContent = 'Imprimir / Guardar PDF';
-    bP.style.cssText = 'padding:10px 20px;background:white;color:#1a6b45;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;';
+    bP.style.cssText = 'min-height:48px;padding:0 20px;background:white;color:#1a6b45;border:none;border-radius:10px;font-weight:700;font-size:16px;cursor:pointer;flex:1;';
     bP.onclick = function(){ imprimirPdfLocal(pdfHtmlDesk, ref, bP); };
     tb.appendChild(bC); tb.appendChild(bP);
     overlay.appendChild(tb);
