@@ -112,9 +112,9 @@ async function generarPDF(){
       var difiere = Math.abs(aCobFt - aSolFt) > 0.01;
       var par = function(a_m,l_m,a_ft,l_ft){ return n1(a_m,2)+' m × '+n1(l_m,2)+' m <span style="color:#888;">('+n1(a_ft,1)+' ft × '+n1(l_ft,1)+' ft)</span>'; };
       var calcTxt = n1(aCobFt,1)+' ft × '+n1(lFt,1)+' ft = <b>'+n1(arCorte,1)+' pie²</b> <span style="color:#888;">('+n1(arCorte/M2,2)+' m²)</span>'
-        + (cant>1 ? '<br>× '+cant+' cortes = <b>'+n1(arTot,1)+' pie²</b> <span style="color:#888;">('+n1(arTot/M2,2)+' m²)</span>' : '');
+        + (cant>1 ? '<br>× '+cant+' piezas = <b>'+n1(arTot,1)+' pie²</b> <span style="color:#888;">('+n1(arTot/M2,2)+' m²)</span>' : '');
       var unitUsd = arCorte * (item.p || 0);
-      var unitTxt = '<b>$'+n1(unitUsd,2)+'</b>'+(item.tc ? '<br><span style="color:#555;">Q'+n1(unitUsd*item.tc,2)+'</span>' : '')+'<br><span style="font-size:9px;color:#888;">por corte</span>';
+      var unitTxt = '<b>$'+n1(unitUsd,2)+'</b>'+(item.tc ? '<br><span style="color:#555;">Q'+n1(unitUsd*item.tc,2)+'</span>' : '')+'<br><span style="font-size:9px;color:#888;">por pieza</span>';
       filas += '<tr>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;color:#bbb;font-size:10px;">'+(idx+1)+'</td>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;"><strong style="color:#1a6b45;">'+(cant>1?cant+'× ':'')+item.nombre+'</strong><br><small style="color:#888;">'+(item.modo==='master'?'Rollo Master':'Confeccionado'+(window.tlAcabadoTxt&&tlAcabadoTxt(item)?' · '+tlAcabadoTxt(item):''))+(item.recargo?' · Rec/Desc '+item.recargo+'%':'')+'</small></td>'

@@ -289,6 +289,13 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 .cart-bar-b { min-height: 52px; padding: 0 18px; border: none; border-radius: 12px; background: #1a6b45; color: #fff; font-size: 17px; font-weight: 700; flex: none; }
 body.cartbar-on #appShell .content { padding-bottom: 100px; }
 @media (min-width: 701px) { .cart-bar { max-width: 700px; margin: 0 auto; } }
+.cx-tot-b { border:none; background:none; text-align:right; display:flex; flex-direction:column; align-items:flex-end; padding:2px 0 2px 8px; min-height:48px; cursor:pointer; font-family:inherit; }
+.cx-tot-b small { font-size:13px; font-weight:600; color:#1a6b45; text-decoration:underline; display:inline-flex; gap:4px; align-items:center; }
+.cx-tot-b small .ic svg { width:12px; height:12px; }
+.cx-nota.fijo { color:#14432a; }
+.pf-cab { display:flex; flex-direction:column; gap:2px; margin-bottom:10px; } .pf-cab b { font-size:18px; color:#14432a; } .pf-cab span { font-size:15px; color:#555; }
+.pf-calc { margin:6px 0 12px; padding:12px; border-radius:10px; background:#f0f9f5; border:1px solid #c8e6c9; font-size:16px; line-height:1.7; color:#1d1d1f; }
+.pf-calc span { color:#555; font-size:14px; }
 .cx-igual { margin-top:8px; padding:10px 12px; border:1.5px solid #e0a23a; background:#fff8ea; border-radius:10px; font-size:15px; line-height:1.45; color:#5b3a00; }
 .cx-igual .ic svg { width:15px; height:15px; vertical-align:-2px; }
 .cx-igual-b { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
@@ -853,8 +860,8 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
           </div>
 
           <div class="tl-sec" id="tlAcabado" style="display:none">
-            <div class="tl-h">Acabado <small>OR = ojetes y rebete</small></div>
-            <div class="tl-presets" role="group" aria-label="Ojetes y rebete">
+            <div class="tl-h">Acabado <small>OR = ojetes y ribete</small></div>
+            <div class="tl-presets" role="group" aria-label="Ojetes y ribete">
               <button type="button" id="tlOrSi" onclick="tlOR(true)">Con OR</button>
               <button type="button" id="tlOrNo" onclick="tlOR(false)">Sin OR</button>
             </div>
@@ -873,7 +880,7 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
           </div>
 
           <div class="tl-sec">
-            <div class="tl-h"><span class="tl-n">3</span> Medidas del corte</div>
+            <div class="tl-h"><span class="tl-n">3</span> Medidas de la pieza</div>
             <div class="tl-presets">
               <button type="button" onclick="tlPreset('ft','m')" id="tlPreHib">Híbrido ft · m</button>
               <button type="button" onclick="tlPreset('m','m')" id="tlPreM">Todo m</button>
@@ -908,7 +915,7 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
 
           <div class="tl-sec tl-2col">
             <div>
-              <div class="tl-h"><span class="tl-n">4</span> Cortes</div>
+              <div class="tl-h"><span class="tl-n">4</span> Piezas</div>
               <div class="tl-step">
                 <button type="button" onclick="tlQty(-1)" aria-label="Menos">−</button>
                 <input type="number" id="cotCantTela" value="1" min="1" step="1" inputmode="numeric" oninput="cotCalcTela()">
@@ -960,9 +967,9 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
             <div id="warnTela"></div>
             <div class="resultado-row"><span>Ancho solicitado</span><strong id="rAnchoSol">—</strong></div>
             <div class="resultado-row"><span>Ancho cobrado (múlt. 6ft)</span><strong id="rAnchoCob">—</strong></div>
-            <div class="resultado-row"><span>Largo por corte</span><strong id="rLargo">—</strong></div>
-            <div class="resultado-row"><span>Área por corte</span><strong id="rAreaCorte">—</strong></div>
-            <div id="rCantFilaTela" class="resultado-row"><span>Cantidad de cortes</span><strong id="rCantTela">—</strong></div>
+            <div class="resultado-row"><span>Largo por pieza</span><strong id="rLargo">—</strong></div>
+            <div class="resultado-row"><span>Área por pieza</span><strong id="rAreaCorte">—</strong></div>
+            <div id="rCantFilaTela" class="resultado-row"><span>Cantidad de piezas</span><strong id="rCantTela">—</strong></div>
             <div class="resultado-row"><span>Área total facturada</span><strong id="rArea">—</strong></div>
             <div class="resultado-row"><span>Precio/pie²</span><strong id="rPrecio">—</strong></div>
             <div class="resultado-row"><span>Total USD</span><strong id="rUsd">—</strong></div>
@@ -1166,6 +1173,24 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
     <div class="field"><label>Se enviará a</label><div id="mreVendedor" style="padding:12px;background:#f4f4f5;border-radius:10px;font-weight:600;color:#1a6b45;"></div></div>
     <div class="field"><label>Enviar también al cliente (déjalo vacío para recibirla solo tú)</label><input type="email" id="mreClienteCorreo" placeholder="cliente@empresa.com"></div>
     <div class="modal-btns"><button class="btn btn-success btn-block" id="btnMreEnviar" onclick="confirmarReenvio()"><span class="ic" data-ic="mail"></span> Enviar</button></div>
+  </div>
+</div>
+
+<!-- PRECIO FINAL DE UNA LÍNEA -->
+<div id="modalPrecioFinal" class="modal hidden" onclick="if(event.target===this)cerrarPrecioFinal()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Precio final de la línea</div>
+      <span class="modal-close" onclick="cerrarPrecioFinal()">×</span>
+    </div>
+    <div class="pf-cab"><b id="pfTitulo"></b><span id="pfDetalle"></span></div>
+    <div class="field"><label id="pfLbl" for="pfInput">Precio final de la línea</label>
+      <input type="text" id="pfInput" inputmode="decimal" autocomplete="off" oninput="pfVista()" onkeydown="if(event.key==='Enter'){event.preventDefault();aplicarPrecioFinal();}"></div>
+    <div id="pfCalc" class="pf-calc"></div>
+    <div class="modal-btns" style="flex-direction:column">
+      <button class="btn btn-success btn-block" id="pfOk" onclick="aplicarPrecioFinal()">Aplicar este precio</button>
+      <button class="btn btn-ghost btn-block" id="pfLista" onclick="volverPrecioLista()" style="display:none">Volver al precio de lista</button>
+    </div>
   </div>
 </div>
 
@@ -1502,7 +1527,7 @@ function _cotCalcTelaBase(){
   document.getElementById('rLargo').textContent     = ul==='m' ? `${(lFt/MT).toFixed(2)} m (${lFt.toFixed(1)} ft)` : `${lFt.toFixed(1)} ft`;
   document.getElementById('rAreaCorte').textContent = arCorte.toFixed(1)+' pie²';
   document.getElementById('rCantFilaTela').style.display = cant > 1 ? 'flex' : 'none';
-  document.getElementById('rCantTela').textContent  = cant+' cortes';
+  document.getElementById('rCantTela').textContent  = cant+' piezas';
   document.getElementById('rArea').textContent      = ar.toFixed(1)+' pie²'+(cant>1?' (total)':'');
   document.getElementById('rPrecio').textContent    = '$'+p.toFixed(3)+'/pie²';
   document.getElementById('rUsd').textContent       = '$'+tu.toFixed(2);
@@ -1541,7 +1566,7 @@ function _cotCalcTelaBase(){
   const warn = document.getElementById('warnTela');
   const desperdicio = aC - aFt;
   if(desperdicio > 0.05){
-    warn.innerHTML = `<div class="warn-box">${_ic('warn')} Ancho ${ua==='m'?a.toFixed(2)+' m':aFt.toFixed(1)+' ft'} → cobrado ${fmtA(aC,ua)} (múltiplo de 6 ft). ${cant>1?cant+' cortes × ':''}${desperdicio.toFixed(1)} ft desperdicio c/u.</div>`;
+    warn.innerHTML = `<div class="warn-box">${_ic('warn')} Ancho ${ua==='m'?a.toFixed(2)+' m':aFt.toFixed(1)+' ft'} → cobrado ${fmtA(aC,ua)} (múltiplo de 6 ft). ${cant>1?cant+' piezas × ':''}${desperdicio.toFixed(1)} ft desperdicio c/u.</div>`;
   } else { warn.innerHTML = ''; }
 
   res.classList.add('show');
@@ -1892,5 +1917,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=9"></script><script src="listas-ui.js?v=4"></script><script src="precios-ui.js?v=4"></script><script src="medidas-iguales.js?v=1"></script><script src="flujo-compacto.js?v=1"></script><script src="real-quote.js?v=20261032"></script><script src="tela-ui.js?v=10"></script><script src="carrito-ui.js?v=9"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=10"></script><script src="listas-ui.js?v=4"></script><script src="precios-ui.js?v=4"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=1"></script><script src="precio-final.js?v=1"></script><script src="real-quote.js?v=20261034"></script><script src="tela-ui.js?v=12"></script><script src="carrito-ui.js?v=11"></script></body>
 </html>

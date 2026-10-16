@@ -602,7 +602,7 @@ function _construirItemsCotizacionReal(){
           precio_unitario: precioSqft,
         };
       }
-      // Confeccionado: pieza terminada (con ojetes/rebete) — se cotiza por unidad,
+      // Confeccionado: pieza terminada (con ojetes/ribete) — se cotiza por unidad,
       // no por área; el precio unitario es el total de UNA pieza de esa medida.
       return {
         descripcion: tlDescripcionLinea(item, medida),
@@ -700,7 +700,7 @@ function _calculosPendientes(){
   var rt = document.getElementById('cotResTela');
   var selT = document.getElementById('cotTelaSelect');
   if (selT && selT.value && rt && rt.classList.contains('show') && _firmaTela() !== _ultimaFirmaTela) {
-    var cortes = Number(_vv('cotCantTela')) > 1 ? ' (' + _vv('cotCantTela') + ' cortes)' : '';
+    var cortes = Number(_vv('cotCantTela')) > 1 ? ' (' + _vv('cotCantTela') + ' piezas)' : '';
     out.push({ tipo: 'tela', desc: selT.options[selT.selectedIndex].text + ' — ' + _vv('cotAncho') + ' ' + _vv('cotUAncho') + ' × ' + _vv('cotLargo') + ' ' + _vv('cotULargo') + cortes });
   }
   var rs = document.getElementById('cotResSaco');
@@ -1208,7 +1208,7 @@ function renderMisCotizaciones(){
   }).join('');
 }
 
-// ── Hoja de cálculo de una cotización: cómo se costeó (anchos, largos, cortes, TC, recargo…) ──
+// ── Hoja de cálculo de una cotización: cómo se costeó (anchos, largos, piezas, TC, recargo…) ──
 var _calc = null;   // { items, no }
 function cerrarModalCalculo(){ document.getElementById('modalCalculo').classList.add('hidden'); _calc = null; }
 
@@ -1224,9 +1224,9 @@ function _htmlCalculoItem(i){
     h += '<h5>' + _ic('fabric') + ' ' + _esc(i.nombre) + ' · ' + (i.modo === 'master' ? 'Rollo Master' : 'Confeccionado') + '</h5>'
       + _filaCalc('Ancho solicitado', _medida(i.aSolFt, i.aSolM, i.ua === 'm'))
       + _filaCalc('Ancho cobrado (múltiplo de 6 ft)', _medida(i.aCobFt, i.aCobM, i.ua === 'm') + (difiere ? ' ⟵ ajustado' : ''))
-      + _filaCalc('Largo por corte', _medida(i.lFt, i.lM, i.ul === 'm'))
-      + _filaCalc('Cortes', _fmtN(i.cant || 1, 0))
-      + _filaCalc('Área por corte', _fmtN(i.arCorte, 1) + ' pie²')
+      + _filaCalc('Largo por pieza', _medida(i.lFt, i.lM, i.ul === 'm'))
+      + _filaCalc('Piezas', _fmtN(i.cant || 1, 0))
+      + _filaCalc('Área por pieza', _fmtN(i.arCorte, 1) + ' pie²')
       + _filaCalc('Área total facturada', _fmtN(i.ar, 1) + ' pie²')
       + _filaCalc(i.precioManual ? 'Precio manual' : 'Precio de lista', '$' + _fmtN(base, 3) + ' /pie²')
       + (i.recargo ? _filaCalc('Recargo / descuento', (i.recargo > 0 ? '+' : '') + _fmtN(i.recargo, 1) + ' %') : '')

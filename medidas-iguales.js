@@ -36,7 +36,7 @@ var K_DESP_SUGERIDO = 0.5;      // 0 = solo lo que recibe el cliente · 1 = todo
     for (var i = 0; i < gs.length; i++) if (gs[i].indexOf(it) >= 0) return gs[i];
     return null;
   }
-  // Precio sugerido por corte (en la moneda de la línea): (terminado + K × desperdicio) × tarifa
+  // Precio sugerido por pieza (en la moneda de la línea): (terminado + K × desperdicio) × tarifa
   function sugerencia(it) {
     var terminado = it.aSolFt * it.lFt, arCorte = it.arCorte || it.aCobFt * it.lFt;
     var desp = Math.max(0, arCorte - terminado);
@@ -56,7 +56,7 @@ var K_DESP_SUGERIDO = 0.5;      // 0 = solo lo que recibe el cliente · 1 = todo
     }
     var mon = it.tc ? 'Q' : '$', mult = it.tc || 1;
     return '<div class="cx-igual"><div>' + (window._ic ? _ic('warn') : '') + ' <b>Mismo precio que «' + esc(medidaTxt(ref)) + '»</b> aunque esta medida es menor (desperdicio ' + f(s.despPct, 1) + ' %).'
-      + '<br>Sugerencia: <b>' + mon + f(s.nuevo * mult, 2) + '</b> por corte en vez de ' + mon + f(s.actual * mult, 2) + ' (−' + f(s.ahorroPct, 1) + ' %). Tú decides.</div>'
+      + '<br>Sugerencia: <b>' + mon + f(s.nuevo * mult, 2) + '</b> por pieza en vez de ' + mon + f(s.actual * mult, 2) + ' (−' + f(s.ahorroPct, 1) + ' %). Tú decides.</div>'
       + '<div class="cx-igual-b"><button type="button" class="ok" onclick="aplicarSugerenciaIgual(' + it.uid + ')">Aplicar sugerencia</button>'
       + '<button type="button" onclick="dejarIgual(' + it.uid + ')">Dejar igual</button>'
       + '<button type="button" onclick="editarItemCarrito(' + it.uid + ')">Poner otro precio</button></div></div>';
@@ -79,6 +79,6 @@ var K_DESP_SUGERIDO = 0.5;      // 0 = solo lo que recibe el cliente · 1 = todo
     it.igualOk = true;
     saveCarrito(); renderCarrito();
     if (window._renderResumenEnvio && !document.getElementById('modalEnviarReal').classList.contains('hidden')) _renderResumenEnvio();
-    toast('Precio ajustado: ' + (it.tc ? 'Q' : '$') + f(s.nuevo * (it.tc || 1), 2) + ' por corte');
+    toast('Precio ajustado: ' + (it.tc ? 'Q' : '$') + f(s.nuevo * (it.tc || 1), 2) + ' por pieza');
   };
 })();

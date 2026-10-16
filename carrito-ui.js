@@ -62,15 +62,16 @@
       +   '<span class="cx-ico">' + ic(tela ? 'fabric' : 'bag') + '</span>'
       +   '<div class="cx-txt"><div class="cx-n">' + esc(it.nombre) + '</div><div class="cx-d">' + detalle + '</div>'
       +     (tela ? notaCobro(it) : '')
+      +     (it.precioManual ? '<div class="cx-nota fijo">' + ic('edit') + ' Precio fijado a mano</div>' : '')
       +     (tela && window.avisoMedidasIguales ? avisoMedidasIguales(it) : '')
       +     (precioAnterior(it) ? '<button type="button" class="opt-chip alerta cx-viejo" onclick="cxActualizarPrecios()">' + ic('refresh') + ' Precio anterior · actualizar</button>' : '')
       +   '</div>'
-      +   '<div class="cx-tot">' + total + '</div>'
+      +   '<button type="button" class="cx-tot cx-tot-b" onclick="abrirPrecioFinal(' + uid + ')" aria-label="Cambiar el precio final de esta línea">' + total + '<small>' + ic('edit') + ' Cambiar precio</small></button>'
       + '</div>'
       + '<div class="cx-bot">'
       +   '<div class="cx-step" role="group" aria-label="Cantidad">'
       +     '<button type="button" onclick="cxQty(' + uid + ',-1)" aria-label="Menos">−</button>'
-      +     '<span><b>' + cantidad + '</b> ' + (tela ? (cantidad === 1 ? 'corte' : 'cortes') : 'u') + '</span>'
+      +     '<span><b>' + cantidad + '</b> ' + (tela ? (cantidad === 1 ? 'pieza' : 'piezas') : 'u') + '</span>'
       +     '<button type="button" onclick="cxQty(' + uid + ',1)" aria-label="Más">+</button>'
       +   '</div>'
       +   '<div class="cx-acc">'

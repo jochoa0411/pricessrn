@@ -12,8 +12,8 @@
   window.tlRenderModos = function (t, modo) {
     var box = $('tlModoCards'); if (!box) return;
     var items = [
-      { v: 'master', titulo: 'Rollo Master', precio: t ? t.pm : null, desc: 'Sin ojetes ni rebete. Corte directo del rollo.' },
-      { v: 'conf', titulo: 'Confeccionado', precio: t ? t.pc : null, desc: 'Con ojetes y rebete. Listo para instalar.' },
+      { v: 'master', titulo: 'Rollo Master', precio: t ? t.pm : null, desc: 'Sin ojetes ni ribete. Se corta directo del rollo.' },
+      { v: 'conf', titulo: 'Confeccionado', precio: t ? t.pc : null, desc: 'Con ojetes y ribete. Listo para instalar.' },
     ];
     box.innerHTML = items.map(function (m) {
       return '<button type="button" class="tl-modo' + (modo === m.v ? ' on' : '') + '" onclick="tlModo(\'' + m.v + '\')" aria-pressed="' + (modo === m.v) + '">'
@@ -27,7 +27,7 @@
     if (r) { r.checked = true; actTelaPreview(); pintarAcabado(); }
   };
 
-  // ── Acabado de la pieza confeccionada: ojetes y rebete (OR) cada N pies + fuelle. Solo informa (no cambia el precio) ──
+  // ── Acabado de la pieza confeccionada: ojetes y ribete (OR) cada N pies + fuelle. Solo informa (no cambia el precio) ──
   var orSi = true, orCada = 2, fuelle = false;
   function pintarAcabado() {
     var box = $('tlAcabado'); if (!box) return;
@@ -56,11 +56,11 @@
   // Descripción de la línea de cotización, redactada como una frase (sin guiones que delaten una línea armada)
   window.tlDescripcionLinea = function (item, medida) {
     var ac = [];
-    if (item.modo === 'master') return item.nombre + ' en rollo, corte de ' + medida;
+    if (item.modo === 'master') return item.nombre + ' en rollo, pieza de ' + medida;
     var base = item.nombre + ' confeccionada de ' + medida;
     if (item.orSi != null) {
       var c = item.orCada;
-      ac.push(item.orSi ? 'con ojetes y rebete cada ' + fmt(c, c % 1 ? 1 : 0) + (c === 1 ? ' pie' : ' pies') : 'sin ojetes ni rebete');
+      ac.push(item.orSi ? 'con ojetes y ribete cada ' + fmt(c, c % 1 ? 1 : 0) + (c === 1 ? ' pie' : ' pies') : 'sin ojetes ni ribete');
       if (item.fuelle) ac.push('con fuelle');
     }
     return base + (ac.length ? ', ' + ac.join(' y ') : '');
@@ -92,7 +92,7 @@
   };
   window.tlPreset = function (a, l) { tlSetUom('ancho', a); tlSetUom('largo', l); };
 
-  // ── Cortes ──
+  // ── Piezas ──
   window.tlQty = function (d) {
     var e = $('cotCantTela');
     e.value = Math.max(1, (parseInt(e.value, 10) || 1) + d);
@@ -217,7 +217,7 @@
     var norm = $('tlNorm');
     if (a > 0 && l > 0) {
       norm.style.display = 'block';
-      norm.innerHTML = 'Corte: <b>' + fmt(aM, 2) + ' m × ' + fmt(lM, 2) + ' m</b> · Área <b>' + fmt(aM * lM, 2) + ' m²</b> (' + fmt(aFt * lFt, 1) + ' pie²)';
+      norm.innerHTML = 'Pieza: <b>' + fmt(aM, 2) + ' m × ' + fmt(lM, 2) + ' m</b> · Área <b>' + fmt(aM * lM, 2) + ' m²</b> (' + fmt(aFt * lFt, 1) + ' pie²)';
     } else norm.style.display = 'none';
 
     // Moneda: un ítem con TC (p. ej. al editarlo desde el presupuesto) activa Quetzales
@@ -240,7 +240,7 @@
     if (listo) {
       var modo = (document.querySelector('input[name="cotModoTela"]:checked') || {}).value === 'master' ? 'Master' : 'Confeccionado';
       var cant = Math.max(1, parseInt($('cotCantTela').value, 10) || 1);
-      $('tlBarSum').textContent = modo + ' · ' + (ua === 'm' ? fmt(a, 2) : fmt(aFt, 1)) + ua + ' × ' + (ul === 'm' ? fmt(l, 2) : fmt(lFt, 1)) + ul + ' · ' + cant + (cant === 1 ? ' corte' : ' cortes') + ($('cotDesglosarIVA').checked ? ' · sin IVA' : '');
+      $('tlBarSum').textContent = modo + ' · ' + (ua === 'm' ? fmt(a, 2) : fmt(aFt, 1)) + ua + ' × ' + (ul === 'm' ? fmt(l, 2) : fmt(lFt, 1)) + ul + ' · ' + cant + (cant === 1 ? ' pieza' : ' piezas') + ($('cotDesglosarIVA').checked ? ' · sin IVA' : '');
       var usd = $('rUsd').textContent + ' USD';
       var q = $('rQBox').style.display !== 'none' ? $('rQ').textContent : '';
       // La moneda elegida va en grande; la otra, como referencia
