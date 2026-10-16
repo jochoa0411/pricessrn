@@ -55,6 +55,12 @@
     var t = e.target, c = card(); if (!c || !t || c.contains(t)) return;
     if (t.closest && (t.closest('#cot-tela') || t.closest('#cot-saco') || t.closest('.tabs'))) compactarCliente();
   });
+  // Safari del iPhone NO da foco a los botones al tocarlos (sólo a campos): el selector de saco/tela y «Siguiente» son botones,
+  // así que también se avanza por toque.
+  document.addEventListener('click', function (e) {
+    var t = e.target, c = card(); if (!c || !t || !t.closest || c.contains(t)) return;
+    if (t.closest('#cot-tela') || t.closest('#cot-saco') || t.closest('.tabs')) compactarCliente();
+  }, true);
   // En otras secciones el encabezado vuelve a decir «Cotizador LGM»; al regresar a Cotizar se vuelve a mostrar el cliente
   LGM.on('vista:cambio', function () {
     var s = $('cotizar'), c = card(); if (!s || !c) return;

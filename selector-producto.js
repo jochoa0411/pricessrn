@@ -41,7 +41,7 @@
     b.addEventListener('click', function () {
       var ops = opcionesDe(sel, tipo);
       LGM.picker({ titulo: titulo, opciones: ops, valor: sel.value, buscar: true,
-        alElegir: function (v) { sel.value = v; sel.dispatchEvent(new Event('change', { bubbles: true })); sincronizar(); } });
+        alElegir: function (v) { if (window.compactarCliente) compactarCliente(); sel.value = v; sel.dispatchEvent(new Event('change', { bubbles: true })); sincronizar(); } });
     });
     sel.style.display = 'none';
     sel.parentNode.insertBefore(b, sel.nextSibling);
