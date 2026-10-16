@@ -321,6 +321,8 @@ body.cartbar-on #appShell .content, body.tl-bar-on #appShell .content { padding-
 .pf-cab { display:flex; flex-direction:column; gap:2px; margin-bottom:10px; } .pf-cab b { font-size:18px; color:#14432a; } .pf-cab span { font-size:15px; color:#555; }
 .pf-calc { margin:6px 0 12px; padding:12px; border-radius:10px; background:#f0f9f5; border:1px solid #c8e6c9; font-size:16px; line-height:1.7; color:#1d1d1f; }
 .pf-calc span { color:#555; font-size:14px; }
+.cond-res { margin:2px 0 4px; padding:12px 14px; border-radius:12px; background:#f0f9f5; border:1px solid #c8e6c9; font-size:16px; line-height:1.5; color:#1d1d1f; }
+.cond-res b { color:#14432a; }
 .cx-igual { margin-top:8px; padding:10px 12px; border:1.5px solid #e0a23a; background:#fff8ea; border-radius:10px; font-size:15px; line-height:1.45; color:#5b3a00; }
 .cx-igual .ic svg { width:15px; height:15px; vertical-align:-2px; }
 .cx-igual-b { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
@@ -345,6 +347,21 @@ body.cartbar-on #appShell .content, body.tl-bar-on #appShell .content { padding-
 .tl-or-q { padding:8px 11px; border:1.5px solid #d1d1d6; border-radius:999px; background:#fff; font-size:15px; font-weight:600; color:#3a3a3c; }
 .tl-or-q.on { background:#1a6b45; border-color:#1a6b45; color:#fff; }
 .tl-sec { padding:12px 0; border-top:1px solid #efeff4; }
+/* Paso a paso */
+.pp-head { display:flex; align-items:center; gap:12px; width:100%; min-height:60px; padding:10px 4px; background:none; border:0; border-top:1px solid #efeff4; text-align:left; font:inherit; color:#222; cursor:pointer; }
+.pp:first-child .pp-head { border-top:0; }
+.pp-n { width:34px; height:34px; border-radius:50%; background:#1a6b45; color:#fff; font-size:18px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.pp.pend .pp-n { background:#c7c7cc; }
+.pp-t { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.pp-t b { font-size:19px; }
+.pp-t span { font-size:16px; color:#555; overflow-wrap:anywhere; }
+.pp.pend .pp-head { cursor:default; color:#8e8e93; }
+.pp-cambiar { color:#1a6b45; font-weight:700; font-size:16px; text-decoration:underline; flex-shrink:0; }
+.pp-sig { display:block; width:100%; min-height:56px; margin:6px 0 8px; font-size:19px; font-weight:700; border-radius:14px; border:0; background:#1a6b45; color:#fff; }
+.pp-falta { display:none; margin:8px 0 0; padding:10px 12px; border-radius:10px; background:#fdeceb; color:#8a1c14; font-size:16px; font-weight:600; }
+.pp-falta.on { display:block; }
+.tl-auto { flex:1; display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:0 8px; border:1.5px dashed #c7c7cc; border-radius:12px; color:#8e8e93; font-size:16px; text-align:center; }
+.tl-auto.on { border-style:solid; border-color:#1a6b45; background:#e8f3ec; color:#14573a; font-weight:700; }
 .tl-sec:first-child { border-top:none; padding-top:2px; }
 .tl-h { display:flex; align-items:center; gap:8px; font-size:14px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#555; margin-bottom:8px; }
 .tl-h small { text-transform:none; letter-spacing:0; font-weight:500; color:#8e8e93; font-size:14px; }
@@ -868,16 +885,17 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
 
       <!-- TAB TELA -->
       <div id="cot-tela" class="tab-content active">
-        <div class="card tl-card">
+        <div class="card tl-card" id="tlPasos">
+          <div class="pp" data-pp="1">
           <div class="tl-sec">
-            <div class="tl-h"><span class="tl-n">1</span> Material</div>
+            <div class="tl-h">Material</div>
             <select id="cotTelaSelect" onchange="actTelaPreview()"><option value="">Toca para elegir la tela…</option></select>
             <div id="cotTelaPreview" class="tl-prev" style="display:none"></div>
           </div>
 
           <div id="cotModoDesc" hidden></div>
           <div class="tl-sec">
-            <div class="tl-h"><span class="tl-n">2</span> Modalidad <small>precio de lista por pie²</small></div>
+            <div class="tl-h">Modalidad <small>precio de lista por pie²</small></div>
             <div class="tl-radios" aria-hidden="true">
               <input type="radio" name="cotModoTela" value="master" checked onchange="actTelaPreview()">
               <input type="radio" name="cotModoTela" value="conf" onchange="actTelaPreview()">
@@ -886,10 +904,10 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
           </div>
 
           <div class="tl-sec" id="tlAcabado" style="display:none">
-            <div class="tl-h">Acabado <small>OR = ojetes y ribete</small></div>
+            <div class="tl-h">Acabado <small>con ojetes y ribete, y fuelle</small></div>
             <div class="tl-presets" role="group" aria-label="Ojetes y ribete">
-              <button type="button" id="tlOrSi" onclick="tlOR(true)">Con OR</button>
-              <button type="button" id="tlOrNo" onclick="tlOR(false)">Sin OR</button>
+              <button type="button" id="tlOrSi" onclick="tlOR(true)">Con ojetes y ribete</button>
+              <button type="button" id="tlOrNo" onclick="tlOR(false)">Sin ojetes</button>
             </div>
             <div id="tlOrBox" class="tl-or">
               <span class="tl-or-l">Ojetes cada</span>
@@ -905,43 +923,44 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
             </div>
           </div>
 
+          </div>
+          <div class="pp" data-pp="2">
           <div class="tl-sec">
-            <div class="tl-h"><span class="tl-n">3</span> Medidas de la pieza</div>
-            <div class="tl-presets">
-              <button type="button" onclick="tlPreset('ft','m')" id="tlPreHib">Híbrido ft · m</button>
-              <button type="button" onclick="tlPreset('m','m')" id="tlPreM">Todo m</button>
-              <button type="button" onclick="tlPreset('ft','ft')" id="tlPreFt">Todo ft</button>
+            <div class="tl-presets" role="group" aria-label="Unidades de medida">
+              <button type="button" onclick="tlPreset('ft','ft')" id="tlPreFt">Pies</button>
+              <button type="button" onclick="tlPreset('m','m')" id="tlPreM" class="on">Metros</button>
+              <span id="tlPreHib" class="tl-auto" title="Se activa solo al usar pies en una medida y metros en la otra">Combinado</span>
             </div>
             <div class="tl-dims">
               <div class="tl-dim">
                 <div class="tl-dim-top"><span>Ancho</span>
                 <div class="tl-seg" role="group" aria-label="Unidad de ancho">
-                  <button type="button" id="tlAnchoFt" onclick="tlSetUom('ancho','ft')">ft</button>
+                  <button type="button" id="tlAnchoFt" onclick="tlSetUom('ancho','ft')">pies</button>
                   <button type="button" id="tlAnchoM" onclick="tlSetUom('ancho','m')">m</button>
                 </div>
                 </div>
                 <input type="number" id="cotAncho" placeholder="0" min="0" step="any" inputmode="decimal" oninput="cotCalcTela()">
                 <div class="tl-eq" id="tlEqAncho">&nbsp;</div>
-                <select id="cotUAncho" hidden onchange="cotCalcTela()"><option value="ft">ft</option><option value="m">m</option></select>
+                <select id="cotUAncho" hidden onchange="cotCalcTela()"><option value="m">m</option><option value="ft">ft</option></select>
               </div>
               <div class="tl-dim">
                 <div class="tl-dim-top"><span>Largo</span>
                 <div class="tl-seg" role="group" aria-label="Unidad de largo">
-                  <button type="button" id="tlLargoFt" onclick="tlSetUom('largo','ft')">ft</button>
+                  <button type="button" id="tlLargoFt" onclick="tlSetUom('largo','ft')">pies</button>
                   <button type="button" id="tlLargoM" onclick="tlSetUom('largo','m')">m</button>
                 </div>
                 </div>
                 <input type="number" id="cotLargo" placeholder="0" min="0" step="any" inputmode="decimal" oninput="cotCalcTela()">
                 <div class="tl-eq" id="tlEqLargo">&nbsp;</div>
-                <select id="cotULargo" hidden onchange="cotCalcTela()"><option value="ft">ft</option><option value="m">m</option></select>
+                <select id="cotULargo" hidden onchange="cotCalcTela()"><option value="m">m</option><option value="ft">ft</option></select>
               </div>
             </div>
             <div id="tlNorm" class="tl-norm" style="display:none"></div>
           </div>
 
-          <div class="tl-sec tl-2col">
+          <div class="tl-sec">
             <div>
-              <div class="tl-h"><span class="tl-n">4</span> Piezas</div>
+              <div class="tl-h">Piezas</div>
               <div class="tl-step">
                 <button type="button" onclick="tlQty(-1)" aria-label="Menos">−</button>
                 <input type="number" id="cotCantTela" value="1" min="1" step="1" inputmode="numeric" oninput="cotCalcTela()">
@@ -949,8 +968,12 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
               </div>
               <div class="tl-eq">piezas iguales</div>
             </div>
+          </div>
+          </div>
+          <div class="pp" data-pp="3">
+          <div class="tl-sec">
             <div>
-              <div class="tl-h"><span class="tl-n">5</span> Ajuste comercial</div>
+              <div class="tl-h">Ajuste comercial <small>opcional</small></div>
               <div class="tl-seg tl-seg-w" role="group" aria-label="Ajuste comercial">
                 <button type="button" id="tlAdjNone" onclick="tlAdj('none')">Ninguno</button>
                 <button type="button" id="tlAdjDesc" onclick="tlAdj('desc')">Descuento</button>
@@ -965,7 +988,7 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
           </div>
 
           <div class="tl-sec">
-            <div class="tl-h"><span class="tl-n">6</span> Moneda de la cotización</div>
+            <div class="tl-h">Moneda de la cotización</div>
             <div class="tl-seg tl-seg-w" role="group" aria-label="Moneda">
               <button type="button" id="tlMonUsd" class="on" onclick="tlMoneda('USD')">Dólares (US$)</button>
               <button type="button" id="tlMonQ" onclick="tlMoneda('Q')">Quetzales (Q)</button>
@@ -1007,6 +1030,7 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
             <p id="rQFalta" class="info-text" style="display:none;color:#d97706;margin-top:8px;"><span class="ic" data-ic="bulb"></span> Ingresa el tipo de cambio para ver el total en Q</p>
           </div>
           <button class="btn btn-success btn-block tl-old-add" style="margin-top:12px;" onclick="agregarTela()"><span class="ic" data-ic="plus"></span> Agregar al presupuesto</button>
+          </div>
         </div>
       </div>
 
@@ -1137,10 +1161,14 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
     <div class="field"><label>Condiciones</label>
       <div id="merPresets" class="sug-row" role="group" aria-label="Condiciones rápidas"></div>
     </div>
+    <div id="merCondRes" class="cond-res"></div>
+    <button type="button" class="cx-link" id="merCondBtn" onclick="mostrarCondiciones()" aria-expanded="false">Ajustar entrega y pago ▾</button>
+    <div id="merCondDet" hidden>
     <div class="field"><label>Forma de entrega *</label><input type="text" id="merFormaEntrega" autocomplete="off" placeholder="Ej: Terrestre, Marítima, Aérea" oninput="renderSugTerminos()"><div id="sug_merFormaEntrega" class="sug-row"></div></div>
     <div class="field"><label>Lugar de entrega *</label><input type="text" id="merLugarEntrega" autocomplete="off" placeholder="Dirección o bodega de entrega" oninput="renderSugTerminos()"><div id="sug_merLugarEntrega" class="sug-row"></div></div>
     <div class="field"><label>Tiempo de entrega *</label><input type="text" id="merTiempoEntrega" autocomplete="off" placeholder="Ej: 3 días hábiles después de la OC" oninput="renderSugTerminos()"><div id="sug_merTiempoEntrega" class="sug-row"></div></div>
     <div class="field"><label>Forma de pago *</label><input type="text" id="merFormaPago" autocomplete="off" placeholder="Ej: Contado, Crédito 30 días" oninput="renderSugTerminos()"><div id="sug_merFormaPago" class="sug-row"></div></div>
+    </div>
     <div class="field"><label>Comentarios adicionales (opcional)</label><textarea id="merComentarios" rows="2" placeholder="Condiciones especiales, instrucciones…" style="width:100%;padding:12px;border:1px solid #d1d1d6;border-radius:10px;font-size:16px;font-family:inherit;resize:vertical"></textarea></div>
     <div class="modal-btns">
       <button class="btn btn-success btn-block" id="btnCotReal" onclick="generarCotizacionReal()">Enviar cotización</button>
@@ -1965,5 +1993,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="version.js"></script><script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=10"></script><script src="listas-ui.js?v=4"></script><script src="precios-ui.js?v=4"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=5"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="vendedor-ui.js?v=1"></script><script src="real-quote.js?v=20261037"></script><script src="tela-ui.js?v=12"></script><script src="carrito-ui.js?v=13"></script></body>
+<script src="version.js"></script><script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=10"></script><script src="listas-ui.js?v=4"></script><script src="precios-ui.js?v=4"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=5"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="vendedor-ui.js?v=1"></script><script src="real-quote.js?v=20261038"></script><script src="tela-ui.js?v=13"></script><script src="carrito-ui.js?v=14"></script><script src="paso-a-paso.js?v=2"></script></body>
 </html>

@@ -904,8 +904,22 @@ function aplicarPresetTerminos(id){
   Object.keys(_CAMPOS_TERMINOS).forEach(function(k){ document.getElementById(_CAMPOS_TERMINOS[k]).value = p.t[k]; });
   renderSugTerminos();
 }
+// Entrega y pago: se ven como un resumen («Terrestre · Bodega Central · 24-48 horas · Contado»); los 4 campos solo si se piden
+function mostrarCondiciones(abrir){
+  var d = document.getElementById('merCondDet'), b = document.getElementById('merCondBtn'); if (!d) return;
+  var ver = abrir === undefined ? d.hidden : !!abrir;
+  d.hidden = !ver; b.setAttribute('aria-expanded', ver ? 'true' : 'false');
+  b.textContent = ver ? 'Ocultar el detalle ▴' : 'Ajustar entrega y pago ▾';
+}
+function pintarResumenCondiciones(){
+  var r = document.getElementById('merCondRes'); if (!r) return;
+  var v = function(k){ return (_valTermino(k).split(' / ')[0] || '—'); };
+  var pre = _PRESETS_TERMINOS.filter(function(p){ return Object.keys(_CAMPOS_TERMINOS).every(function(k){ return _valTermino(k) === p.t[k]; }); })[0];
+  r.innerHTML = '<b>' + (pre ? pre.nombre : 'Condiciones personalizadas') + ':</b> ' + _esc(v('forma_entrega')) + ' · ' + _esc(v('lugar_entrega')) + ' · ' + _esc(v('tiempo_entrega')) + ' · pago ' + _esc(v('forma_pago').toLowerCase());
+}
 function elegirTermino(k, v){ document.getElementById(_CAMPOS_TERMINOS[k]).value = v; renderSugTerminos(); }
 function renderSugTerminos(){
+  pintarResumenCondiciones();
   var cur = _lsGet('cotTerminos', {});
   var pr = document.getElementById('merPresets');
   if (pr) pr.innerHTML = _PRESETS_TERMINOS.map(function(p){
@@ -963,6 +977,8 @@ function abrirModalEnviarReal(){
   var display = document.getElementById('merVendedorCorreoDisplay');
   if (display) display.textContent = sesion.correo || '(sin correo configurado)';
   _ignorarPendiente = false; _ignorarViejos = false; _ignorarPreciosAnt = false; _ignorarIguales = false;
+  mostrarCondiciones(false);
+  var tt = document.getElementById('toast'); if (tt) tt.classList.remove('show');   // un aviso anterior no debe tapar el título del formulario
   var chk = document.getElementById('merEnviarCliente'); if (chk) chk.checked = false;   // cada cotización empieza como «solo para revisión»
   _prellenarModalEnvio();
   if (window.vendedorPreparar) vendedorPreparar('mer');
@@ -1060,6 +1076,7 @@ async function generarCotizacionReal(){
   for (var fi = 0; fi < entregaCampos.length; fi++) {
     if (!entregaCampos[fi][1]) {
       toast('Completa ' + entregaCampos[fi][2] + ' — lo necesita la cotización', 'err');
+      mostrarCondiciones(true);
       document.getElementById(entregaCampos[fi][0]).focus();
       return;
     }

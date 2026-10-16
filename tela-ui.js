@@ -208,7 +208,7 @@
     var a = n($('cotAncho').value), l = n($('cotLargo').value);
     setOn('tlAnchoFt', ua === 'ft'); setOn('tlAnchoM', ua === 'm');
     setOn('tlLargoFt', ul === 'ft'); setOn('tlLargoM', ul === 'm');
-    setOn('tlPreHib', ua === 'ft' && ul === 'm'); setOn('tlPreM', ua === 'm' && ul === 'm'); setOn('tlPreFt', ua === 'ft' && ul === 'ft');
+    setOn('tlPreHib', ua !== ul); setOn('tlPreM', ua === 'm' && ul === 'm'); setOn('tlPreFt', ua === 'ft' && ul === 'ft');
 
     var aFt = ua === 'm' ? a * MT_ : a, aM = ua === 'm' ? a : a / MT_;
     var lFt = ul === 'm' ? l * MT_ : l, lM = ul === 'm' ? l : l / MT_;
@@ -264,6 +264,7 @@
     if (ev.tipo !== 'tela') return;
     orSi = true; orCada = 2; fuelle = false;
     adjTipo = 'none'; $('tlAdjPct').value = '';
+    $('cotUAncho').value = 'm'; $('cotULargo').value = 'm';     // las medidas siempre empiezan en metros
     var m = document.querySelector('input[name="cotModoTela"]:checked');
     tlRenderModos(null, m ? m.value : 'master');
     syncTelaUI();

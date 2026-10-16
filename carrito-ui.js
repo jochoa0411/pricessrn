@@ -197,6 +197,7 @@
   }
   function limpiarFormularios() {
     ['cotAncho', 'cotLargo', 'cotPrecioManual', 'cotCantSaco', 'cotPMSaco'].forEach(function (id) { var e = $(id); if (e) e.value = ''; });
+    $('cotUAncho').value = 'm'; $('cotULargo').value = 'm';
     $('cotCantTela').value = 1; $('cotRecargo').value = 0; $('cotRecargoSaco').value = 0;
     $('cotTelaSelect').value = ''; $('cotSacoSelect').value = '';
     $('cotTelaPreview').style.display = 'none'; $('cotSacoPreview').style.display = 'none';
