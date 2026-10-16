@@ -1315,7 +1315,7 @@ async function verCalculo(id){
     if (!r.ok) { toast(r.data.error || 'No se pudo abrir el cálculo', 'err'); return; }
     var q = r.data;
     if (!q.calculo || !q.calculo.length) { toast('Esta cotización no tiene hoja de cálculo guardada', 'err'); return; }
-    _calc = { items: q.calculo, no: q.no_cotizacion };
+    _calc = { items: q.calculo, no: q.no_cotizacion, cliente: q.cliente || '', nit: q.cliente_nit || '', creada: q.created_at, version: q.precios_version, editada: new Date(q.updated_at) - new Date(q.created_at) > 60000, vendedor: q.vendedor_nombre || '' };
     document.getElementById('mcalTitle').textContent = 'Cálculo · ' + q.no_cotizacion;
     var editada = new Date(q.updated_at) - new Date(q.created_at) > 60000;
     document.getElementById('mcalBody').innerHTML =
@@ -1326,6 +1326,75 @@ async function verCalculo(id){
     document.getElementById('mcalCopiar').innerHTML = _ic('copy') + ' Copiar al presupuesto';
     document.getElementById('modalCalculo').classList.remove('hidden');
   } catch (e) { if (!e.handled) toast('Sin conexión al sistema — revisa tu internet', 'err'); }
+}
+
+// PDF de la hoja de cálculo de toda la cotización (documento interno de costeo, para adjuntar). Usa la misma vista y el mismo
+// generador de PDF que la vista previa: en computadora abre el diálogo de imprimir; en el celular, la hoja de compartir.
+function _htmlCalculoPdf(c){
+  var fila = function (k, v) { return '<tr><td style="padding:4px 0;color:#666;border-bottom:1px dashed #ddd;">' + k + '</td><td style="padding:4px 0;text-align:right;font-weight:700;border-bottom:1px dashed #ddd;">' + v + '</td></tr>'; };
+  var usd = 0, q = 0, hayUsd = false;
+  var bloques = c.items.map(function (i, n) {
+    var h, esTela = i.tipo === 'tela';
+    if (esTela) {
+      var difiere = Math.abs((i.aCobFt || 0) - (i.aSolFt || 0)) > 0.05;
+      var base = i.precioManual ? i.precioManual : (i.p / (1 + (i.recargo || 0) / 100));
+      hayUsd = true; usd += i.tu || 0; q += i.totalQ || 0;
+      h = '<b style="font-size:15px;color:#1a6b45;">' + (n + 1) + '. ' + _esc(i.nombre) + ' · ' + (i.modo === 'master' ? 'Rollo Master' : 'Confeccionado') + '</b><table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:6px;">'
+        + fila('Ancho solicitado', _medida(i.aSolFt, i.aSolM, i.ua === 'm'))
+        + fila('Ancho cobrado (múltiplo de 6 ft)', _medida(i.aCobFt, i.aCobM, i.ua === 'm') + (difiere ? ' — ajustado' : ''))
+        + fila('Largo por pieza', _medida(i.lFt, i.lM, i.ul === 'm'))
+        + fila('Piezas', _fmtN(i.cant || 1, 0))
+        + fila('Área por pieza', _fmtN(i.arCorte, 1) + ' pie²')
+        + fila('Área total facturada', _fmtN(i.ar, 1) + ' pie²')
+        + fila(i.precioManual ? 'Precio manual' : 'Precio de lista', '$' + _fmtN(base, 3) + ' /pie²')
+        + (i.recargo ? fila(i.recargo > 0 ? 'Recargo' : 'Descuento', _fmtN(Math.abs(i.recargo), 1) + ' %') : '')
+        + fila('Precio aplicado', '$' + _fmtN(i.p, 3) + ' /pie²')
+        + fila('Total USD', '$' + _fmtN(i.tu, 2))
+        + (i.tc ? fila('Tipo de cambio', 'Q' + _fmtN(i.tc, 2) + ' por US$1') + fila('Total Q', 'Q' + _fmtN(i.totalQ, 2)) : '') + '</table>';
+    } else {
+      var baseS = i.precioManual ? i.precioManual : (i.precioUnit / (1 + (i.recargo || 0) / 100));
+      q += i.totalQ || 0;
+      h = '<b style="font-size:15px;color:#1a6b45;">' + (n + 1) + '. ' + _esc(i.nombre) + (i.medidas ? ' (' + _esc(i.medidas) + ')' : '') + '</b><table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:6px;">'
+        + fila('Cantidad', _fmtN(i.cantidad, 0) + ' u')
+        + fila(i.precioManual ? 'Precio manual' : (i.listaNombre ? 'Lista ' + _esc(i.listaNombre) + ' · ' + _esc(tierLabel(i.tier)) : 'Precio ' + _esc(i.tier || 'A')), 'Q' + _fmtN(baseS, 2) + ' /u')
+        + (i.recargo ? fila(i.recargo > 0 ? 'Recargo' : 'Descuento', _fmtN(Math.abs(i.recargo), 1) + ' %') : '')
+        + fila('Precio aplicado', 'Q' + _fmtN(i.precioUnit, 2) + ' /u')
+        + fila('Total Q', 'Q' + _fmtN(i.totalQ, 2)) + '</table>';
+    }
+    return '<div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:12px;page-break-inside:avoid;">' + h + '</div>';
+  }).join('');
+  var tot = (hayUsd ? 'Total USD: $' + _fmtN(usd, 2) : '') + (hayUsd && q ? ' &nbsp;·&nbsp; ' : '') + (q ? 'Total Q: Q' + _fmtN(q, 2) : '');
+  return '<div style="padding:32px;background:white;font-family:Arial,sans-serif;color:#1a1a1a;-webkit-print-color-adjust:exact;print-color-adjust:exact;">'
+    + '<div style="display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:12px;border-bottom:4px solid #1a6b45;margin-bottom:18px;">'
+    + '<div style="font-size:28px;font-weight:900;color:#1a6b45;">LGM<small style="display:block;font-size:12px;font-weight:400;color:#888;margin-top:4px;">Hoja de cálculo de la cotización</small></div>'
+    + '<div style="text-align:right;"><div style="font-size:20px;font-weight:800;color:#1a6b45;">' + _esc(c.no) + '</div><div style="font-size:11px;color:#888;margin-top:4px;">Creada: ' + _fechaCorta(c.creada) + '</div></div></div>'
+    + '<div style="background:#f0f9f5;border-left:5px solid #1a6b45;padding:12px 14px;margin-bottom:16px;font-size:14px;"><b>' + _esc(c.cliente) + '</b>' + (c.nit ? ' · NIT ' + _esc(c.nit) : '')
+    + (c.vendedor ? '<br><span style="color:#555;">Vendedor: ' + _esc(c.vendedor) + '</span>' : '')
+    + (c.version ? '<br><span style="color:#555;">Lista de precios v' + c.version + '</span>' : '') + '</div>'
+    + (c.editada ? '<div style="font-size:12px;color:#92400e;margin-bottom:12px;">La cotización se editó después de crearse: las líneas actuales pueden diferir de este cálculo.</div>' : '')
+    + bloques
+    + '<div style="margin-top:8px;padding:12px 14px;border:2px solid #1a6b45;color:#1a6b45;border-radius:8px;font-size:16px;font-weight:800;text-align:right;">' + tot + '</div>'
+    + '<div style="margin-top:24px;font-size:11px;color:#999;border-top:1px solid #eee;padding-top:10px;">Documento interno de costeo · LGM · La Gran Montaña</div></div>';
+}
+function imprimirCalculo(){
+  if (!_calc) return;
+  var c = _calc, ref = 'Calculo-' + c.no, html = _htmlCalculoPdf(c);
+  var ov = document.createElement('div');
+  ov.id = 'pdfOverlay';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#e8e8e8;overflow-y:auto;';
+  var tb = document.createElement('div');
+  tb.style.cssText = 'display:flex;gap:10px;padding:12px 16px;position:sticky;top:0;background:#1a6b45;z-index:1;';
+  var bC = document.createElement('button'); bC.textContent = '← Volver';
+  bC.style.cssText = 'padding:10px 20px;background:rgba(255,255,255,0.2);color:white;border:none;border-radius:8px;font-weight:700;font-size:16px;cursor:pointer;';
+  bC.onclick = function () { ov.remove(); };
+  var bP = document.createElement('button'); bP.textContent = 'Imprimir / Guardar PDF';
+  bP.style.cssText = 'padding:10px 20px;background:white;color:#1a6b45;border:none;border-radius:8px;font-weight:700;font-size:16px;cursor:pointer;';
+  bP.onclick = function () { imprimirPdfLocal(html, ref, bP); };
+  tb.appendChild(bC); tb.appendChild(bP); ov.appendChild(tb);
+  var body = document.createElement('div');
+  body.style.cssText = 'max-width:800px;margin:16px auto;background:white;box-shadow:0 2px 12px rgba(0,0,0,0.15);';
+  body.innerHTML = html; ov.appendChild(body);
+  document.body.appendChild(ov);
 }
 
 // Vuelve a cargar esos cálculos en el presupuesto para ajustarlos con la calculadora (✎ en cada ítem).

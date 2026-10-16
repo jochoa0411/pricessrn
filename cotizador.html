@@ -1307,9 +1307,10 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
       <span class="modal-close" onclick="cerrarModalCalculo()">×</span>
     </div>
     <div id="mcalBody" style="font-size:15px"></div>
-    <div class="modal-btns">
+    <div class="modal-btns" style="flex-direction:column">
+      <button class="btn btn-success btn-block" id="mcalPdf" onclick="imprimirCalculo()">Imprimir / guardar PDF del cálculo</button>
+      <button class="btn btn-ghost btn-block" id="mcalCopiar" onclick="copiarCalculoAlPresupuesto()"></button>
       <button class="btn btn-ghost btn-block" onclick="cerrarModalCalculo()">Cerrar</button>
-      <button class="btn btn-success btn-block" id="mcalCopiar" onclick="copiarCalculoAlPresupuesto()"></button>
     </div>
   </div>
 </div>
@@ -2025,5 +2026,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="version.js"></script><script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=11"></script><script src="listas-ui.js?v=5"></script><script src="precios-ui.js?v=4"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=5"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="vendedor-ui.js?v=1"></script><script src="real-quote.js?v=20261041"></script><script src="tela-ui.js?v=14"></script><script src="carrito-ui.js?v=14"></script><script src="paso-a-paso.js?v=3"></script><script src="paso-envio.js?v=2"></script></body>
+<script src="version.js"></script><script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=11"></script><script src="listas-ui.js?v=5"></script><script src="precios-ui.js?v=4"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=5"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="vendedor-ui.js?v=1"></script><script src="real-quote.js?v=20261042"></script><script src="tela-ui.js?v=14"></script><script src="carrito-ui.js?v=14"></script><script src="paso-a-paso.js?v=3"></script><script src="paso-envio.js?v=2"></script></body>
 </html>
