@@ -1119,6 +1119,7 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
     </div>
     <div id="merResumen" class="resumen"></div>
     <div class="field"><label>Se enviará a</label><div id="merVendedorCorreoDisplay" style="padding:12px;background:#f4f4f5;border-radius:10px;font-weight:600;color:#1a6b45;"></div></div>
+<div class="field"><label>Vendedor *</label><button type="button" id="merVendedorBtn" class="pk-btn" aria-haspopup="dialog" onclick="elegirVendedor('mer')"><span class="pk-btn-v"></span><span class="pk-btn-i"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></span></button></div>
     <div class="field"><label>Atención (con quién se cotiza) *</label><input type="text" id="merContacto" autocomplete="off" placeholder="Nombre de la persona"></div>
     <div class="field"><label>Teléfono del contacto</label><input type="tel" id="merTelefono" autocomplete="off" placeholder="Ej: 5555 1234"></div>
     <div class="field"><label>Correo del contacto — correo o teléfono es obligatorio *</label><input type="email" id="merClienteCorreo" placeholder="cliente@empresa.com"></div>
@@ -1147,6 +1148,7 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
     <div id="medAviso"></div>
     <div class="field"><label>Cliente *</label><input type="text" id="medCliente"></div>
     <div class="field"><label>NIT</label><input type="text" id="medNit"></div>
+<div class="field"><label>Vendedor *</label><button type="button" id="medVendedorBtn" class="pk-btn" aria-haspopup="dialog" onclick="elegirVendedor('med')"><span class="pk-btn-v"></span><span class="pk-btn-i"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></span></button></div>
     <div class="field"><label>Atención (con quién se cotiza) *</label><input type="text" id="medContacto" autocomplete="off"></div>
     <div class="field"><label>Teléfono del contacto</label><input type="tel" id="medTelefono" autocomplete="off"></div>
     <div class="field"><label>Correo del cliente (copia al reenviar) — correo o teléfono es obligatorio *</label><input type="email" id="medClienteCorreo"></div>
@@ -1950,5 +1952,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=10"></script><script src="listas-ui.js?v=4"></script><script src="precios-ui.js?v=4"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=3"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="real-quote.js?v=20261036"></script><script src="tela-ui.js?v=12"></script><script src="carrito-ui.js?v=13"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=10"></script><script src="listas-ui.js?v=4"></script><script src="precios-ui.js?v=4"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=3"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="vendedor-ui.js?v=1"></script><script src="real-quote.js?v=20261037"></script><script src="tela-ui.js?v=12"></script><script src="carrito-ui.js?v=13"></script></body>
 </html>

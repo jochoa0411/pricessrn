@@ -965,6 +965,7 @@ function abrirModalEnviarReal(){
   _ignorarPendiente = false; _ignorarViejos = false; _ignorarPreciosAnt = false; _ignorarIguales = false;
   var chk = document.getElementById('merEnviarCliente'); if (chk) chk.checked = false;   // cada cotización empieza como «solo para revisión»
   _prellenarModalEnvio();
+  if (window.vendedorPreparar) vendedorPreparar('mer');
   actualizarAvisoEnvio();
   _renderResumenEnvio();
   document.getElementById('modalEnviarReal').classList.remove('hidden');
@@ -1035,6 +1036,8 @@ async function generarCotizacionReal(){
     return;
   }
 
+  var vendedorId = window.vendedorElegido ? vendedorElegido('mer') : null;
+  if (!vendedorId) { toast('Elige el vendedor de esta cotización', 'err'); var vb = document.getElementById('merVendedorBtn'); if (vb) { vb.scrollIntoView({ block: 'center' }); vb.focus(); } return; }
   var enviarCliente = !!document.getElementById('merEnviarCliente').checked;
   if (enviarCliente && !clienteCorreo) {
     toast('Para enviarla al cliente escribe su correo, o desmarca la casilla', 'err');
@@ -1094,6 +1097,7 @@ async function generarCotizacionReal(){
     calculo: CARRITO.map(function(i){ var o = {}; Object.keys(i).forEach(function(k){ if (k !== 'uid' && k !== 'addedAt') o[k] = i[k]; }); return o; }),
     cliente_correo: clienteCorreo,
     enviar_cliente: enviarCliente,
+    vendedor_id: vendedorId,
     cliente_contacto: contacto,
     cliente_telefono: telefono,
     moneda: armado.moneda,
@@ -1210,7 +1214,7 @@ function renderMisCotizaciones(){
     var editada = new Date(c.updated_at) - new Date(c.created_at) > 60000;
     return '<div class="item-card" style="flex-wrap:wrap">'
       + '<div class="item-info"><strong>' + _esc(c.no_cotizacion) + ' — ' + _esc(c.cliente) + '</strong>'
-      + '<small>' + _fechaCorta(c.created_at) + ' · ' + c.total_items + ' ítem(s)' + (c.precios_version ? ' · precios v' + c.precios_version : '') + (editada ? ' · editada ' + _fechaCorta(c.updated_at) : '') + '</small>'
+      + '<small>' + _fechaCorta(c.created_at) + ' · ' + c.total_items + ' ítem(s)' + (c.vendedor_nombre ? ' · Vendedor: ' + _esc(c.vendedor_nombre) : '') + (c.precios_version ? ' · precios v' + c.precios_version : '') + (editada ? ' · editada ' + _fechaCorta(c.updated_at) : '') + '</small>'
       + '<div style="margin-top:4px"><span class="pill ' + pill[1] + '">' + _esc(pill[0]) + '</span>' + (c.vendida ? ' <span class="pill ok">Vendida</span>' : '') + (c.origen === 'MOVIL' && !c.cliente_enviada_at && !c.vendida && String(c.estatus).toUpperCase() !== 'CONVERTIDA' ? ' <span class="pill sin-enviar">Sin enviar al cliente</span>' : '') + '</div></div>'
       + '<div style="text-align:right"><strong style="color:#1a6b45;font-size:15px">' + _fmtMoneda(c.total, c.moneda) + '</strong></div>'
       + '<div style="width:100%;display:flex;gap:6px;justify-content:flex-end">'
@@ -1391,6 +1395,7 @@ async function abrirEditar(id){
         + ((est === 'APROBADA' || est === 'PENDIENTE') ? '<br><strong>Estaba ' + _esc(est.toLowerCase()) + ':</strong> volverá a borrador y requerirá autorización de nuevo.' : '') + '</div>';
     document.getElementById('medCliente').value = q.cliente || '';
     document.getElementById('medNit').value = q.cliente_nit || '';
+    if (window.vendedorPreparar) vendedorPreparar('med', q.vendedor_id);
     document.getElementById('medClienteCorreo').value = q.cliente_correo || '';
     document.getElementById('medContacto').value = q.cliente_contacto || '';
     document.getElementById('medTelefono').value = q.cliente_telefono || '';
@@ -1452,6 +1457,8 @@ async function guardarEdicion(reenviar){
   var correo = document.getElementById('medClienteCorreo').value.trim();
   if (!cliente) { toast('Ingresa el nombre del cliente', 'err'); return; }
   if (correo && !_emailValido(correo)) { toast('El correo del cliente no es válido', 'err'); return; }
+  var vendedorEd = window.vendedorElegido ? vendedorElegido('med') : null;
+  if (!vendedorEd) { toast('Elige el vendedor de esta cotización', 'err'); return; }
   var contacto = document.getElementById('medContacto').value.trim();
   var telefono = document.getElementById('medTelefono').value.trim();
   if (!contacto) { toast('Ingresa la atención: con quién se cotiza', 'err'); document.getElementById('medContacto').focus(); return; }
@@ -1465,7 +1472,7 @@ async function guardarEdicion(reenviar){
   try {
     var r = await _api('/mis/' + _edit.id + '/editar', { method: 'POST', body: {
       cliente: cliente, cliente_nit: _nitONormal(document.getElementById('medNit').value), cod_cliente: _edit.codCliente || undefined,
-      cliente_correo: correo, cliente_contacto: contacto, cliente_telefono: telefono,
+      cliente_correo: correo, cliente_contacto: contacto, cliente_telefono: telefono, vendedor_id: vendedorEd,
       moneda: _edit.moneda, con_iva: document.getElementById('medConIva').checked,
       items: items,
       forma_entrega: document.getElementById('medFormaEntrega').value.trim(),
