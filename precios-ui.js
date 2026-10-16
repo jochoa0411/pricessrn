@@ -32,9 +32,12 @@
     var sel = opts.valor, foco = -1;
 
     function pintar(filtro) {
-      var f = String(filtro || '').toLowerCase().trim(), html = '', ultimo = null, n = 0;
+      var sinAcentos = function (t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); };
+      var f = sinAcentos(filtro).trim(), html = '', ultimo = null, n = 0;
+      var palabras = f ? f.split(/\s+/) : [];
       ops.forEach(function (o, i) {
-        if (f && (String(o.texto) + ' ' + String(o.sub || '')).toLowerCase().indexOf(f) < 0) return;
+        var pajar = sinAcentos(String(o.texto) + ' ' + String(o.sub || '') + ' ' + String(o.grupo || ''));
+        if (palabras.some(function (w) { return pajar.indexOf(w) < 0; })) return;
         if (o.grupo && o.grupo !== ultimo) { html += '<div class="pk-grp">' + esc(o.grupo) + '</div>'; ultimo = o.grupo; }
         var on = String(o.valor) === String(sel);
         html += '<button type="button" class="pk-op' + (on ? ' on' : '') + '" role="option" aria-selected="' + on + '" data-i="' + i + '">'
