@@ -128,8 +128,8 @@
     var v = parseFloat($('cotTC').value);
     var ic = function (n) { return typeof _ic === 'function' ? _ic(n) : ''; };
     if (!(v > 0)) { c.className = 'opt-chip alerta'; c.innerHTML = ic('warn') + ' Definir tipo de cambio'; }
-    else if (tcManual) { c.className = 'opt-chip dark'; c.innerHTML = ic('edit') + ' TC Q' + v + ' · manual'; }
-    else { c.className = 'opt-chip ok'; c.innerHTML = ic('check') + ' TC Q' + v + ' · Banguat'; }
+    else if (tcManual) { c.className = 'opt-chip dark'; c.innerHTML = ic('edit') + ' Cambio Q' + v + ' por US$ · escrito por ti'; }
+    else { c.className = 'opt-chip ok'; c.innerHTML = ic('check') + ' Cambio Q' + v + ' por US$ · oficial (Banguat)'; }
   }
   window.tlTcEditar = function () {
     var ed = $('tcEditor'), abrir = ed.style.display === 'none';

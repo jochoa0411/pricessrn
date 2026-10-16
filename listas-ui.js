@@ -26,7 +26,7 @@ var _listaManual = false;      // el vendedor eligió la lista a mano: ya no se 
   window.listaSacoId = function () { var v = $('cotListaSaco') ? $('cotListaSaco').value : ''; return v ? Number(v) : null; };
   window.tierLabel = function (t) { return t === 'BASE' ? 'Base' : t === 'MAS10' ? '+10 %' : t; };
   // «Lista de Rudy · Base»  /  «Tier A»
-  window.etiquetaTierItem = function (it) { return it.listaNombre ? 'Lista ' + it.listaNombre + ' · ' + tierLabel(it.tier) : 'Tier ' + it.tier; };
+  window.etiquetaTierItem = function (it) { return it.listaNombre ? 'Lista ' + it.listaNombre + ' · ' + tierLabel(it.tier) : 'Precio ' + it.tier; };
 
   // Precio (o null si no existe) de un saco para un nivel: A/B/C de la general, BASE/MAS10 de una lista de cliente
   window.precioTierSaco = function (s, tier, listaId) {

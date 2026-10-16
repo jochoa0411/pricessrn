@@ -117,7 +117,7 @@ async function generarPDF(){
       var unitTxt = '<b>$'+n1(unitUsd,2)+'</b>'+(item.tc ? '<br><span style="color:#555;">Q'+n1(unitUsd*item.tc,2)+'</span>' : '')+'<br><span style="font-size:9px;color:#888;">por pieza</span>';
       filas += '<tr>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;color:#bbb;font-size:10px;">'+(idx+1)+'</td>'
-        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;"><strong style="color:#1a6b45;">'+(cant>1?cant+'× ':'')+item.nombre+'</strong><br><small style="color:#888;">'+(item.modo==='master'?'Rollo Master':'Confeccionado'+(window.tlAcabadoTxt&&tlAcabadoTxt(item)?' · '+tlAcabadoTxt(item):''))+(item.recargo?' · Rec/Desc '+item.recargo+'%':'')+'</small></td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;"><strong style="color:#1a6b45;">'+(cant>1?cant+'× ':'')+item.nombre+'</strong><br><small style="color:#888;">'+(item.modo==='master'?'Rollo Master':'Confeccionado'+(window.tlAcabadoTxt&&tlAcabadoTxt(item)?' · '+tlAcabadoTxt(item):''))+(item.recargo?' · '+(item.recargo>0?'Recargo ':'Descuento ')+Math.abs(item.recargo)+'%':'')+'</small></td>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;font-size:11px;line-height:1.55;"><span style="font-weight:700;color:#555;">Solicitado:</span> '+par(aSolM,lM,aSolFt,lFt)
           +(difiere?'<br><span style="font-weight:700;color:#d97706;">Cobrado: '+par(aCobM,lM,aCobFt,lFt)+'</span>':'')
           +'<br><span style="font-weight:700;color:#555;">Cálculo:</span> '+calcTxt+'</td>'
@@ -129,7 +129,7 @@ async function generarPDF(){
     } else {
       filas += '<tr>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;color:#bbb;font-size:10px;">'+(idx+1)+'</td>'
-        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;"><strong style="color:#1a6b45;">'+item.nombre+'</strong><br><small style="color:#888;">Saco \u00b7 '+etiquetaTierItem(item)+(item.recargo?' \u00b7 Rec/Desc '+item.recargo+'%':'')+'</small></td>'
+        + '<td style="padding:9px 8px;border-bottom:1px solid #eee;"><strong style="color:#1a6b45;">'+item.nombre+'</strong><br><small style="color:#888;">Saco \u00b7 '+etiquetaTierItem(item)+(item.recargo?' \u00b7 '+(item.recargo>0?'Recargo ':'Descuento ')+Math.abs(item.recargo)+'%':'')+'</small></td>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;font-size:11px;">'+(item.medidas||'')+' \u00b7 '+item.cantidad+' unidades</td>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;">\u2014</td>'
         + '<td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right;"><b>Q'+(item.precioUnit||0).toFixed(2)+'</b><br><span style="font-size:9px;color:#888;">por unidad</span></td>'
@@ -336,7 +336,7 @@ async function _syncPreciosCore(manual){
         var viejo = SACOS.find(function(s){ return s.id === ns.id; });
         if(!viejo){ cambios.push('+ Saco nuevo: '+ns.nombre); return; }
         ['pA','pB','pC'].forEach(function(k){
-          if(viejo[k] !== ns[k]) cambios.push(viejo.nombre+' Tier '+k.slice(1)+': Q'+viejo[k].toFixed(2)+' > Q'+ns[k].toFixed(2));
+          if(viejo[k] !== ns[k]) cambios.push(viejo.nombre+' precio '+k.slice(1)+': Q'+viejo[k].toFixed(2)+' > Q'+ns[k].toFixed(2));
         });
       });
       TELAS = data.telas; SACOS = data.sacos;
