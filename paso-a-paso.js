@@ -6,7 +6,7 @@
   function $(id) { return document.getElementById(id); }
   function esc(t) { return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
   function num(id) { var e = $(id); return e ? (parseFloat(e.value) || 0) : 0; }
-  var TIT = { 1: '¿Qué tela?', 2: '¿Qué medidas?', 3: 'Precio y agregar' };
+  var TIT = { 1: 'Tela', 2: 'Medidas', 3: 'Precio y agregar' };
   var cur = 1, grupos = [];
 
   function fm(v) { return String(+Number(v).toFixed(2)); }
