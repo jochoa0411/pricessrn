@@ -362,6 +362,7 @@ body.cartbar-on #appShell .content, body.tl-bar-on #appShell .content { padding-
 .mc-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .mc-pills .pill { white-space: normal; line-height: 1.25; }
 .mc-acts { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
+.apr-sel { display: flex; flex-wrap: wrap; gap: 8px; margin: -2px 0 4px; } .apr-sel .sug-chip { min-height: 48px; font-size: 17px; padding: 0 18px; color: #1d1d1f; } .apr-sel .sug-chip.on { background: #1a6b45 !important; border-color: #1a6b45 !important; color: #fff !important; }
 .envio-prog { margin:10px 0 4px; padding:12px 14px; border-radius:12px; background:#e8f3ec; color:#14573a; }
 .envio-prog[hidden] { display:none; }
 .ep-t { font-size:18px; font-weight:700; margin-bottom:8px; }
@@ -1225,6 +1226,8 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
     <div class="field"><label>Se enviará a</label><div id="merVendedorCorreoDisplay" style="padding:12px;background:#f4f4f5;border-radius:10px;font-weight:600;color:#1a6b45;"></div></div>
     <div class="dest" role="radiogroup" aria-label="¿A quién se envía?">
       <button type="button" id="destMi" role="radio" aria-checked="true" class="on" onclick="setDestinoEnvio(false)"><b>Solo a mi correo</b><small>Para revisar costos. Al cliente la envías después, desde Mis cotizaciones.</small></button>
+      <button type="button" id="destApr" role="radio" aria-checked="false" onclick="setDestinoEnvio('apr')"><b>Pedir aprobación</b><small id="destAprTxt">Rudy o José revisan los costos y la aprueban antes de enviarla.</small></button>
+      <div id="merAprSel" class="apr-sel" hidden></div>
       <button type="button" id="destCli" role="radio" aria-checked="false" onclick="setDestinoEnvio(true)"><b>Enviar al cliente ahora</b><small id="merEnvioTxt"></small></button>
     </div>
     <input type="checkbox" id="merEnviarCliente" hidden>
@@ -2055,5 +2058,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="version.js"></script><script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=12"></script><script src="listas-ui.js?v=5"></script><script src="precios-ui.js?v=5"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=6"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="vendedor-ui.js?v=1"></script><script src="real-quote.js?v=20261046"></script><script src="tela-ui.js?v=15"></script><script src="carrito-ui.js?v=14"></script><script src="paso-a-paso.js?v=3"></script><script src="selector-producto.js?v=2"></script><script src="paso-envio.js?v=2"></script><script src="instalar-app.js?v=4"></script></body>
+<script src="version.js"></script><script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=12"></script><script src="listas-ui.js?v=5"></script><script src="precios-ui.js?v=5"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=6"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="vendedor-ui.js?v=1"></script><script src="real-quote.js?v=20261049"></script><script src="tela-ui.js?v=15"></script><script src="carrito-ui.js?v=14"></script><script src="paso-a-paso.js?v=3"></script><script src="selector-producto.js?v=2"></script><script src="paso-envio.js?v=2"></script><script src="instalar-app.js?v=4"></script></body>
 </html>
