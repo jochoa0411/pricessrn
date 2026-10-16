@@ -105,7 +105,8 @@
   function montarOpcionScroll() {
     var foot = document.querySelector('#sidebar .nv-foot'); if (!foot || $('optSubir')) return;
     var l = document.createElement('div'); l.className = 'nv-opt';
-    l.innerHTML = '<div class="nv-opt-t"><b id="optSubirT">Volver arriba al agregar</b><small>Después de agregar un producto, la pantalla sube al inicio para agregar el siguiente.</small></div>'
+    l.title = 'Después de agregar un producto, la pantalla sube al inicio para agregar el siguiente.';
+    l.innerHTML = '<div class="nv-opt-t"><b id="optSubirT">Volver arriba al agregar</b></div>'
       + '<button type="button" id="optSubir" class="sw" role="switch" aria-labelledby="optSubirT" aria-checked="' + (subirActivo() ? 'true' : 'false') + '" onclick="alternarOpcionSubir()"><i></i></button>';
     foot.insertBefore(l, foot.firstChild);
   }
