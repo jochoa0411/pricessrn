@@ -1,2 +1,2 @@
 // Lo escribe publicar.sh en cada publicación: no editar a mano.
-window.APP_VERSION = { version: '2.0', build: 148, fecha: '2026-10-16', nota: 'Quitar Instalar del menú Más' };
+window.APP_VERSION = { version: '2.0', build: 149, fecha: '2026-10-16', nota: 'Actualización automática y mejor uso de la pantalla alta' };
