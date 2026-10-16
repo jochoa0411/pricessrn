@@ -293,7 +293,11 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 #bottomNav { order: 4; }
 body.cartbar-on #appShell .content, body.tl-bar-on #appShell .content { padding-bottom: 20px; }
 @media (min-width: 701px) { .cart-bar, .tl-bar { max-width: 700px; } }
-.cx-tot-b { border:none; background:none; text-align:right; display:flex; flex-direction:column; align-items:flex-end; padding:2px 0 2px 8px; min-height:48px; cursor:pointer; font-family:inherit; }
+.cx-link { margin-top:6px; min-height:44px; padding:0; border:none; background:none; color:#1a6b45; font-size:15px; font-weight:700; text-decoration:underline; display:inline-flex; gap:6px; align-items:center; cursor:pointer; font-family:inherit; text-align:left; }
+.cx-link .ic svg { width:14px; height:14px; }
+.cx-texto { margin-top:6px; padding:8px 10px; border-left:3px solid #1a6b45; background:#f0f9f5; font-size:14px; color:#1d1d1f; line-height:1.4; border-radius:0 8px 8px 0; white-space:pre-line; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.cx-top { flex-wrap: wrap; }
+.cx-tot-b { border:none; background:none; text-align:right; display:flex; flex-direction:row; justify-content:space-between; align-items:center; order:3; flex:1 0 100%; padding:4px 0 2px 30px; min-height:48px; cursor:pointer; font-family:inherit; font-size:20px; font-weight:800; color:#1a6b45; }
 .cx-tot-b small { font-size:13px; font-weight:600; color:#1a6b45; text-decoration:underline; display:inline-flex; gap:4px; align-items:center; }
 .cx-tot-b small .ic svg { width:12px; height:12px; }
 .cx-nota.fijo { color:#14432a; }
@@ -1198,6 +1202,23 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
   </div>
 </div>
 
+<!-- TEXTO DE UNA LÍNEA -->
+<div id="modalDescripcion" class="modal hidden" onclick="if(event.target===this)cerrarDescripcion()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Texto de la línea</div>
+      <span class="modal-close" onclick="cerrarDescripcion()">×</span>
+    </div>
+    <div class="pf-cab"><b id="dlNombre"></b><span>Esto es lo que lee el cliente. Las medidas, el precio y el cálculo no cambian.</span></div>
+    <div class="field"><label for="dlTexto">Descripción</label>
+      <textarea id="dlTexto" rows="6" maxlength="600" style="width:100%;padding:12px;border:1px solid #d1d1d6;border-radius:10px;font-size:17px;font-family:inherit;resize:vertical"></textarea></div>
+    <div class="modal-btns" style="flex-direction:column">
+      <button class="btn btn-success btn-block" onclick="guardarDescripcion()">Guardar texto</button>
+      <button class="btn btn-ghost btn-block" id="dlAuto" onclick="descripcionAuto()" style="display:none">Volver al texto automático</button>
+    </div>
+  </div>
+</div>
+
 <!-- HOJA DE CALCULO DE UNA COTIZACION -->
 <div id="modalCalculo" class="modal hidden" onclick="if(event.target===this)cerrarModalCalculo()">
   <div class="modal-box" onclick="event.stopPropagation()">
@@ -1921,5 +1942,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=10"></script><script src="listas-ui.js?v=4"></script><script src="precios-ui.js?v=4"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=2"></script><script src="precio-final.js?v=1"></script><script src="real-quote.js?v=20261034"></script><script src="tela-ui.js?v=12"></script><script src="carrito-ui.js?v=11"></script></body>
+<script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=10"></script><script src="listas-ui.js?v=4"></script><script src="precios-ui.js?v=4"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=2"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="real-quote.js?v=20261035"></script><script src="tela-ui.js?v=12"></script><script src="carrito-ui.js?v=13"></script></body>
 </html>

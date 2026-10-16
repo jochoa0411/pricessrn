@@ -63,6 +63,8 @@
       +   '<div class="cx-txt"><div class="cx-n">' + esc(it.nombre) + '</div><div class="cx-d">' + detalle + '</div>'
       +     (tela ? notaCobro(it) : '')
       +     (it.precioManual ? '<div class="cx-nota fijo">' + ic('edit') + ' Precio fijado a mano</div>' : '')
+      +     (it.descripcionManual ? '<div class="cx-texto">«' + esc(it.descripcionManual) + '»</div>' : '')
+      +     '<button type="button" class="cx-link" onclick="abrirDescripcion(' + uid + ')">' + ic('edit') + (it.descripcionManual ? ' Texto personalizado · editar' : ' Editar el texto de la cotización') + '</button>'
       +     (tela && window.avisoMedidasIguales ? avisoMedidasIguales(it) : '')
       +     (precioAnterior(it) ? '<button type="button" class="opt-chip alerta cx-viejo" onclick="cxActualizarPrecios()">' + ic('refresh') + ' Precio anterior · actualizar</button>' : '')
       +   '</div>'
@@ -260,6 +262,7 @@
     if (idx >= 0) {
       var nuevo = CARRITO.pop();         // el recién agregado
       idx = CARRITO.findIndex(function (x) { return x.uid === editUid; });
+      if (CARRITO[idx] && CARRITO[idx].descripcionManual) nuevo.descripcionManual = CARRITO[idx].descripcionManual;   // el texto personalizado sobrevive a la edición
       nuevo.uid = editUid;
       CARRITO[idx] = nuevo;
       ev.actualizado = true;

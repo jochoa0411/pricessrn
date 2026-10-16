@@ -560,6 +560,16 @@ async function consultarNit(){
   }
 }
 
+// Medida pedida (la que tecleó el vendedor, no la redondeada a 6 ft que se usa para el precio): «14.80 m x 20.00 m»
+function _medidaTelaTxt(item){
+  var anchoLabel = item.ua === 'm' ? item.aSolM.toFixed(2) + 'm' : item.aSolFt.toFixed(1) + 'ft';
+  var largoLabel = item.ul === 'm' ? item.lM.toFixed(2) + 'm' : item.lFt.toFixed(1) + 'ft';
+  return anchoLabel.replace(/(\d)(ft|m)$/, '$1 $2') + ' x ' + largoLabel.replace(/(\d)(ft|m)$/, '$1 $2');
+}
+// Texto que se arma solo para la línea (el vendedor puede reemplazarlo: item.descripcionManual)
+function descripcionAutomatica(item){
+  return item.tipo === 'tela' ? tlDescripcionLinea(item, _medidaTelaTxt(item)) : tlDescripcionSaco(item);
+}
 function _construirItemsCotizacionReal(){
   var hasSaco = CARRITO.some(function(i){ return i.tipo === 'saco'; });
   var telas = CARRITO.filter(function(i){ return i.tipo === 'tela'; });
@@ -587,9 +597,7 @@ function _construirItemsCotizacionReal(){
       // Medida SOLICITADA (la que el vendedor tecleó), no la redondeada a múltiplo de
       // 6ft que se usa internamente para calcular precio — eso es lo que no debe ver
       // el cliente; la medida pedida sí, porque es literalmente lo que va a recibir.
-      var anchoLabel = item.ua === 'm' ? item.aSolM.toFixed(2) + 'm' : item.aSolFt.toFixed(1) + 'ft';
-      var largoLabel = item.ul === 'm' ? item.lM.toFixed(2) + 'm' : item.lFt.toFixed(1) + 'ft';
-      var medida = anchoLabel.replace(/(\d)(ft|m)$/, '$1 $2') + ' x ' + largoLabel.replace(/(\d)(ft|m)$/, '$1 $2');
+      var medida = _medidaTelaTxt(item);
       var modoLabel = item.modo === 'master' ? 'Master' : 'Confeccionado';
       var precioSqft = moneda === 'GTQ' ? (item.p * item.tc) : item.p;
 
@@ -618,6 +626,9 @@ function _construirItemsCotizacionReal(){
       precio_unitario: item.precioUnit,
     };
   });
+
+  // Texto personalizado por el vendedor: reemplaza solo la descripción; medidas, precios y cálculo siguen siendo los ingresados
+  items.forEach(function(it, idx){ var c = CARRITO[idx]; if (c && c.descripcionManual) it.descripcion = c.descripcionManual; });
 
   var total = items.reduce(function(s, it){ return s + it.cantidad * it.precio_unitario; }, 0);
   return { moneda: moneda, items: items, total: total };
