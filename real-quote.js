@@ -690,7 +690,7 @@ function _mostrarCambiosPrecios(version, cambios){
 
 // ── Modal de datos para la cotización real (correo, entrega, pago) — se abre
 // solo al hacer click en "Generar cotización real", no queda fijo en pantalla ──
-var _ignorarPendiente = false, _ignorarViejos = false, _ignorarPreciosAnt = false;
+var _ignorarPendiente = false, _ignorarViejos = false, _ignorarPreciosAnt = false, _ignorarIguales = false;
 var _HORAS_VIEJO = 12;
 
 // Cálculos que el vendedor tecleó pero NO agregó al presupuesto. Es el caso que causó
@@ -729,7 +729,8 @@ function _estadoEnvio(){
   var pend = _ignorarPendiente ? [] : _calculosPendientes();
   var viejos = _ignorarViejos ? [] : CARRITO.filter(function(i){ return _edadItemMs(i) > _HORAS_VIEJO * 3600000; });
   var preciosAnt = _ignorarPreciosAnt ? [] : _itemsPreciosAnteriores();
-  return { armado: armado, pend: pend, viejos: viejos, preciosAnt: preciosAnt, bloqueo: !!(armado.error || pend.length || viejos.length || preciosAnt.length) };
+  var iguales = (_ignorarIguales || !window.gruposMismoPrecio) ? [] : gruposMismoPrecio();
+  return { armado: armado, pend: pend, viejos: viejos, preciosAnt: preciosAnt, iguales: iguales, bloqueo: !!(armado.error || pend.length || viejos.length || preciosAnt.length || iguales.length) };
 }
 
 function _renderResumenEnvio(){
@@ -759,6 +760,13 @@ function _renderResumenEnvio(){
       + 'Actualízalos para cotizar con la lista de hoy, o confirma que es intencional.'
       + '<div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn btn-success btn-sm" onclick="_actualizarPreciosYRevisar()">' + _ic('refresh') + ' Actualizar a precios vigentes</button>'
       + '<button type="button" class="btn btn-ghost btn-sm" onclick="_ignorarPreciosAnt=true;_renderResumenEnvio()">Conservar precios anteriores</button></div></div>';
+  }
+  if (est.iguales.length) {
+    var nIg = est.iguales.reduce(function(a, g){ return a + g.length; }, 0);
+    html += '<div class="res-warn"><strong>' + _ic('warn') + ' ' + nIg + ' líneas de tela tienen el MISMO precio con medidas distintas.</strong><br>'
+      + 'Como el ancho se cobra por múltiplos de 6 pies, una medida menor cuesta igual. Revisa si quieres ajustar el precio (el sistema te sugiere uno, tú lo apruebas) o envíala así.'
+      + '<div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn btn-success btn-sm" onclick="cerrarModalEnviarReal();document.getElementById(\'cartList\').scrollIntoView({behavior:\'smooth\',block:\'center\'})">' + _ic('eye') + ' Revisar en el presupuesto</button>'
+      + '<button type="button" class="btn btn-ghost btn-sm" onclick="_ignorarIguales=true;_renderResumenEnvio()">Enviar con el mismo precio</button></div></div>';
   }
   if (est.armado.error) {
     html += '<div class="res-warn err"><strong>No se puede enviar todavía:</strong><br>' + _esc(est.armado.error) + '</div>';
@@ -942,7 +950,7 @@ function abrirModalEnviarReal(){
   }
   var display = document.getElementById('merVendedorCorreoDisplay');
   if (display) display.textContent = sesion.correo || '(sin correo configurado)';
-  _ignorarPendiente = false; _ignorarViejos = false; _ignorarPreciosAnt = false;
+  _ignorarPendiente = false; _ignorarViejos = false; _ignorarPreciosAnt = false; _ignorarIguales = false;
   var chk = document.getElementById('merEnviarCliente'); if (chk) chk.checked = false;   // cada cotización empieza como «solo para revisión»
   _prellenarModalEnvio();
   actualizarAvisoEnvio();

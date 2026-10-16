@@ -62,6 +62,7 @@
       +   '<span class="cx-ico">' + ic(tela ? 'fabric' : 'bag') + '</span>'
       +   '<div class="cx-txt"><div class="cx-n">' + esc(it.nombre) + '</div><div class="cx-d">' + detalle + '</div>'
       +     (tela ? notaCobro(it) : '')
+      +     (tela && window.avisoMedidasIguales ? avisoMedidasIguales(it) : '')
       +     (precioAnterior(it) ? '<button type="button" class="opt-chip alerta cx-viejo" onclick="cxActualizarPrecios()">' + ic('refresh') + ' Precio anterior · actualizar</button>' : '')
       +   '</div>'
       +   '<div class="cx-tot">' + total + '</div>'
