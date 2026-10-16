@@ -606,17 +606,8 @@ function _construirItemsCotizacionReal(){
       var modoLabel = item.modo === 'master' ? 'Master' : 'Confeccionado';
       var precioSqft = moneda === 'GTQ' ? (item.p * item.tc) : item.p;
 
-      if (item.modo === 'master') {
-        // Rollo Master: material crudo, se vende por área continua.
-        return {
-          descripcion: tlDescripcionLinea(item, medida),
-          unidad: 'pie²',
-          cantidad: item.ar,
-          precio_unitario: precioSqft,
-        };
-      }
-      // Confeccionado: pieza terminada (con ojetes/ribete) — se cotiza por unidad,
-      // no por área; el precio unitario es el total de UNA pieza de esa medida.
+      // Se venden PRODUCTOS FINALES, no tela: toda pieza (Rollo Master o Confeccionado) se cotiza por UNIDAD,
+      // nunca por pie²; el precio unitario es el total de UNA pieza de esa medida.
       return {
         descripcion: tlDescripcionLinea(item, medida),
         unidad: 'UNIDAD',
@@ -1261,6 +1252,7 @@ function renderMisCotizaciones(){
     var corta = function (v) { try { return new Date(v).toLocaleString('es-GT', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; } };
     var meta = [_fechaCorta(c.created_at), c.total_items + (c.total_items === 1 ? ' ítem' : ' ítems')];
     if (c.vendedor_nombre) meta.push('Vendedor: ' + _esc(c.vendedor_nombre));
+    if (c.mia === false && c.creado_por_nombre) meta.push('Elaboró: ' + _esc(c.creado_por_nombre));
     if (c.precios_version) meta.push('precios v' + c.precios_version);
     return '<div class="item-card mc">'
       + '<div class="mc-top"><strong>' + _esc(c.no_cotizacion) + ' — ' + _esc(c.cliente) + '</strong><span class="mc-tot">' + _fmtMoneda(c.total, c.moneda) + '</span></div>'
@@ -1424,7 +1416,7 @@ function abrirAcciones(id){
     + (c.tiene_calculo ? it('calc', 'Ver cálculo', 'verCalculo(' + id + ')') : '')
     + it('print', 'Imprimir', "accionPdf(" + id + ",'imprimir')")
     + it('download', 'Descargar PDF', "accionPdf(" + id + ",'descargar')")
-    + it('mail', 'Enviar al cliente / por correo', 'abrirReenviar(' + id + ')');
+    + (c.mia === false ? '' : it('mail', 'Enviar al cliente / por correo', 'abrirReenviar(' + id + ')'));
   if (c.puede_clonar) h += it('copy', 'Clonar', 'clonarCot(' + id + ')');
   if (c.puede_editar_estado || c.puede_eliminar) h += '<div class="act-sep"></div>';
   if (c.puede_editar_estado) h += it('sold', c.vendida ? 'Desmarcar vendida' : 'Marcar como vendida', 'marcarVendida(' + id + ')');
@@ -1531,7 +1523,7 @@ async function abrirEditar(id){
     document.getElementById('medAddLinea').classList.toggle('hidden', ro);
     document.getElementById('btnMedGuardarEnviar').classList.toggle('hidden', ro);
     document.getElementById('btnMedGuardar').classList.toggle('hidden', ro);
-    document.getElementById('btnMedReenviar').classList.toggle('hidden', !ro);
+    document.getElementById('btnMedReenviar').classList.toggle('hidden', !ro || q.mia === false);   // reenviar solo el autor
     medRender();
     document.getElementById('modalEditar').classList.remove('hidden');
   } catch (e) {
