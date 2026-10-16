@@ -332,6 +332,25 @@ body.cartbar-on #appShell .content, body.tl-bar-on #appShell .content { padding-
 .chk-envio input { width:26px; height:26px; min-height:0; margin:2px 0 0; flex:none; accent-color:#1a6b45; }
 .chk-envio span { display:flex; flex-direction:column; gap:4px; font-size:16px; color:#1d1d1f; }
 .chk-envio small { font-size:14px; font-weight:500; color:#555; line-height:1.4; }
+.dest { display:flex; flex-direction:column; gap:8px; margin:12px 0; }
+.dest button { text-align:left; padding:12px 14px; border-radius:14px; border:2px solid #d1d1d6; background:#fff; font:inherit; color:#222; cursor:pointer; min-height:64px; }
+.dest button b { display:block; font-size:18px; } .dest button small { display:block; font-size:16px; color:#555; line-height:1.35; margin-top:2px; overflow-wrap:anywhere; }
+.dest button.on { border-color:#1a6b45; background:#e8f3ec; }
+.dest button.on b::before { content:'● '; color:#1a6b45; } .dest button:not(.on) b::before { content:'○ '; color:#8e8e93; }
+.envio-prog { margin:10px 0 4px; padding:12px 14px; border-radius:12px; background:#e8f3ec; color:#14573a; }
+.envio-prog[hidden] { display:none; }
+.ep-t { font-size:18px; font-weight:700; margin-bottom:8px; }
+.ep-bar { height:10px; border-radius:6px; background:#c9e0d2; overflow:hidden; position:relative; }
+.ep-bar i { position:absolute; top:0; bottom:0; width:40%; border-radius:6px; background:#1a6b45; animation:epMove 1.2s ease-in-out infinite; }
+@keyframes epMove { 0% { left:-40%; } 100% { left:100%; } }
+@media (prefers-reduced-motion: reduce) { .ep-bar i { animation:none; width:100%; opacity:.6; } }
+.res-no { font-size:22px; font-weight:800; color:#1a6b45; margin-bottom:6px; }
+.res-fila { display:flex; gap:12px; align-items:flex-start; padding:10px 12px; margin-top:8px; border-radius:12px; line-height:1.35; }
+.res-fila.si { background:#e8f3ec; } .res-fila.no { background:#fff3e0; color:#8a4b00; border:1px solid #f0c987; }
+.res-fila b { display:block; font-size:18px; } .res-fila small { display:block; font-size:16px; overflow-wrap:anywhere; }
+.res-ic { width:30px; height:30px; border-radius:50%; flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; font-weight:800; color:#fff; background:#1a6b45; }
+.res-fila.no .res-ic { background:#c26a00; }
+.res-nota { margin-top:12px; font-size:16px; color:#555; line-height:1.4; }
 .pill.sin-enviar { background:#fff3e0; color:#8a4b00; border:1px solid #f0c987; }
 .sug-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
 .sug-row:empty { display:none; }
@@ -1175,7 +1194,12 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
     <div class="pp" data-pp="3">
     <div id="merResumen" class="resumen"></div>
     <div class="field"><label>Se enviará a</label><div id="merVendedorCorreoDisplay" style="padding:12px;background:#f4f4f5;border-radius:10px;font-weight:600;color:#1a6b45;"></div></div>
-    <label class="chk-envio" for="merEnviarCliente"><input type="checkbox" id="merEnviarCliente" onchange="actualizarAvisoEnvio()"><span><b>Enviar también al cliente ahora</b><small id="merEnvioTxt"></small></span></label>
+    <div class="dest" role="radiogroup" aria-label="¿A quién se envía?">
+      <button type="button" id="destMi" role="radio" aria-checked="true" class="on" onclick="setDestinoEnvio(false)"><b>Solo a mi correo</b><small>Para revisar costos. Al cliente la envías después, desde Mis cotizaciones.</small></button>
+      <button type="button" id="destCli" role="radio" aria-checked="false" onclick="setDestinoEnvio(true)"><b>Enviar al cliente ahora</b><small id="merEnvioTxt"></small></button>
+    </div>
+    <input type="checkbox" id="merEnviarCliente" hidden>
+    <div id="merProg" class="envio-prog" role="status" aria-live="polite" hidden><div id="merProgT" class="ep-t"></div><div class="ep-bar"><i></i></div></div>
     <div class="modal-btns">
       <button class="btn btn-success btn-block" id="btnCotReal" onclick="generarCotizacionReal()">Enviar cotización</button>
     </div>
@@ -1327,7 +1351,7 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
       <span class="modal-close" onclick="cerrarModalCotReal()">×</span>
     </div>
     <div id="mcrBody" style="font-size:16px;line-height:1.9;color:#333;"></div>
-    <div class="modal-btns">
+    <div class="modal-btns" id="mcrBtns" style="flex-direction:column">
       <button class="btn btn-success btn-block" onclick="cerrarModalCotReal()">Entendido</button>
     </div>
   </div>
@@ -2001,5 +2025,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="version.js"></script><script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=10"></script><script src="listas-ui.js?v=4"></script><script src="precios-ui.js?v=4"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=5"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="vendedor-ui.js?v=1"></script><script src="real-quote.js?v=20261038"></script><script src="tela-ui.js?v=13"></script><script src="carrito-ui.js?v=14"></script><script src="paso-a-paso.js?v=3"></script><script src="paso-envio.js?v=1"></script></body>
+<script src="version.js"></script><script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=10"></script><script src="listas-ui.js?v=4"></script><script src="precios-ui.js?v=4"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=5"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="vendedor-ui.js?v=1"></script><script src="real-quote.js?v=20261040"></script><script src="tela-ui.js?v=13"></script><script src="carrito-ui.js?v=14"></script><script src="paso-a-paso.js?v=3"></script><script src="paso-envio.js?v=2"></script></body>
 </html>

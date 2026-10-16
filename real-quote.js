@@ -347,11 +347,16 @@ function _recordarCliente(c){
   list.unshift({ nombre: c.nombre, nit: c.nit || '', correo: c.correo || '', codigo: c.codigo || null, ts: Date.now() });
   _lsSet('cotClientesRecientes', list.slice(0, 12));
 }
+function setDestinoEnvio(alCliente){ document.getElementById('merEnviarCliente').checked = !!alCliente; actualizarAvisoEnvio(); }
 function actualizarAvisoEnvio(){
   var t = document.getElementById('merEnvioTxt'), on = document.getElementById('merEnviarCliente').checked;
+  var mi = document.getElementById('destMi'), cli = document.getElementById('destCli');
+  if (mi && cli) { mi.classList.toggle('on', !on); cli.classList.toggle('on', on); mi.setAttribute('aria-checked', on ? 'false' : 'true'); cli.setAttribute('aria-checked', on ? 'true' : 'false'); }
+  var correo = ((document.getElementById('merClienteCorreo') || {}).value || '').trim();
   if (t) t.textContent = on
-    ? 'Se enviará al correo del contacto en cuanto toques «Enviar cotización». No se puede deshacer.'
-    : 'Sin marcar: la cotización se guarda y el PDF te llega solo a ti para revisar costos. Después la envías al cliente desde Mis cotizaciones.';
+    ? 'Se enviará a ' + (correo || 'el correo del contacto') + ' al tocar el botón verde. No se puede deshacer.'
+    : 'El cliente la recibe por correo al instante.';
+  if (document.getElementById('merResumen')) _renderResumenEnvio();
 }
 function _recordarTerminos(t){
   var cur = _lsGet('cotTerminos', {});
@@ -797,7 +802,8 @@ function _renderResumenEnvio(){
   box.innerHTML = html;
   if (btn) {
     btn.disabled = est.bloqueo;
-    btn.textContent = est.bloqueo ? 'Resuelve los avisos de arriba' : 'Enviar ' + _fmtMoneda(est.armado.total, est.armado.moneda) + ' a ' + (cliente.length > 24 ? cliente.slice(0, 22) + '…' : cliente);
+    var alCli = document.getElementById('merEnviarCliente').checked;
+    btn.textContent = est.bloqueo ? 'Resuelve los avisos de arriba' : (alCli ? 'Enviar ' + _fmtMoneda(est.armado.total, est.armado.moneda) + ' a ' + (cliente.length > 24 ? cliente.slice(0, 22) + '…' : cliente) : 'Guardar y enviarme el PDF · ' + _fmtMoneda(est.armado.total, est.armado.moneda));
   }
 }
 function _resolverPendiente(tipo){
@@ -996,14 +1002,24 @@ function _mostrarConfirmacionCotReal(estado, info){
   var bodyEl  = document.getElementById('mcrBody');
 
   if (estado === 'ok'){
-    titleEl.textContent = info.titulo || 'Cotización enviada';
+    var fila = function (ok, t, d) {
+      return '<div class="res-fila ' + (ok ? 'si' : 'no') + '"><span class="res-ic" aria-hidden="true">' + (ok ? '✓' : '!') + '</span><div><b>' + t + '</b>' + (d ? '<small>' + d + '</small>' : '') + '</div></div>';
+    };
+    var hora = _fechaCorta(new Date());
+    titleEl.textContent = info.paraRevision ? 'Guardada para revisión' : 'Enviada al cliente';
     bodyEl.innerHTML =
-        '<p><strong>Número de cotización:</strong> ' + info.no_cotizacion + '</p>'
-      + '<p><strong>Enviada a:</strong> ' + info.vendedorCorreo + '</p>'
-      + (info.clienteCorreo ? '<p><strong>Enviada también al cliente:</strong> ' + info.clienteCorreo + '</p>' : '')
+        '<div class="res-no">' + _esc(info.no_cotizacion) + '</div>'
+      + fila(true, 'Cotización guardada', 'Ya está en Mis cotizaciones')
+      + fila(true, 'PDF enviado a tu correo', _esc(info.vendedorCorreo))
       + (info.paraRevision
-        ? '<p style="margin-top:10px;padding:10px;background:#fff3e0;border-radius:6px;color:#8a4b00;font-weight:700;">Todavía NO se envió al cliente. Te llegó el PDF a tu correo para revisar costos. Cuando esté lista: Mis cotizaciones › ⋮ › Enviar al cliente.</p>'
-        : '<p style="margin-top:10px;padding:10px;background:#f0f9f5;border-radius:6px;color:#1a6b45;font-weight:700;">Revisa tu correo — debería llegar en segundos. Queda en Historial › Mis cotizaciones, donde puedes editarla o reenviarla.</p>');
+        ? fila(false, 'Todavía NO se envió al cliente', 'Revisa los costos en tu correo. Cuando esté lista, toca el botón verde de abajo.')
+        : fila(true, 'Enviada al cliente', _esc(info.clienteCorreo) + ' · ' + _esc(hora)))
+      + (info.paraRevision ? '' : '<p class="res-nota">Para comprobarlo después: Mis cotizaciones muestra «Enviada al cliente» con la fecha y la hora.</p>');
+    var bt = document.getElementById('mcrBtns');
+    if (bt) bt.innerHTML = (info.paraRevision && info.id ? '<button class="btn btn-success btn-block" id="mcrEnviarAhora">Enviar al cliente ahora</button>' : '')
+      + '<button class="btn ' + (info.paraRevision && info.id ? 'btn-ghost' : 'btn-success') + ' btn-block" onclick="cerrarModalCotReal()">Entendido</button>';
+    var ea = document.getElementById('mcrEnviarAhora');
+    if (ea) ea.onclick = function () { cerrarModalCotReal(); abrirReenviar(info.id, info.clienteCorreoEscrito || ''); if (_reenv) { _reenv.no = info.no_cotizacion; document.getElementById('mreTitle').textContent = 'Enviar ' + info.no_cotizacion; } };
   } else if (estado === 'creada_sin_correo'){
     titleEl.textContent = 'Cotización guardada, correo falló';
     bodyEl.innerHTML =
@@ -1014,6 +1030,7 @@ function _mostrarConfirmacionCotReal(estado, info){
     bodyEl.innerHTML = '<p style="color:#d32f2f">' + (info.error || 'Error desconocido') + '</p>'
       + '<p style="margin-top:8px;font-size:14px;color:#888;">El presupuesto no se perdió — corrige e intenta de nuevo.</p>';
   }
+  if (estado !== 'ok') { var bt2 = document.getElementById('mcrBtns'); if (bt2) bt2.innerHTML = '<button class="btn btn-success btn-block" onclick="cerrarModalCotReal()">Entendido</button>'; }
   document.getElementById('modalCotReal').classList.remove('hidden');
 }
 
@@ -1100,6 +1117,7 @@ async function generarCotizacionReal(){
   var textoOriginal = btn.textContent;
   btn.disabled = true;
   btn.textContent = 'Enviando…';
+  var _detenerProg = _mostrarProgresoEnvio(enviarCliente);
 
   // Cliente que no está en el catálogo (y no es consumidor final): se registra en la BD junto con la cotización
   var esNuevoCliente = !!(_cliCache && _cliCache.puede_crear && !(_clienteSel && _clienteSel.nombre === cliente && _clienteSel.codigo)
@@ -1168,15 +1186,26 @@ async function generarCotizacionReal(){
       _mostrarConfirmacionCotReal('creada_sin_correo', { no_cotizacion: data.no_cotizacion, aviso: data.aviso });
     } else {
       document.getElementById('merEnviarCliente').checked = false;   // la siguiente cotización vuelve a empezar solo para revisión
-      _mostrarConfirmacionCotReal('ok', { no_cotizacion: data.no_cotizacion, vendedorCorreo: vendedorCorreo, clienteCorreo: data.enviada_cliente ? clienteCorreo : '', paraRevision: !data.enviada_cliente });
+      _mostrarConfirmacionCotReal('ok', { id: data.id, no_cotizacion: data.no_cotizacion, vendedorCorreo: vendedorCorreo, clienteCorreo: data.enviada_cliente ? clienteCorreo : '', clienteCorreoEscrito: clienteCorreo, paraRevision: !data.enviada_cliente });
     }
   } catch (e) {
     cerrarModalEnviarReal();
     _mostrarConfirmacionCotReal('error', { error: 'Sin conexión al sistema — revisa tu conexión a internet e intenta de nuevo.' });
   } finally {
+    if (_detenerProg) _detenerProg();
     btn.disabled = false;
     btn.textContent = textoOriginal;
   }
+}
+
+// Barra de avance mientras se guarda y se envía (una sola llamada al servidor: las etapas siguen su orden real)
+function _mostrarProgresoEnvio(alCliente){
+  var box = document.getElementById('merProg'), t = document.getElementById('merProgT'); if (!box) return null;
+  var etapas = [[0, 'Guardando la cotización…'], [2500, 'Generando el PDF…'], [6000, alCliente ? 'Enviando a tu correo y al cliente…' : 'Enviando el PDF a tu correo…'], [16000, 'Sigue enviando — no cierres esta pantalla…']];
+  var ids = [];
+  box.hidden = false; t.textContent = etapas[0][1]; try { box.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {}
+  etapas.slice(1).forEach(function(e){ ids.push(setTimeout(function(){ t.textContent = e[1]; }, e[0])); });
+  return function(){ ids.forEach(clearTimeout); box.hidden = true; };
 }
 
 // ── Historial: mis cotizaciones en el sistema (consultar, editar, reenviar) + borradores locales ──
@@ -1231,8 +1260,9 @@ function renderMisCotizaciones(){
     var editada = new Date(c.updated_at) - new Date(c.created_at) > 60000;
     return '<div class="item-card" style="flex-wrap:wrap">'
       + '<div class="item-info"><strong>' + _esc(c.no_cotizacion) + ' — ' + _esc(c.cliente) + '</strong>'
+      + (c.cliente_enviada_at && c.cliente_enviada_a ? '<small>Enviada a ' + _esc(c.cliente_enviada_a) + '</small>' : '')
       + '<small>' + _fechaCorta(c.created_at) + ' · ' + c.total_items + ' ítem(s)' + (c.vendedor_nombre ? ' · Vendedor: ' + _esc(c.vendedor_nombre) : '') + (c.precios_version ? ' · precios v' + c.precios_version : '') + (editada ? ' · editada ' + _fechaCorta(c.updated_at) : '') + '</small>'
-      + '<div style="margin-top:4px"><span class="pill ' + pill[1] + '">' + _esc(pill[0]) + '</span>' + (c.vendida ? ' <span class="pill ok">Vendida</span>' : '') + (c.origen === 'MOVIL' && !c.cliente_enviada_at && !c.vendida && String(c.estatus).toUpperCase() !== 'CONVERTIDA' ? ' <span class="pill sin-enviar">Sin enviar al cliente</span>' : '') + '</div></div>'
+      + '<div style="margin-top:4px"><span class="pill ' + pill[1] + '">' + _esc(pill[0]) + '</span>' + (c.vendida ? ' <span class="pill ok">Vendida</span>' : '') + (c.cliente_enviada_at ? ' <span class="pill ok">Enviada al cliente · ' + _fechaCorta(c.cliente_enviada_at) + '</span>' : '') + (c.origen === 'MOVIL' && !c.cliente_enviada_at && !c.vendida && String(c.estatus).toUpperCase() !== 'CONVERTIDA' ? ' <span class="pill sin-enviar">Sin enviar al cliente</span>' : '') + '</div></div>'
       + '<div style="text-align:right"><strong style="color:#1a6b45;font-size:15px">' + _fmtMoneda(c.total, c.moneda) + '</strong></div>'
       + '<div style="width:100%;display:flex;gap:6px;justify-content:flex-end">'
       + '<button class="btn btn-warning btn-sm" onclick="abrirEditar(' + c.id + ')">' + _ic(c.editable ? 'edit' : 'eye') + ' ' + (c.editable ? 'Editar' : 'Ver') + '</button>'
