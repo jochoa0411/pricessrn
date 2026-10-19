@@ -94,6 +94,7 @@ input:focus, select:focus { outline: none; border-color: #1a6b45; box-shadow: 0 
 .cart-empty { text-align: center; color: #bbb; padding: 24px 16px; font-size: 15px; }
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; padding-top: max(env(safe-area-inset-top), 16px); }
 .modal.hidden { display: none; }
+button.hidden, .btn.hidden { display: none !important; }   /* los botones del editor se ocultan con la clase «hidden» (antes quedaban siempre visibles) */
 #appShell.hidden { display: none; }
 
 /* ── Login gate ── */
@@ -363,6 +364,7 @@ body.cartbar-on #appShell .content, body.tl-bar-on #appShell .content { padding-
 .mc-pills .pill { white-space: normal; line-height: 1.25; }
 .mc-acts { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
 .apr-sel { display: flex; flex-wrap: wrap; gap: 8px; margin: -2px 0 4px; } .apr-sel .sug-chip { min-height: 48px; font-size: 17px; padding: 0 18px; color: #1d1d1f; } .apr-sel .sug-chip.on { background: #1a6b45 !important; border-color: #1a6b45 !important; color: #fff !important; }
+.dest-oblig { margin: 0; padding: 10px 12px; border-radius: 12px; background: #e8f3ec; color: #14573a; font-size: 16px; line-height: 1.35; } .act-item.dis { opacity: .55; } .rev-linea { border-left: 3px solid #1a6b45; padding: 2px 0 2px 10px; margin: 6px 0; font-size: 15px; color: #333; } .rev-linea small { display: block; color: #6b6b70; font-size: 14px; } .rev-nota { margin-top: 8px; padding: 10px 12px; border-radius: 10px; background: #fdeceb; color: #8a1c14; font-size: 16px; line-height: 1.35; }
 .envio-prog { margin:10px 0 4px; padding:12px 14px; border-radius:12px; background:#e8f3ec; color:#14573a; }
 .envio-prog[hidden] { display:none; }
 .ep-t { font-size:18px; font-weight:700; margin-bottom:8px; }
@@ -1226,7 +1228,8 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
     <div class="field"><label>Se enviará a</label><div id="merVendedorCorreoDisplay" style="padding:12px;background:#f4f4f5;border-radius:10px;font-weight:600;color:#1a6b45;"></div></div>
     <div class="dest" role="radiogroup" aria-label="¿A quién se envía?">
       <button type="button" id="destMi" role="radio" aria-checked="true" class="on" onclick="setDestinoEnvio(false)"><b>Solo a mi correo</b><small>Para revisar costos. Al cliente la envías después, desde Mis cotizaciones.</small></button>
-      <button type="button" id="destApr" role="radio" aria-checked="false" onclick="setDestinoEnvio('apr')"><b>Pedir aprobación</b><small id="destAprTxt">Rudy o José revisan los costos y la aprueban antes de enviarla.</small></button>
+      <p id="destOblig" class="dest-oblig" hidden><b>Toda cotización pasa por revisión.</b> Un revisor revisa precios y condiciones, la ajusta si hace falta y la autoriza antes de que pueda enviarse al cliente.</p>
+      <button type="button" id="destApr" role="radio" aria-checked="false" onclick="setDestinoEnvio('apr')"><b id="destAprT">Pedir aprobación</b><small id="destAprTxt">Rudy o José revisan los costos y la aprueban antes de enviarla.</small></button>
       <div id="merAprSel" class="apr-sel" hidden></div>
       <button type="button" id="destCli" role="radio" aria-checked="false" onclick="setDestinoEnvio(true)"><b>Enviar al cliente ahora</b><small id="merEnvioTxt"></small></button>
     </div>
@@ -1267,7 +1270,26 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
     <div class="modal-btns" style="flex-direction:column">
       <button class="btn btn-success btn-block" id="btnMedGuardarEnviar" onclick="guardarEdicion(true)"><span class="ic" data-ic="mail"></span> Guardar y reenviar</button>
       <button class="btn btn-primary btn-block" id="btnMedGuardar" onclick="guardarEdicion(false)">Guardar sin enviar</button>
+      <button class="btn btn-success btn-block hidden" id="btnMedAutorizarGuardar" onclick="guardarEdicion(false, true)"><span class="ic" data-ic="check"></span> Guardar y autorizar</button>
+      <button class="btn btn-ghost btn-block hidden" id="btnMedDevolver" onclick="abrirDevolver()">Devolver al vendedor…</button>
+      <button class="btn btn-success btn-block hidden" id="btnMedAprobar" onclick="aprobarDesdeEditor()"><span class="ic" data-ic="check"></span> Autorizar tal como está</button>
       <button class="btn btn-success btn-block hidden" id="btnMedReenviar" onclick="reenviarDesdeEditor()"><span class="ic" data-ic="mail"></span> Reenviar tal como está</button>
+    </div>
+  </div>
+</div>
+
+<!-- DEVOLVER AL VENDEDOR (el revisor explica qué corregir) -->
+<div id="modalDevolver" class="modal hidden" onclick="if(event.target===this)cerrarDevolver()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Devolver al vendedor</div>
+      <span class="modal-close" onclick="cerrarDevolver()">×</span>
+    </div>
+    <p style="font-size:16px;color:#555;margin-bottom:10px">Explica qué hay que corregir. El vendedor recibe tu comentario por aviso y correo, corrige y vuelve a pedir la revisión.</p>
+    <div class="field"><label for="devNota">¿Qué hay que corregir? *</label><textarea id="devNota" rows="4" maxlength="1000" placeholder="Ej: el precio del saco A está bajo, súbelo a Q1.60" style="width:100%;padding:12px;border:1px solid #d1d1d6;border-radius:10px;font-size:17px;font-family:inherit"></textarea></div>
+    <div class="modal-btns" style="flex-direction:column">
+      <button class="btn btn-success btn-block" id="btnDevEnviar" onclick="devolverCotizacion()">Devolver con este comentario</button>
+      <button class="btn btn-ghost btn-block" onclick="cerrarDevolver()">Cancelar</button>
     </div>
   </div>
 </div>
@@ -2058,5 +2080,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="version.js"></script><script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=12"></script><script src="listas-ui.js?v=5"></script><script src="precios-ui.js?v=5"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=6"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="vendedor-ui.js?v=1"></script><script src="real-quote.js?v=20261049"></script><script src="tela-ui.js?v=15"></script><script src="carrito-ui.js?v=14"></script><script src="paso-a-paso.js?v=3"></script><script src="selector-producto.js?v=2"></script><script src="paso-envio.js?v=2"></script><script src="instalar-app.js?v=4"></script></body>
+<script src="version.js"></script><script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=12"></script><script src="listas-ui.js?v=5"></script><script src="precios-ui.js?v=5"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=6"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="vendedor-ui.js?v=1"></script><script src="real-quote.js?v=20261055"></script><script src="tela-ui.js?v=15"></script><script src="carrito-ui.js?v=14"></script><script src="paso-a-paso.js?v=3"></script><script src="selector-producto.js?v=2"></script><script src="paso-envio.js?v=2"></script><script src="instalar-app.js?v=4"></script></body>
 </html>

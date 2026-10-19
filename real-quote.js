@@ -348,15 +348,23 @@ function _recordarCliente(c){
   _lsSet('cotClientesRecientes', list.slice(0, 12));
 }
 // Destino de la cotización: false = solo mi correo · 'apr' = pedir aprobación a un revisor · true = enviar al cliente ahora
-var _destino = false, _revisores = null, _revisorId = null;
+var _destino = false, _revisores = null, _revisorId = null, _esRevisor = true, _revisorDefecto = null;
 function _cargarRevisores(){
   if (_revisores) return Promise.resolve(_revisores);
-  return _api('/autorizadores').then(function(r){ _revisores = (r.ok && Array.isArray(r.data)) ? r.data.filter(function(u){ return !u.yo; }) : []; return _revisores; }).catch(function(){ _revisores = []; return _revisores; });
+  return _api('/autorizadores').then(function(r){
+    var todos = (r.ok && Array.isArray(r.data)) ? r.data : [];
+    _esRevisor = todos.some(function(u){ return u.yo; });             // quien NO autoriza tiene la revisión obligatoria
+    var def = todos.filter(function(u){ return u.por_defecto && !u.yo; })[0];
+    _revisorDefecto = def ? def.id : null;
+    _revisores = todos.filter(function(u){ return !u.yo; });
+    return _revisores;
+  }).catch(function(){ _revisores = []; return _revisores; });
 }
+function _obligatoria(){ return _revisores !== null && !_esRevisor && _revisores.length > 0; }
 function setDestinoEnvio(v){
   _destino = v;
   document.getElementById('merEnviarCliente').checked = v === true;
-  if (v === 'apr') _cargarRevisores().then(function(rs){ if (rs.length === 1) _revisorId = rs[0].id; pintarRevisores(); actualizarAvisoEnvio(); });
+  if (v === 'apr') _cargarRevisores().then(function(rs){ if (!_revisorId && rs.length === 1) _revisorId = rs[0].id; if (!_revisorId && _revisorDefecto) _revisorId = _revisorDefecto; pintarRevisores(); actualizarAvisoEnvio(); });
   actualizarAvisoEnvio();
 }
 function pintarRevisores(){
@@ -374,12 +382,18 @@ function actualizarAvisoEnvio(){
   var mi = document.getElementById('destMi'), cli = document.getElementById('destCli'), apr = document.getElementById('destApr');
   if (mi && cli) { mi.classList.toggle('on', _destino === false); cli.classList.toggle('on', on); mi.setAttribute('aria-checked', _destino === false ? 'true' : 'false'); cli.setAttribute('aria-checked', on ? 'true' : 'false'); }
   if (apr) { apr.classList.toggle('on', _destino === 'apr'); apr.setAttribute('aria-checked', _destino === 'apr' ? 'true' : 'false'); apr.hidden = !!(_revisores && !_revisores.length); }
+  // Revisión obligatoria (quien no autoriza): solo existe «enviar a revisión»; nada sale al cliente hasta que la autoricen
+  var obl = _obligatoria();
+  if (mi) mi.hidden = obl; if (cli) cli.hidden = obl;
+  var ob = document.getElementById('destOblig'); if (ob) ob.hidden = !obl;
   var correo = ((document.getElementById('merClienteCorreo') || {}).value || '').trim();
   if (t) t.textContent = on
     ? 'Se enviará a ' + (correo || 'el correo del contacto') + ' al tocar el botón verde. No se puede deshacer.'
     : 'El cliente la recibe por correo al instante.';
+  var tt = document.getElementById('destAprT'); if (tt) tt.textContent = obl ? 'Enviar a revisión' : 'Pedir aprobación';
   var ta = document.getElementById('destAprTxt');
-  if (ta) ta.textContent = _destino === 'apr' ? (_nombreRevisor() ? 'Se la mandamos a ' + _nombreRevisor() + ' con el PDF. Cuando la apruebe te avisamos.' : 'Elige quién la revisa.') : 'Rudy o José revisan los costos y la aprueban antes de enviarla.';
+  if (ta && obl) ta.textContent = _nombreRevisor() ? 'La revisa y autoriza ' + _nombreRevisor() + '. Cuando la autorice te avisamos y ya podrás enviarla al cliente.' : 'Elige quién la revisa.';
+  else if (ta) ta.textContent = _destino === 'apr' ? (_nombreRevisor() ? 'Se la mandamos a ' + _nombreRevisor() + ' con el PDF. Cuando la apruebe te avisamos.' : 'Elige quién la revisa.') : 'Rudy o José revisan los costos y la aprueban antes de enviarla.';
   pintarRevisores();
   if (document.getElementById('merResumen')) _renderResumenEnvio();
 }
@@ -819,7 +833,7 @@ function _renderResumenEnvio(){
   if (btn) {
     btn.disabled = est.bloqueo;
     var alCli = document.getElementById('merEnviarCliente').checked;
-    btn.textContent = est.bloqueo ? 'Resuelve los avisos de arriba' : (_destino === 'apr' ? 'Guardar y pedir aprobación · ' + _fmtMoneda(est.armado.total, est.armado.moneda) : alCli ? 'Enviar ' + _fmtMoneda(est.armado.total, est.armado.moneda) + ' a ' + (cliente.length > 24 ? cliente.slice(0, 22) + '…' : cliente) : 'Guardar y enviarme el PDF · ' + _fmtMoneda(est.armado.total, est.armado.moneda));
+    btn.textContent = est.bloqueo ? 'Resuelve los avisos de arriba' : (_destino === 'apr' ? (_obligatoria() ? 'Guardar y enviar a revisión · ' : 'Guardar y pedir aprobación · ') + _fmtMoneda(est.armado.total, est.armado.moneda) : alCli ? 'Enviar ' + _fmtMoneda(est.armado.total, est.armado.moneda) + ' a ' + (cliente.length > 24 ? cliente.slice(0, 22) + '…' : cliente) : 'Guardar y enviarme el PDF · ' + _fmtMoneda(est.armado.total, est.armado.moneda));
   }
 }
 function _resolverPendiente(tipo){
@@ -1002,7 +1016,8 @@ function abrirModalEnviarReal(){
   mostrarCondiciones(false);
   var tt = document.getElementById('toast'); if (tt) tt.classList.remove('show');   // un aviso anterior no debe tapar el título del formulario
   var chk = document.getElementById('merEnviarCliente'); if (chk) chk.checked = false;   // cada cotización empieza como «solo para revisión»
-  _destino = false; _revisorId = null; _cargarRevisores().then(function(){ actualizarAvisoEnvio(); });
+  _destino = false; _revisorId = null;
+  _cargarRevisores().then(function(){ if (_obligatoria()) setDestinoEnvio('apr'); else actualizarAvisoEnvio(); });
   _prellenarModalEnvio();
   if (window.vendedorPreparar) vendedorPreparar('mer');
   actualizarAvisoEnvio();
@@ -1023,14 +1038,14 @@ function _mostrarConfirmacionCotReal(estado, info){
       return '<div class="res-fila ' + (ok ? 'si' : 'no') + '"><span class="res-ic" aria-hidden="true">' + (ok ? '✓' : '!') + '</span><div><b>' + t + '</b>' + (d ? '<small>' + d + '</small>' : '') + '</div></div>';
     };
     var hora = _fechaCorta(new Date());
-    titleEl.textContent = info.aprobacionPedida ? (info.aprobacionA ? 'Enviada a aprobación' : 'Guardada') : (info.paraRevision ? 'Guardada para revisión' : 'Enviada al cliente');
+    titleEl.textContent = info.aprobacionPedida ? (info.aprobacionA ? 'Enviada a revisión' : 'Guardada') : (info.paraRevision ? 'Guardada para revisión' : 'Enviada al cliente');
     bodyEl.innerHTML =
         '<div class="res-no">' + _esc(info.no_cotizacion) + '</div>'
       + fila(true, 'Cotización guardada', 'Ya está en Mis cotizaciones')
       + fila(true, 'PDF enviado a tu correo', _esc(info.vendedorCorreo))
-      + (info.aprobacionPedida ? (info.aprobacionA ? fila(true, 'Aprobación pedida a ' + _esc(info.aprobacionA), 'Le llegó el aviso y el PDF. Cuando la apruebe te avisamos.') : fila(false, 'No se pudo pedir la aprobación', 'La cotización quedó guardada. Pídela desde Mis cotizaciones › ⋮ › Pedir aprobación.')) : '')
+      + (info.aprobacionPedida ? (info.aprobacionA ? fila(true, 'Enviada a revisión de ' + _esc(info.aprobacionA), 'Le llegó el aviso y el PDF. Cuando la autorice te avisamos y ya podrás enviarla al cliente.') : fila(false, 'No se pudo pedir la aprobación', 'La cotización quedó guardada. Pídela desde Mis cotizaciones › ⋮ › Pedir aprobación.')) : '')
       + (info.paraRevision
-        ? fila(false, 'Todavía NO se envió al cliente', info.aprobacionPedida ? 'Se envía después de la aprobación, desde Mis cotizaciones.' : 'Revisa los costos en tu correo. Cuando esté lista, toca el botón verde de abajo.')
+        ? fila(false, 'Todavía NO se envió al cliente', info.aprobacionPedida ? 'Se envía después de la autorización, desde Mis cotizaciones.' : 'Revisa los costos en tu correo. Cuando esté lista, toca el botón verde de abajo.')
         : fila(true, 'Enviada al cliente', _esc(info.clienteCorreo) + ' · ' + _esc(hora)))
       + (info.paraRevision ? '' : '<p class="res-nota">Para comprobarlo después: Mis cotizaciones muestra «Enviada al cliente» con la fecha y la hora.</p>');
     var bt = document.getElementById('mcrBtns');
@@ -1231,7 +1246,7 @@ function _mostrarProgresoEnvio(alCliente){
 }
 
 // ── Historial: mis cotizaciones en el sistema (consultar, editar, reenviar) + borradores locales ──
-var _misCot = null, _soloPorAprobar = false;
+var _misCot = null, _soloPorAprobar = false, _filtroAprIni = false;
 
 // Buscador de la barra lateral: abre «Mis cotizaciones» con el texto ya aplicado como filtro.
 function buscarDesdeMenu(ev){
@@ -1249,6 +1264,15 @@ function actualizarBadgeMis(){
   if (!b) return;
   b.style.display = _misCot && _misCot.length ? 'inline-flex' : 'none';
   b.textContent = _misCot ? _misCot.length : '';
+  // Revisores: el aviso rojo de «Mis cotizaciones» (barra inferior) cuenta lo que espera su aprobación
+  var n = (_misCot || []).filter(function(c){ return c.puede_autorizar; }).length;
+  var bm = document.getElementById('bnMis');
+  if (bm) {
+    var pb = document.getElementById('bnBadgePorAprobar');
+    if (!pb) { pb = document.createElement('span'); pb.id = 'bnBadgePorAprobar'; pb.className = 'bn-badge'; bm.appendChild(pb); }
+    pb.style.display = n ? 'inline-block' : 'none'; pb.textContent = n || '';
+    pb.setAttribute('aria-label', n + ' por aprobar');
+  }
 }
 var _ESTATUS_PILL = { BORRADOR: ['Borrador', 'borr'], ENVIADA: ['Enviada', 'ok'], APROBADA: ['Aprobada', 'ok'], CONVERTIDA: ['Convertida a pedido', 'conv'] };
 
@@ -1276,8 +1300,9 @@ function renderMisCotizaciones(){
   if (!_misCot) return;
   var f = (document.getElementById('misCotFiltro').value || '').trim().toLowerCase();
   var porAprobar = _misCot.filter(function(c){ return c.puede_autorizar; });
+  if (!_filtroAprIni) { _filtroAprIni = true; if (porAprobar.length) _soloPorAprobar = true; }   // al abrir, el revisor ve primero lo que espera su revisión
   var lista = _misCot.filter(function(c){ return (!f || (c.no_cotizacion + ' ' + c.cliente + ' ' + (c.cliente_nit || '')).toLowerCase().indexOf(f) >= 0) && (!_soloPorAprobar || c.puede_autorizar); });
-  var barra = porAprobar.length ? '<button type="button" class="sug-chip' + (_soloPorAprobar ? ' on' : '') + '" style="margin:2px 0 6px;min-height:46px;font-size:16px" onclick="_soloPorAprobar=!_soloPorAprobar;renderMisCotizaciones()">Por aprobar (' + porAprobar.length + ')</button>' : '';
+  var barra = porAprobar.length ? '<button type="button" class="sug-chip' + (_soloPorAprobar ? ' on' : '') + '" style="margin:2px 0 6px;min-height:46px;font-size:16px" onclick="_soloPorAprobar=!_soloPorAprobar;renderMisCotizaciones()">Por revisar (' + porAprobar.length + ')</button>' : '';
   if (!lista.length) { el.innerHTML = barra + '<p class="muted">' + (_misCot.length ? 'Sin resultados.' : 'Aún no has generado cotizaciones.') + '</p>'; return; }
   el.innerHTML = barra + lista.map(function(c){
     var pill = _ESTATUS_PILL[String(c.estatus || '').toUpperCase()] || [c.estatus, ''];
@@ -1291,13 +1316,17 @@ function renderMisCotizaciones(){
       + '<div class="mc-top"><strong>' + _esc(c.no_cotizacion) + ' — ' + _esc(c.cliente) + '</strong><span class="mc-tot">' + _fmtMoneda(c.total, c.moneda) + '</span></div>'
       + '<div class="mc-meta">' + meta.join(' · ') + (editada ? '<br>Editada ' + _fechaCorta(c.updated_at) : '') + '</div>'
       + (c.cliente_enviada_at && c.cliente_enviada_a ? '<div class="mc-meta">Enviada a ' + _esc(c.cliente_enviada_a) + '</div>' : '')
+      + (c.estado_revision === 'DEVUELTA' && c.revision_devuelta_nota ? '<div class="rev-nota"><b>Qué corregir:</b> ' + _esc(c.revision_devuelta_nota) + '</div>' : '')
       + '<div class="mc-pills"><span class="pill ' + pill[1] + '">' + _esc(pill[0]) + '</span>' + (c.vendida ? '<span class="pill ok">Vendida</span>' : '')
-      + (c.por_aprobar ? '<span class="pill sin-enviar">Por aprobar' + (c.autorizador_nombre ? ' · ' + _esc(c.autorizador_nombre) : '') + '</span>' : '')
+      + (c.aprobado_por_nombre && /^(APROBADA|CONVERTIDA)$/i.test(String(c.estatus || '')) ? '<span class="pill ok">Revisada y autorizada por ' + _esc(c.aprobado_por_nombre) + '</span>' : '')
+      + (c.estado_revision === 'EN_REVISION' ? '<span class="pill sin-enviar">En revisión' + (c.autorizador_nombre ? ' · ' + _esc(c.autorizador_nombre) : '') + '</span>' : '')
+      + (c.estado_revision === 'DEVUELTA' ? '<span class="pill" style="background:#d32f2f">Devuelta' + (c.revision_devuelta_por_nombre ? ' por ' + _esc(c.revision_devuelta_por_nombre) : '') + '</span>' : '')
+      + (c.estado_revision === 'SIN_SOLICITAR' ? '<span class="pill sin-enviar">Falta pedir la revisión</span>' : '')
       + (c.cliente_enviada_at ? '<span class="pill ok">Enviada al cliente · ' + corta(c.cliente_enviada_at) + '</span>' : '')
-      + (c.origen === 'MOVIL' && !c.cliente_enviada_at && !c.vendida && String(c.estatus).toUpperCase() !== 'CONVERTIDA' ? '<span class="pill sin-enviar">Sin enviar al cliente</span>' : '') + '</div>'
+      + (c.origen === 'MOVIL' && !c.cliente_enviada_at && !c.vendida && !c.estado_revision && String(c.estatus).toUpperCase() !== 'CONVERTIDA' ? '<span class="pill sin-enviar">Sin enviar al cliente</span>' : '') + '</div>'
       + '<div class="mc-acts">'
-      + (c.puede_autorizar ? '<button class="btn btn-success btn-sm" onclick="aprobarCotizacion(' + c.id + ')">' + _ic('check') + ' Aprobar</button>' : '')
-      + '<button class="btn btn-warning btn-sm" onclick="abrirEditar(' + c.id + ')">' + _ic(c.editable ? 'edit' : 'eye') + ' ' + (c.editable ? 'Editar' : 'Ver') + '</button>'
+      + (c.puede_autorizar && c.editable ? '<button class="btn btn-success btn-sm" onclick="abrirEditar(' + c.id + ')">' + _ic('check') + ' Revisar</button>'
+        : '<button class="btn btn-warning btn-sm" onclick="abrirEditar(' + c.id + ')">' + _ic(c.editable ? 'edit' : 'eye') + ' ' + (c.editable ? 'Editar' : 'Ver') + '</button>')
       + '<button class="kebab-m" onclick="abrirAcciones(' + c.id + ')" aria-label="Más acciones">' + _ic('more') + '</button></div></div>';
   }).join('');
 }
@@ -1447,13 +1476,15 @@ function abrirAcciones(id){
   var c = _cotLocal(id);
   if (!c) return;
   var it = function(ic, txt, fn, cls){ return '<button class="act-item' + (cls ? ' ' + cls : '') + '" onclick="cerrarAcciones();' + fn + '">' + _ic(ic) + '<span>' + txt + '</span></button>'; };
-  var h = it(c.editable ? 'edit' : 'eye', c.editable ? 'Editar' : 'Ver', 'abrirEditar(' + id + ')')
+  var h = it(c.puede_autorizar && c.editable ? 'check' : c.editable ? 'edit' : 'eye', c.puede_autorizar && c.editable ? 'Revisar' : c.editable ? 'Editar' : 'Ver', 'abrirEditar(' + id + ')')
     + (c.tiene_calculo ? it('calc', 'Ver cálculo', 'verCalculo(' + id + ')') : '')
     + it('print', 'Imprimir', "accionPdf(" + id + ",'imprimir')")
     + it('download', 'Descargar PDF', "accionPdf(" + id + ",'descargar')")
-    + (c.mia === false ? '' : it('mail', 'Enviar al cliente / por correo', 'abrirReenviar(' + id + ')'));
-  if (c.puede_autorizar) h += it('check', 'Aprobar', 'aprobarCotizacion(' + id + ')');
-  if (c.mia !== false && /^(BORRADOR|PENDIENTE)$/i.test(String(c.estatus || ''))) h += it('mail', c.por_aprobar ? 'Pedir aprobación otra vez' : 'Pedir aprobación', 'pedirAprobacion(' + id + ')');
+    + (c.mia === false ? '' : (c.bloqueo_envio
+        ? it('mail', 'Enviar al cliente — bloqueado', 'toast(' + JSON.stringify(c.bloqueo_envio).replace(/"/g, '&quot;') + ", 'err')", 'dis')
+        : it('mail', 'Enviar al cliente / por correo', 'abrirReenviar(' + id + ')')));
+  if (c.puede_autorizar) h += it('check', 'Autorizar tal como está', 'aprobarCotizacion(' + id + ')');
+  if (c.mia !== false && /^(BORRADOR|PENDIENTE)$/i.test(String(c.estatus || ''))) h += it('mail', c.por_aprobar ? 'Pedir aprobación otra vez' : (c.estado_revision === 'DEVUELTA' ? 'Volver a pedir revisión' : 'Pedir aprobación'), 'pedirAprobacion(' + id + ')');
   if (c.puede_clonar) h += it('copy', 'Clonar', 'clonarCot(' + id + ')');
   if (c.puede_editar_estado || c.puede_eliminar) h += '<div class="act-sep"></div>';
   if (c.puede_editar_estado) h += it('sold', c.vendida ? 'Desmarcar vendida' : 'Marcar como vendida', 'marcarVendida(' + id + ')');
@@ -1465,12 +1496,47 @@ function abrirAcciones(id){
 // Revisor: aprueba una cotización que le pidieron aprobar
 async function aprobarCotizacion(id){
   var c = _cotLocal(id) || {};
-  if (!confirm('¿Aprobar la cotización ' + (c.no_cotizacion || '') + ' de ' + (c.cliente || '') + ' por ' + _fmtMoneda(c.total, c.moneda) + '?')) return;
+  if (!confirm('¿Autorizar tal como está la cotización ' + (c.no_cotizacion || '') + ' de ' + (c.cliente || '') + ' por ' + _fmtMoneda(c.total, c.moneda) + '? Quedará como «Revisado y autorizado por» tu nombre.')) return;
+  toast('Autorizando…');
+  try {
+    var r = await _api('/mis/' + id + '/autorizar', { method: 'POST', body: {} });
+    if (!r.ok) { toast(r.data.error || 'No se pudo aprobar', 'err'); return; }
+    toast(r.data.estatus === 'APROBADA' ? 'Cotización autorizada. Le avisamos al vendedor.' : 'Tu autorización quedó registrada (' + r.data.actual + '/' + r.data.requeridas + ')');
+    _misCot = null; cargarMisCotizaciones(true);
+  } catch (e) { if (!e.handled) toast('Sin conexión al sistema — revisa tu internet', 'err'); }
+}
+function abrirDevolver(){
+  if (!_edit || !_edit.revisor) return;
+  document.getElementById('devNota').value = '';
+  document.getElementById('modalDevolver').classList.remove('hidden');
+  setTimeout(function(){ document.getElementById('devNota').focus(); }, 60);
+}
+function cerrarDevolver(){ document.getElementById('modalDevolver').classList.add('hidden'); }
+async function devolverCotizacion(){
+  if (!_edit) return;
+  var nota = document.getElementById('devNota').value.trim();
+  if (nota.length < 3) { toast('Escribe qué hay que corregir', 'err'); document.getElementById('devNota').focus(); return; }
+  var id = _edit.id, autor = _edit.autor || 'el vendedor', btn = document.getElementById('btnDevEnviar');
+  btn.disabled = true; var t0 = btn.textContent; btn.textContent = 'Devolviendo…';
+  try {
+    var r = await _api('/mis/' + id + '/devolver', { method: 'POST', body: { nota: nota } });
+    if (!r.ok) { toast(r.data.error || 'No se pudo devolver', 'err'); return; }
+    cerrarDevolver(); cerrarModalEditar();
+    toast('Devuelta a ' + autor + ' con tu comentario');
+    _misCot = null; cargarMisCotizaciones(true);
+  } catch (e) { if (!e.handled) toast('Sin conexión al sistema — revisa tu internet', 'err'); }
+  finally { btn.disabled = false; btn.textContent = t0; }
+}
+async function aprobarDesdeEditor(){
+  if (!_edit) return;
+  var id = _edit.id;
+  if (!confirm('¿Autorizar la cotización ' + _edit.no + ' tal como está? Quedará como «Revisado y autorizado por» tu nombre.')) return;
   toast('Aprobando…');
   try {
     var r = await _api('/mis/' + id + '/autorizar', { method: 'POST', body: {} });
     if (!r.ok) { toast(r.data.error || 'No se pudo aprobar', 'err'); return; }
-    toast(r.data.estatus === 'APROBADA' ? 'Cotización aprobada' : 'Tu aprobación quedó registrada (' + r.data.actual + '/' + r.data.requeridas + ')');
+    cerrarModalEditar();
+    toast(r.data.estatus === 'APROBADA' ? 'Cotización aprobada. Le avisamos al vendedor.' : 'Tu aprobación quedó registrada (' + r.data.actual + '/' + r.data.requeridas + ')');
     _misCot = null; cargarMisCotizaciones(true);
   } catch (e) { if (!e.handled) toast('Sin conexión al sistema — revisa tu internet', 'err'); }
 }
@@ -1563,14 +1629,29 @@ async function abrirEditar(id){
     var r = await _api('/mis/' + id);
     if (!r.ok) { toast(r.data.error || 'No se pudo abrir la cotización', 'err'); return; }
     var q = r.data;
-    _edit = { id: q.id, no: q.no_cotizacion, estatus: q.estatus, editable: q.editable, moneda: q.moneda, base: q.updated_at, codCliente: q.cod_cliente || null, items: q.items };
+    _edit = { id: q.id, no: q.no_cotizacion, estatus: q.estatus, editable: q.editable, puedeAutorizar: !!q.puede_autorizar, revisor: !!(q.puede_autorizar && q.editable && q.mia === false), autor: q.creado_por_nombre || '', moneda: q.moneda, base: q.updated_at, codCliente: q.cod_cliente || null, items: q.items };
     var ro = !q.editable;
-    document.getElementById('medTitle').textContent = (ro ? 'Ver ' : 'Editar ') + q.no_cotizacion;
+    document.getElementById('medTitle').textContent = (_edit.revisor ? 'Revisar ' : ro ? 'Ver ' : 'Editar ') + q.no_cotizacion;
     var est = String(q.estatus || '').toUpperCase();
-    document.getElementById('medAviso').innerHTML = ro
+    var fechaRev = function(v){ return _esc(_fechaCorta(v)); };
+    var accRev = { SOLICITADA: 'Pidió revisión', EDITADA: 'Editó', AUTORIZADA: 'Autorizó', DEVUELTA: 'Devolvió' };
+    var linea = (q.revisiones || []).map(function(r){
+      return '<div class="rev-linea"><b>' + _esc(accRev[r.accion] || r.accion) + '</b> · ' + _esc(r.usuario || '') + ' <small>' + fechaRev(r.created_at) + '</small>'
+        + (r.nota ? '<small>«' + _esc(r.nota) + '»</small>' : '') + (r.cambios && r.cambios.length ? '<small>' + r.cambios.map(_esc).join('<br>') + '</small>' : '') + '</div>';
+    }).join('');
+    var historia = linea ? '<details style="margin:6px 0"><summary style="font-weight:700;font-size:16px;color:#1a6b45">Historial de la revisión (' + q.revisiones.length + ')</summary>' + linea + '</details>' : '';
+    var aprTxt = (_edit.revisor
+      ? '<div class="res-warn" style="border-color:#1a6b45;background:#e8f3ec"><strong style="color:#14573a">Estás revisando la cotización de ' + _esc(q.creado_por_nombre || 'otro vendedor') + '.</strong> Corrige precios, líneas o condiciones si hace falta. Con «Guardar y autorizar» queda como versión final y la leyenda dirá «Revisado y autorizado por ' + _esc((_cargarSesion() || {}).nombre || 'tu nombre') + '».</div>'
+      : (q.puede_autorizar ? '<div class="res-warn" style="border-color:#1a6b45;background:#e8f3ec"><strong style="color:#14573a">Espera tu autorización.</strong> Revisa los datos, los precios y el cálculo y, si todo está bien, toca «Autorizar tal como está».</div>'
+      : (q.aprobado_por_nombre ? '<div class="res-warn" style="border-color:#1a6b45;background:#e8f3ec"><strong style="color:#14573a">Revisado y autorizado por ' + _esc(q.aprobado_por_nombre) + '</strong>' + (q.aprobado_at ? ' · ' + _esc(_fechaCorta(q.aprobado_at)) : '') + '</div>'
+      : (q.estado_revision === 'EN_REVISION' ? '<div class="res-warn" style="border-color:#c26a00;background:#fff3e0"><strong style="color:#8a4b00">En revisión' + (q.autorizador_nombre ? ' de ' + _esc(q.autorizador_nombre) : '') + '.</strong> Si la cambias, el revisor la verá de nuevo. No puede enviarse al cliente hasta que la autoricen.</div>'
+      : (q.estado_revision === 'DEVUELTA' ? '<div class="rev-nota"><b>Devuelta por ' + _esc(q.revision_devuelta_por_nombre || 'el revisor') + ':</b> ' + _esc(q.revision_devuelta_nota || '') + '<br><small>Corrígela y guarda: se vuelve a enviar a revisión.</small></div>' : ''))))) + historia;
+    document.getElementById('medAviso').innerHTML = aprTxt + (ro
       ? '<div class="res-warn"><strong>Solo lectura.</strong> Esta cotización está ' + _esc(est.toLowerCase()) + (q.fel_numero ? ' y facturada' : '') + ', así que ya no puede cambiar de monto. Puedes verla, descargarla y reenviarla.</div>'
       : '<div class="res-warn" style="border-color:#1a6b45"><strong style="color:#1a6b45">Editando el folio ' + _esc(q.no_cotizacion) + '.</strong> Al guardar se actualiza esta misma cotización (no se crea otra).'
-        + ((est === 'APROBADA' || est === 'PENDIENTE') ? '<br><strong>Estaba ' + _esc(est.toLowerCase()) + ':</strong> volverá a borrador y requerirá autorización de nuevo.' : '') + '</div>';
+        + ((est === 'APROBADA' || est === 'PENDIENTE') ? '<br><strong>Estaba ' + _esc(est.toLowerCase()) + ':</strong> volverá a borrador y requerirá autorización de nuevo.' : '') + '</div>');
+    if (_edit.revisor) document.getElementById('medAviso').innerHTML = aprTxt;
+    else if (ro && q.mia === false) document.getElementById('medAviso').innerHTML = aprTxt + '<div class="res-warn"><strong>Solo lectura.</strong> Cotización elaborada por ' + _esc(q.creado_por_nombre || 'otro vendedor') + (q.vendedor_nombre ? ' · Vendedor: ' + _esc(q.vendedor_nombre) : '') + '.</div>';
     document.getElementById('medCliente').value = q.cliente || '';
     document.getElementById('medNit').value = q.cliente_nit || '';
     if (window.vendedorPreparar) vendedorPreparar('med', q.vendedor_id);
@@ -1586,9 +1667,13 @@ async function abrirEditar(id){
     ['medCliente', 'medNit', 'medContacto', 'medTelefono', 'medClienteCorreo', 'medConIva', 'medFormaEntrega', 'medLugarEntrega', 'medTiempoEntrega', 'medFormaPago', 'medComentarios']
       .forEach(function(i){ document.getElementById(i).disabled = ro; });
     document.getElementById('medAddLinea').classList.toggle('hidden', ro);
-    document.getElementById('btnMedGuardarEnviar').classList.toggle('hidden', ro);
+    document.getElementById('btnMedGuardarEnviar').classList.toggle('hidden', ro || _edit.revisor);
     document.getElementById('btnMedGuardar').classList.toggle('hidden', ro);
+    document.getElementById('btnMedGuardar').textContent = _edit.revisor ? 'Solo guardar cambios' : 'Guardar sin enviar';
+    document.getElementById('btnMedAutorizarGuardar').classList.toggle('hidden', !_edit.revisor);
+    document.getElementById('btnMedDevolver').classList.toggle('hidden', !_edit.revisor);
     document.getElementById('btnMedReenviar').classList.toggle('hidden', !ro || q.mia === false);   // reenviar solo el autor
+    document.getElementById('btnMedAprobar').classList.toggle('hidden', !q.puede_autorizar || _edit.revisor);
     medRender();
     document.getElementById('modalEditar').classList.remove('hidden');
   } catch (e) {
@@ -1629,8 +1714,10 @@ function medRecalcular(){
   document.getElementById('medTotal').textContent = _fmtMoneda(t, _edit.moneda) + (document.getElementById('medConIva').checked ? ' (IVA incluido)' : ' (sin IVA)');
 }
 
-async function guardarEdicion(reenviar){
+async function guardarEdicion(reenviar, autorizar){
   if (!_edit || !_edit.editable) return;
+  var comoRevisor = !!_edit.revisor, autorNombre = _edit.autor || '';
+  if (autorizar && !confirm('¿Guardar los cambios y autorizar la cotización ' + _edit.no + '? Quedará como «Revisado y autorizado por» tu nombre.')) return;
   var cliente = document.getElementById('medCliente').value.trim();
   var correo = document.getElementById('medClienteCorreo').value.trim();
   if (!cliente) { toast('Ingresa el nombre del cliente', 'err'); return; }
@@ -1644,7 +1731,7 @@ async function guardarEdicion(reenviar){
   var items = _edit.items.filter(function(it){ return String(it.descripcion).trim() && it.cantidad > 0; });
   if (!items.length) { toast('Agrega al menos un ítem con descripción y cantidad', 'err'); return; }
   if (items.length !== _edit.items.length && !confirm('Hay líneas vacías o con cantidad 0; se descartarán al guardar. ¿Continuar?')) return;
-  var btns = [document.getElementById('btnMedGuardarEnviar'), document.getElementById('btnMedGuardar')];
+  var btns = [document.getElementById('btnMedGuardarEnviar'), document.getElementById('btnMedGuardar'), document.getElementById('btnMedAutorizarGuardar')];
   var textos = btns.map(function(b){ return b.textContent; });
   btns.forEach(function(b){ b.disabled = true; b.textContent = 'Guardando…'; });
   try {
@@ -1658,7 +1745,7 @@ async function guardarEdicion(reenviar){
       tiempo_entrega: document.getElementById('medTiempoEntrega').value.trim(),
       forma_pago: document.getElementById('medFormaPago').value.trim(),
       comentarios_adicionales: document.getElementById('medComentarios').value.trim(),
-      base_updated_at: _edit.base, reenviar: reenviar, enviar_cliente: false,
+      base_updated_at: _edit.base, reenviar: comoRevisor ? false : reenviar, enviar_cliente: false, autorizar: autorizar ? true : undefined,
     } });
     if (!r.ok) { toast(r.data.error || 'No se pudo guardar', 'err'); return; }
     _recordarCliente({ nombre: cliente, nit: _nitONormal(document.getElementById('medNit').value), correo: correo, codigo: _edit.codCliente });
@@ -1667,7 +1754,12 @@ async function guardarEdicion(reenviar){
     _misCot = null;
     cargarMisCotizaciones(true);
     var sesion = _cargarSesion() || {};
-    if (!reenviar) toast('Cambios guardados en ' + r.data.no_cotizacion);
+    if (comoRevisor) {
+      var nc = (r.data.cambios || []).length;
+      toast(r.data.autorizada ? 'Autorizada' + (nc ? ' con ' + nc + (nc === 1 ? ' cambio' : ' cambios') : '') + '. Le avisamos a ' + (autorNombre || 'el vendedor') + '.' : 'Cambios guardados' + (nc ? ' (' + nc + ')' : '') + '. Sigue en tu revisión.');
+    }
+    else if (!reenviar && r.data.aprobacion_solicitada_a) toast('Cambios guardados y enviados a revisión de ' + r.data.aprobacion_solicitada_a);
+    else if (!reenviar) toast('Cambios guardados en ' + r.data.no_cotizacion);
     else if (r.data.email_enviado === false) _mostrarConfirmacionCotReal('creada_sin_correo', { no_cotizacion: r.data.no_cotizacion, aviso: r.data.aviso });
     else _mostrarConfirmacionCotReal('ok', { titulo: 'Cotización actualizada', no_cotizacion: r.data.no_cotizacion, vendedorCorreo: sesion.correo, clienteCorreo: '', paraRevision: true });
   } catch (e) {
