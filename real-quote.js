@@ -1246,7 +1246,7 @@ function _mostrarProgresoEnvio(alCliente){
 }
 
 // ── Historial: mis cotizaciones en el sistema (consultar, editar, reenviar) + borradores locales ──
-var _misCot = null, _soloPorAprobar = false, _filtroAprIni = false;
+var _misCot = null, _filtroAprIni = false, _vista = 'mias';   // _vista: 'mias' | 'todas' (solo para quien ve las de todos)
 
 // Buscador de la barra lateral: abre «Mis cotizaciones» con el texto ya aplicado como filtro.
 function buscarDesdeMenu(ev){
@@ -1262,8 +1262,9 @@ function buscarDesdeMenu(ev){
 function actualizarBadgeMis(){
   var b = document.getElementById('navBadgeMis');
   if (!b) return;
-  b.style.display = _misCot && _misCot.length ? 'inline-flex' : 'none';
-  b.textContent = _misCot ? _misCot.length : '';
+  var propias = (_misCot || []).filter(function(c){ return c.mia !== false; }).length;   // el contador cuenta las MÍAS (quien ve todas no suma las de los demás)
+  b.style.display = propias ? 'inline-flex' : 'none';
+  b.textContent = propias || '';
   // Revisores: el aviso rojo de «Mis cotizaciones» (barra inferior) cuenta lo que espera su aprobación
   var n = (_misCot || []).filter(function(c){ return c.puede_autorizar; }).length;
   var bm = document.getElementById('bnMis');
@@ -1300,10 +1301,18 @@ function renderMisCotizaciones(){
   if (!_misCot) return;
   var f = (document.getElementById('misCotFiltro').value || '').trim().toLowerCase();
   var porAprobar = _misCot.filter(function(c){ return c.puede_autorizar; });
-  if (!_filtroAprIni) { _filtroAprIni = true; if (porAprobar.length) _soloPorAprobar = true; }   // al abrir, el revisor ve primero lo que espera su revisión
-  var lista = _misCot.filter(function(c){ return (!f || (c.no_cotizacion + ' ' + c.cliente + ' ' + (c.cliente_nit || '')).toLowerCase().indexOf(f) >= 0) && (!_soloPorAprobar || c.puede_autorizar); });
-  var barra = porAprobar.length ? '<button type="button" class="sug-chip' + (_soloPorAprobar ? ' on' : '') + '" style="margin:2px 0 6px;min-height:46px;font-size:16px" onclick="_soloPorAprobar=!_soloPorAprobar;renderMisCotizaciones()">Por revisar (' + porAprobar.length + ')</button>' : '';
-  if (!lista.length) { el.innerHTML = barra + '<p class="muted">' + (_misCot.length ? 'Sin resultados.' : 'Aún no has generado cotizaciones.') + '</p>'; return; }
+  var verOtras = _misCot.some(function(c){ return c.mia === false; });     // quien tiene «ver todas» o es revisor ve además las de otros vendedores
+  var mias = _misCot.filter(function(c){ return c.mia !== false; });
+  if (!_filtroAprIni) { _filtroAprIni = true; _vista = porAprobar.length ? 'revisar' : 'mias'; }   // al abrir, el revisor ve primero lo que espera su revisión
+  if (!verOtras) _vista = 'mias';
+  if (_vista === 'revisar' && !porAprobar.length) _vista = 'mias';
+  var lista = _misCot.filter(function(c){
+    if (f && (c.no_cotizacion + ' ' + c.cliente + ' ' + (c.cliente_nit || '') + ' ' + (c.creado_por_nombre || '') + ' ' + (c.vendedor_nombre || '')).toLowerCase().indexOf(f) < 0) return false;
+    return _vista === 'todas' ? true : _vista === 'revisar' ? !!c.puede_autorizar : c.mia !== false;
+  });
+  var tab = function(v, txt, n){ return '<button type="button" role="tab" aria-selected="' + (_vista === v) + '" class="vista-tab' + (_vista === v ? ' on' : '') + '" onclick="_vista=\'' + v + '\';renderMisCotizaciones()">' + txt + ' <span class="vt-n">' + n + '</span></button>'; };
+  var barra = verOtras ? '<div class="vista-seg" role="tablist" aria-label="Qué cotizaciones ver">' + tab('mias', 'Mis cotizaciones', mias.length) + tab('todas', 'Todas', _misCot.length) + (porAprobar.length ? tab('revisar', 'Por revisar', porAprobar.length) : '') + '</div>' : '';
+  if (!lista.length) { el.innerHTML = barra + '<p class="muted">' + (_misCot.length ? (_vista === 'mias' && !f ? 'Aún no has generado cotizaciones.' : 'Sin resultados.') : 'Aún no has generado cotizaciones.') + '</p>'; return; }
   el.innerHTML = barra + lista.map(function(c){
     var pill = _ESTATUS_PILL[String(c.estatus || '').toUpperCase()] || [c.estatus, ''];
     var editada = new Date(c.updated_at) - new Date(c.created_at) > 60000;
