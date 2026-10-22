@@ -369,6 +369,17 @@ body.cartbar-on #appShell .content, body.tl-bar-on #appShell .content { padding-
 .vista-tab { flex: 1; min-height: 48px; padding: 0 6px; border: 0; border-radius: 11px; background: transparent; font: inherit; font-size: 16px; font-weight: 700; color: #555; cursor: pointer; line-height: 1.15; }
 .vista-tab.on { background: #fff; color: #1a6b45; box-shadow: 0 1px 3px rgba(0,0,0,.14); }
 .vt-n { display: inline-block; min-width: 22px; padding: 1px 6px; margin-left: 2px; border-radius: 10px; background: #dcdce2; color: #333; font-size: 14px; } .vista-tab.on .vt-n { background: #1a6b45; color: #fff; }
+/* Avisos en este teléfono (hoja) */
+.av-ov { position: fixed; inset: 0; z-index: 100000; background: rgba(0,0,0,.42); display: flex; align-items: flex-end; justify-content: center; }
+.av-hoja { width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; background: #fff; border-radius: 22px 22px 0 0; padding: 20px 20px calc(20px + env(safe-area-inset-bottom)); font-size: 17px; line-height: 1.4; color: #222; }
+@media (min-width: 701px) { .av-ov { align-items: center; } .av-hoja { border-radius: 22px; } }
+.av-tit { font-size: 22px; font-weight: 800; color: #1a6b45; margin-bottom: 8px; }
+.av-hoja p { margin: 8px 0; } .av-nota { color: #6b6b70; font-size: 16px; }
+.av-lista { margin: 6px 0 6px 22px; } .av-lista li { margin: 6px 0; }
+.av-paso { display: flex; gap: 12px; align-items: flex-start; margin: 10px 0; } .av-paso > span { flex: none; width: 32px; height: 32px; border-radius: 50%; background: #1a6b45; color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+.av-acc { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.av-btn { min-height: 56px; border: 0; border-radius: 14px; font: inherit; font-size: 18px; font-weight: 700; cursor: pointer; } .av-btn:disabled { opacity: .6; }
+.av-pri { background: #1a6b45; color: #fff; } .av-sec { background: #e8f3ec; color: #14573a; } .av-gris { background: #efeff4; color: #444; }
 .envio-prog { margin:10px 0 4px; padding:12px 14px; border-radius:12px; background:#e8f3ec; color:#14573a; }
 .envio-prog[hidden] { display:none; }
 .ep-t { font-size:18px; font-weight:700; margin-bottom:8px; }
@@ -888,6 +899,11 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
       <span class="ic" data-ic="file"></span>
       <div class="nv-t"><b>Mis cotizaciones</b><small>Buscar, editar y reenviar</small></div>
       <span class="nv-badge" id="navBadgeMis" style="display:none"></span>
+    </div>
+    <div class="nav-item nv-item" id="navAvisos" onclick="abrirAvisos()">
+      <span class="ic" data-ic="bell"></span>
+      <div class="nv-t"><b>Avisos en este teléfono</b><small id="navAvisosSub">…</small></div>
+      <span class="nv-badge" id="navAvisosDot" style="display:inline-flex" hidden>!</span>
     </div>
     <div class="nv-foot">
       <button type="button" class="nv-ver" id="navVersion" onclick="document.getElementById('navModo').hidden=!document.getElementById('navModo').hidden" aria-label="Versión de la aplicación. Toca para ver detalles técnicos"><b id="navVerT"></b><small id="navVerF"></small></button>
@@ -2084,5 +2100,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="version.js"></script><script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=12"></script><script src="listas-ui.js?v=5"></script><script src="precios-ui.js?v=5"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=6"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="vendedor-ui.js?v=1"></script><script src="real-quote.js?v=20261056"></script><script src="tela-ui.js?v=15"></script><script src="carrito-ui.js?v=14"></script><script src="paso-a-paso.js?v=3"></script><script src="selector-producto.js?v=2"></script><script src="paso-envio.js?v=2"></script><script src="instalar-app.js?v=4"></script></body>
+<script src="version.js"></script><script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=12"></script><script src="listas-ui.js?v=5"></script><script src="precios-ui.js?v=5"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=6"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="vendedor-ui.js?v=1"></script><script src="real-quote.js?v=20261057"></script><script src="tela-ui.js?v=15"></script><script src="carrito-ui.js?v=14"></script><script src="paso-a-paso.js?v=3"></script><script src="selector-producto.js?v=2"></script><script src="paso-envio.js?v=2"></script><script src="instalar-app.js?v=4"></script><script src="avisos.js?v=1"></script></body>
 </html>
