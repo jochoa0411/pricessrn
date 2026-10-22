@@ -621,8 +621,13 @@ function _construirItemsCotizacionReal(){
   var telasSinTC = telas.filter(function(i){ return !i.tc; });
   var telasConTC = telas.filter(function(i){ return !!i.tc; });
 
+  var ext = !!(window.EXT && EXT.on), tcExt = ext && window.extTc ? extTc() : 0;     // cliente del exterior: todo en US$, sin IVA
   var moneda;
-  if (hasSaco) {
+  if (ext) {
+    if (!CARRITO.length) return { error: 'El presupuesto está vacío.' };
+    if (hasSaco && !(tcExt > 0)) return { error: 'Cliente del exterior: escribe el tipo de cambio para convertir los sacos a dólares (toca «Exterior» arriba).' };
+    moneda = 'USD';
+  } else if (hasSaco) {
     if (telasSinTC.length > 0) {
       return { error: 'Ingresa el Tipo de Cambio (TC) en estos ítems de tela para poder cotizar junto con los sacos (todo debe quedar en Quetzales): '
         + telasSinTC.map(function(i){ return i.nombre; }).join(', ') };
@@ -659,7 +664,7 @@ function _construirItemsCotizacionReal(){
       descripcion: tlDescripcionSaco(item),
       unidad: 'UNIDAD',
       cantidad: item.cantidad,
-      precio_unitario: item.precioUnit,
+      precio_unitario: ext ? Math.round(item.precioUnit / tcExt * 10000) / 10000 : item.precioUnit,     // exterior: Q → US$ al tipo de cambio elegido
     };
   });
 
@@ -788,7 +793,8 @@ function _renderResumenEnvio(){
   var cliente = document.getElementById('cotCliente').value.trim();
   var nit = document.getElementById('cotNit').value.trim();
   var html = '<h4>Revisa antes de enviar</h4>'
-    + '<div style="font-size:15px;margin-bottom:6px"><strong>Cliente:</strong> ' + _esc(cliente) + (nit ? ' · NIT ' + _esc(nit) : '') + '</div>';
+    + '<div style="font-size:15px;margin-bottom:6px"><strong>Cliente:</strong> ' + _esc(cliente) + (nit ? ' · NIT ' + _esc(nit) : '') + '</div>'
+    + ((window.EXT && EXT.on) ? '<div style="font-size:15px;margin-bottom:6px"><strong>Exterior:</strong> ' + _esc(EXT.pais || '—') + ' · Incoterm ' + _esc(EXT.incoterm || '—') + ' · US$ sin IVA</div>' : '');
 
   est.pend.forEach(function(p){
     html += '<div class="res-warn"><strong>' + _ic('warn') + ' Tienes un cálculo SIN agregar al presupuesto:</strong><br>' + _esc(p.desc)
@@ -1103,6 +1109,7 @@ async function generarCotizacionReal(){
     return;
   }
 
+  if (window.EXT && EXT.on && (!EXT.pais || !EXT.incoterm)) { toast('Cliente del exterior: elige el país y el Incoterm', 'err'); cerrarModalEnviarReal(); extAbrir(); return; }
   var vendedorId = window.vendedorElegido ? vendedorElegido('mer') : null;
   if (!vendedorId) { toast('Elige el vendedor de esta cotización', 'err'); var vb = document.getElementById('merVendedorBtn'); if (vb) { vb.scrollIntoView({ block: 'center' }); vb.focus(); } return; }
   var enviarCliente = !!document.getElementById('merEnviarCliente').checked;
@@ -1147,8 +1154,10 @@ async function generarCotizacionReal(){
   if (est.bloqueo) { _renderResumenEnvio(); toast('Revisa los avisos del resumen antes de enviar', 'err'); return; }
   var armado = est.armado;
 
-  var clienteNit = _nitONormal(document.getElementById('cotNit').value);
-  document.getElementById('cotNit').value = clienteNit;
+  var esExt = !!(window.EXT && EXT.on);
+  // Cliente del exterior: el ID fiscal es opcional (no se convierte en «CF»)
+  var clienteNit = esExt ? String(document.getElementById('cotNit').value || '').trim().replace(/^c\.?f\.?$/i, '') : _nitONormal(document.getElementById('cotNit').value);
+  if (!esExt) document.getElementById('cotNit').value = clienteNit;
   var btn = document.getElementById('btnCotReal');
   var textoOriginal = btn.textContent;
   btn.disabled = true;
@@ -1156,7 +1165,7 @@ async function generarCotizacionReal(){
   var _detenerProg = _mostrarProgresoEnvio(enviarCliente);
 
   // Cliente que no está en el catálogo (y no es consumidor final): se registra en la BD junto con la cotización
-  var esNuevoCliente = !!(_cliCache && _cliCache.puede_crear && !(_clienteSel && _clienteSel.nombre === cliente && _clienteSel.codigo)
+  var esNuevoCliente = !esExt && !!(_cliCache && _cliCache.puede_crear && !(_clienteSel && _clienteSel.nombre === cliente && _clienteSel.codigo)
     && !_esCF(clienteNit) && !_filaCatalogo(cliente, clienteNit));
   var conIva = !document.getElementById('cotDesglosarIVA').checked;
   var payload = {
@@ -1174,6 +1183,10 @@ async function generarCotizacionReal(){
     cliente_contacto: contacto,
     cliente_telefono: telefono,
     moneda: armado.moneda,
+    cliente_exterior: (window.EXT && EXT.on) ? true : undefined,
+    pais: (window.EXT && EXT.on) ? EXT.pais : undefined,
+    incoterm: (window.EXT && EXT.on) ? EXT.incoterm : undefined,
+    cliente_direccion: (window.EXT && EXT.on && EXT.direccion) ? EXT.direccion : undefined,
     con_iva: conIva,
     items: armado.items,
     forma_entrega: formaEntrega,
@@ -1212,6 +1225,7 @@ async function generarCotizacionReal(){
     else _recordarCliente({ nombre: cliente, nit: clienteNit, correo: clienteCorreo, codigo: payload.cod_cliente });
     _recordarTerminos({ forma_entrega: formaEntrega, lugar_entrega: lugarEntrega, tiempo_entrega: tiempoEntrega, forma_pago: formaPago });
     aplicarPresetTerminos('express');   // la siguiente cotización empieza otra vez con las condiciones Express
+    if (window.extReiniciar) extReiniciar();     // y otra vez como cliente local
     _renderRecientes();
     _misCot = null;
     CARRITO = [];
@@ -1329,6 +1343,7 @@ function renderMisCotizaciones(){
       + (c.cliente_enviada_at && c.cliente_enviada_a ? '<div class="mc-meta">Enviada a ' + _esc(c.cliente_enviada_a) + '</div>' : '')
       + (c.estado_revision === 'DEVUELTA' && c.revision_devuelta_nota ? '<div class="rev-nota"><b>Qué corregir:</b> ' + _esc(c.revision_devuelta_nota) + '</div>' : '')
       + '<div class="mc-pills"><span class="pill ' + pill[1] + '">' + _esc(pill[0]) + '</span>' + (c.vendida ? '<span class="pill ok">Vendida</span>' : '')
+      + (c.cliente_exterior ? '<span class="pill conv">Exterior' + (c.pais ? ' · ' + _esc(c.pais) : '') + '</span>' : '')
       + (c.aprobado_por_nombre && /^(APROBADA|CONVERTIDA)$/i.test(String(c.estatus || '')) ? '<span class="pill ok">Revisada y autorizada por ' + _esc(c.aprobado_por_nombre) + '</span>' : '')
       + (c.estado_revision === 'EN_REVISION' ? '<span class="pill sin-enviar">En revisión' + (c.autorizador_nombre ? ' · ' + _esc(c.autorizador_nombre) : '') + '</span>' : '')
       + (c.estado_revision === 'DEVUELTA' ? '<span class="pill" style="background:#d32f2f">Devuelta' + (c.revision_devuelta_por_nombre ? ' por ' + _esc(c.revision_devuelta_por_nombre) : '') + '</span>' : '')
@@ -1640,7 +1655,7 @@ async function abrirEditar(id){
     var r = await _api('/mis/' + id);
     if (!r.ok) { toast(r.data.error || 'No se pudo abrir la cotización', 'err'); return; }
     var q = r.data;
-    _edit = { id: q.id, no: q.no_cotizacion, estatus: q.estatus, editable: q.editable, puedeAutorizar: !!q.puede_autorizar, revisor: !!(q.puede_autorizar && q.editable && q.mia === false), autor: q.creado_por_nombre || '', moneda: q.moneda, base: q.updated_at, codCliente: q.cod_cliente || null, items: q.items };
+    _edit = { exterior: !!q.cliente_exterior, id: q.id, no: q.no_cotizacion, estatus: q.estatus, editable: q.editable, puedeAutorizar: !!q.puede_autorizar, revisor: !!(q.puede_autorizar && q.editable && q.mia === false), autor: q.creado_por_nombre || '', moneda: q.moneda, base: q.updated_at, codCliente: q.cod_cliente || null, items: q.items };
     var ro = !q.editable;
     document.getElementById('medTitle').textContent = (_edit.revisor ? 'Revisar ' : ro ? 'Ver ' : 'Editar ') + q.no_cotizacion;
     var est = String(q.estatus || '').toUpperCase();
@@ -1663,6 +1678,20 @@ async function abrirEditar(id){
         + ((est === 'APROBADA' || est === 'PENDIENTE') ? '<br><strong>Estaba ' + _esc(est.toLowerCase()) + ':</strong> volverá a borrador y requerirá autorización de nuevo.' : '') + '</div>');
     if (_edit.revisor) document.getElementById('medAviso').innerHTML = aprTxt;
     else if (ro && q.mia === false) document.getElementById('medAviso').innerHTML = aprTxt + '<div class="res-warn"><strong>Solo lectura.</strong> Cotización elaborada por ' + _esc(q.creado_por_nombre || 'otro vendedor') + (q.vendedor_nombre ? ' · Vendedor: ' + _esc(q.vendedor_nombre) : '') + '.</div>';
+    var eb = document.getElementById('medExtBox');
+    if (eb) {
+      eb.hidden = !q.cliente_exterior;
+      if (q.cliente_exterior) {
+        var sel = document.getElementById('medPais');
+        (window.extPaises ? extPaises() : Promise.resolve([])).then(function(ps){
+          sel.innerHTML = ps.map(function(p){ return '<option value="' + _esc(p.nombre) + '">' + _esc(p.nombre) + '</option>'; }).join('');
+          if (q.pais && !ps.some(function(p){ return p.nombre === q.pais; })) sel.innerHTML += '<option value="' + _esc(q.pais) + '">' + _esc(q.pais) + '</option>';
+          sel.value = q.pais || '';
+        });
+        document.getElementById('medIncoterm').value = q.incoterm || '';
+        document.getElementById('medDireccion').value = q.cliente_direccion || '';
+      }
+    }
     document.getElementById('medCliente').value = q.cliente || '';
     document.getElementById('medNit').value = q.cliente_nit || '';
     if (window.vendedorPreparar) vendedorPreparar('med', q.vendedor_id);
@@ -1675,7 +1704,7 @@ async function abrirEditar(id){
     document.getElementById('medTiempoEntrega').value = q.tiempo_entrega || '';
     document.getElementById('medFormaPago').value = q.forma_pago || '';
     document.getElementById('medComentarios').value = q.comentarios_adicionales || '';
-    ['medCliente', 'medNit', 'medContacto', 'medTelefono', 'medClienteCorreo', 'medConIva', 'medFormaEntrega', 'medLugarEntrega', 'medTiempoEntrega', 'medFormaPago', 'medComentarios']
+    ['medPais', 'medIncoterm', 'medDireccion', 'medCliente', 'medNit', 'medContacto', 'medTelefono', 'medClienteCorreo', 'medConIva', 'medFormaEntrega', 'medLugarEntrega', 'medTiempoEntrega', 'medFormaPago', 'medComentarios']
       .forEach(function(i){ document.getElementById(i).disabled = ro; });
     document.getElementById('medAddLinea').classList.toggle('hidden', ro);
     document.getElementById('btnMedGuardarEnviar').classList.toggle('hidden', ro || _edit.revisor);
@@ -1732,6 +1761,7 @@ async function guardarEdicion(reenviar, autorizar){
   var cliente = document.getElementById('medCliente').value.trim();
   var correo = document.getElementById('medClienteCorreo').value.trim();
   if (!cliente) { toast('Ingresa el nombre del cliente', 'err'); return; }
+  if (_edit.exterior && (!document.getElementById('medPais').value || !document.getElementById('medIncoterm').value.trim())) { toast('Cliente del exterior: indica el país y el Incoterm', 'err'); return; }
   if (correo && !_emailValido(correo)) { toast('El correo del cliente no es válido', 'err'); return; }
   var vendedorEd = window.vendedorElegido ? vendedorElegido('med') : null;
   if (!vendedorEd) { toast('Elige el vendedor de esta cotización', 'err'); return; }
@@ -1747,7 +1777,9 @@ async function guardarEdicion(reenviar, autorizar){
   btns.forEach(function(b){ b.disabled = true; b.textContent = 'Guardando…'; });
   try {
     var r = await _api('/mis/' + _edit.id + '/editar', { method: 'POST', body: {
-      cliente: cliente, cliente_nit: _nitONormal(document.getElementById('medNit').value), cod_cliente: _edit.codCliente || undefined,
+      cliente: cliente, cliente_nit: _edit.exterior ? String(document.getElementById('medNit').value || '').trim().replace(/^c\.?f\.?$/i, '') : _nitONormal(document.getElementById('medNit').value), cod_cliente: _edit.codCliente || undefined,
+      cliente_exterior: _edit.exterior ? true : undefined, pais: _edit.exterior ? document.getElementById('medPais').value : undefined,
+      incoterm: _edit.exterior ? document.getElementById('medIncoterm').value.trim() : undefined, cliente_direccion: _edit.exterior ? document.getElementById('medDireccion').value.trim() : undefined,
       cliente_correo: correo, cliente_contacto: contacto, cliente_telefono: telefono, vendedor_id: vendedorEd,
       moneda: _edit.moneda, con_iva: document.getElementById('medConIva').checked,
       items: items,

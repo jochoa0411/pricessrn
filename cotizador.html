@@ -380,6 +380,15 @@ body.cartbar-on #appShell .content, body.tl-bar-on #appShell .content { padding-
 .av-acc { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
 .av-btn { min-height: 56px; border: 0; border-radius: 14px; font: inherit; font-size: 18px; font-weight: 700; cursor: pointer; } .av-btn:disabled { opacity: .6; }
 .av-pri { background: #1a6b45; color: #fff; } .av-sec { background: #e8f3ec; color: #14573a; } .av-gris { background: #efeff4; color: #444; }
+/* Cliente del exterior */
+.opt-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.ext-seg { display: flex; gap: 8px; margin: 6px 0 4px; } .ext-seg button { flex: 1; text-align: left; padding: 12px 14px; border: 2px solid #d1d1d6; border-radius: 14px; background: #fff; font: inherit; color: #222; min-height: 70px; }
+.ext-seg button b { display: block; font-size: 18px; } .ext-seg button small { display: block; font-size: 14px; color: #6b6b70; margin-top: 2px; line-height: 1.25; }
+.ext-seg button.on { border-color: #1a6b45; background: #e8f3ec; }
+.ext-l { display: block; margin: 12px 0 4px; font-size: 16px; font-weight: 700; color: #444; } .ext-l small { font-weight: 400; color: #6b6b70; }
+.ext-inc { display: flex; flex-wrap: wrap; gap: 8px; } .ext-inc .sug-chip { min-height: 46px; font-size: 17px; padding: 0 16px; } .ext-inc .sug-chip.on { background: #1a6b45 !important; border-color: #1a6b45 !important; color: #fff !important; }
+.av-hoja input[type=text], .av-hoja input[type=number] { width: 100%; }
+.pk-ov { z-index: 100001 !important; }   /* el selector (país…) debe verse por encima de las hojas «Tipo de cliente» / avisos */
 .envio-prog { margin:10px 0 4px; padding:12px 14px; border-radius:12px; background:#e8f3ec; color:#14573a; }
 .envio-prog[hidden] { display:none; }
 .ep-t { font-size:18px; font-weight:700; margin-bottom:8px; }
@@ -946,7 +955,7 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
         </div>
         <input type="hidden" id="cotRef">
         <input type="checkbox" id="cotDesglosarIVA" hidden onchange="cotCalcTela();cotCalcSaco();">
-        <div class="opt-row"><button type="button" class="opt-chip" id="ivaChip" onclick="tlToggleIva()" aria-pressed="false" title="Cambiar si el precio incluye IVA"></button></div>
+        <div class="opt-row"><button type="button" class="opt-chip" id="extChip" onclick="extAbrir()" aria-pressed="false" title="Cambiar entre cliente local y cliente del exterior">Cliente local</button><button type="button" class="opt-chip" id="ivaChip" onclick="tlToggleIva()" aria-pressed="false" title="Cambiar si el precio incluye IVA"></button></div>
       </div>
 
       <div class="tabs">
@@ -1273,6 +1282,11 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
     <div id="medAviso"></div>
     <div class="field"><label>Cliente *</label><input type="text" id="medCliente"></div>
     <div class="field"><label>NIT</label><input type="text" id="medNit"></div>
+    <div id="medExtBox" hidden>
+      <div class="field"><label for="medPais">País del cliente *</label><select id="medPais"></select></div>
+      <div class="field"><label for="medIncoterm">Incoterm *</label><input type="text" id="medIncoterm" maxlength="40" placeholder="Ej: FOB"></div>
+      <div class="field"><label for="medDireccion">Dirección del cliente</label><input type="text" id="medDireccion" maxlength="300"></div>
+    </div>
 <div class="field"><label>Vendedor *</label><button type="button" id="medVendedorBtn" class="pk-btn" aria-haspopup="dialog" onclick="elegirVendedor('med')"><span class="pk-btn-v"></span><span class="pk-btn-i"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></span></button></div>
     <div class="field"><label>Atención (con quién se cotiza) *</label><input type="text" id="medContacto" autocomplete="off"></div>
     <div class="field"><label>Teléfono del contacto</label><input type="tel" id="medTelefono" autocomplete="off"></div>
@@ -2100,5 +2114,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="version.js"></script><script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=12"></script><script src="listas-ui.js?v=5"></script><script src="precios-ui.js?v=5"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=6"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="vendedor-ui.js?v=1"></script><script src="real-quote.js?v=20261057"></script><script src="tela-ui.js?v=15"></script><script src="carrito-ui.js?v=14"></script><script src="paso-a-paso.js?v=3"></script><script src="selector-producto.js?v=2"></script><script src="paso-envio.js?v=2"></script><script src="instalar-app.js?v=4"></script><script src="avisos.js?v=1"></script></body>
+<script src="version.js"></script><script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=12"></script><script src="listas-ui.js?v=5"></script><script src="precios-ui.js?v=5"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=6"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="vendedor-ui.js?v=1"></script><script src="real-quote.js?v=20261059"></script><script src="tela-ui.js?v=15"></script><script src="carrito-ui.js?v=14"></script><script src="paso-a-paso.js?v=3"></script><script src="selector-producto.js?v=2"></script><script src="paso-envio.js?v=2"></script><script src="instalar-app.js?v=4"></script><script src="avisos.js?v=1"></script><script src="exterior.js?v=2"></script></body>
 </html>
