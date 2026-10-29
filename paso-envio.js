@@ -101,6 +101,9 @@
       if (af && af !== enfocado) grupos.forEach(function (g, k) { if (g.contains(af)) paso = k + 1; });
       if (paso) { cur = paso; }
       pintar();
+      // El aviso de error (cotizador.html › _errorEnModal) se mudó al primer paso mientras estaban todos visibles: se lleva al paso que quedó abierto
+      var er = document.querySelector('#merPasos .err-inline'), act = grupos[cur - 1] && grupos[cur - 1].querySelector('.pp-body');
+      if (er && act && er.offsetParent === null && !act.contains(er)) { act.insertBefore(er, act.firstChild); try { er.scrollIntoView({ block: 'nearest' }); } catch (e) {} }
       if (paso && af.scrollIntoView) setTimeout(function () { af.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 30);
       return p;
     };

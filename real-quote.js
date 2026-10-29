@@ -349,7 +349,7 @@ function _recordarCliente(c){
   _lsSet('cotClientesRecientes', list.slice(0, 12));
 }
 // Destino de la cotización: false = solo mi correo · 'apr' = pedir aprobación a un revisor · true = enviar al cliente ahora
-var _destino = false, _revisores = null, _revisorId = null, _esRevisor = true, _revisorDefecto = null;
+var _destino = false, _revisores = null, _revisorId = null, _esRevisor = true, _revisorDefecto = null, _revisorAuto = false;   // _revisorAuto: lo eligió el sistema (por defecto), no la persona
 function _cargarRevisores(){
   if (_revisores) return Promise.resolve(_revisores);
   return _api('/autorizadores').then(function(r){
@@ -363,9 +363,10 @@ function _cargarRevisores(){
 }
 function _obligatoria(){ return _revisores !== null && !_esRevisor && _revisores.length > 0; }
 function setDestinoEnvio(v){
+  if (v !== 'apr' && !_obligatoria()) { _revisorId = null; _revisorAuto = false; }      // «Solo a mi correo» / «al cliente»: no queda ningún revisor elegido
   _destino = v;
   document.getElementById('merEnviarCliente').checked = v === true;
-  if (v === 'apr') _cargarRevisores().then(function(rs){ if (!_revisorId && rs.length === 1) _revisorId = rs[0].id; if (!_revisorId && _revisorDefecto) _revisorId = _revisorDefecto; pintarRevisores(); actualizarAvisoEnvio(); });
+  if (v === 'apr') _cargarRevisores().then(function(rs){ if (!_revisorId && rs.length === 1) { _revisorId = rs[0].id; _revisorAuto = true; } if (!_revisorId && _revisorDefecto) { _revisorId = _revisorDefecto; _revisorAuto = true; } pintarRevisores(); actualizarAvisoEnvio(); });
   actualizarAvisoEnvio();
 }
 function pintarRevisores(){
@@ -376,7 +377,11 @@ function pintarRevisores(){
     return '<button type="button" class="sug-chip' + (Number(_revisorId) === Number(u.id) ? ' on' : '') + '" onclick="elegirRevisor(' + u.id + ')">' + _esc(u.nombre) + '</button>';
   }).join('') || '<small>No hay revisores disponibles.</small>';
 }
-function elegirRevisor(id){ _revisorId = id; pintarRevisores(); actualizarAvisoEnvio(); }
+function elegirRevisor(id){
+  if (_destino === 'apr' && Number(_revisorId) === Number(id) && !_revisorAuto && !_obligatoria()) { setDestinoEnvio(false); return; }   // segundo toque (elegido por la persona): se desmarca
+  _revisorAuto = false; _revisorId = id; _destino = 'apr'; document.getElementById('merEnviarCliente').checked = false;
+  pintarRevisores(); actualizarAvisoEnvio();
+}
 function _nombreRevisor(){ var u = (_revisores || []).filter(function(x){ return Number(x.id) === Number(_revisorId); })[0]; return u ? u.nombre : ''; }
 function actualizarAvisoEnvio(){
   var t = document.getElementById('merEnvioTxt'), on = _destino === true;

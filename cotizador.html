@@ -363,6 +363,7 @@ body.cartbar-on #appShell .content, body.tl-bar-on #appShell .content { padding-
 .mc-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .mc-pills .pill { white-space: normal; line-height: 1.25; }
 .mc-acts { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
+.apr-sel[hidden] { display: none !important; }
 .apr-sel { display: flex; flex-wrap: wrap; gap: 8px; margin: -2px 0 4px; } .apr-sel .sug-chip { min-height: 48px; font-size: 17px; padding: 0 18px; color: #1d1d1f; } .apr-sel .sug-chip.on { background: #1a6b45 !important; border-color: #1a6b45 !important; color: #fff !important; }
 .dest-oblig { margin: 0; padding: 10px 12px; border-radius: 12px; background: #e8f3ec; color: #14573a; font-size: 16px; line-height: 1.35; } .act-item.dis { opacity: .55; } .rev-linea { border-left: 3px solid #1a6b45; padding: 2px 0 2px 10px; margin: 6px 0; font-size: 15px; color: #333; } .rev-linea small { display: block; color: #6b6b70; font-size: 14px; } .rev-nota { margin-top: 8px; padding: 10px 12px; border-radius: 10px; background: #fdeceb; color: #8a1c14; font-size: 16px; line-height: 1.35; }
 .vista-seg { display: flex; gap: 4px; padding: 4px; margin: 2px 0 8px; background: #efeff4; border-radius: 14px; }
@@ -389,6 +390,9 @@ body.cartbar-on #appShell .content, body.tl-bar-on #appShell .content { padding-
 .ext-inc { display: flex; flex-wrap: wrap; gap: 8px; } .ext-inc .sug-chip { min-height: 46px; font-size: 17px; padding: 0 16px; } .ext-inc .sug-chip.on { background: #1a6b45 !important; border-color: #1a6b45 !important; color: #fff !important; }
 .av-hoja input[type=text], .av-hoja input[type=number] { width: 100%; }
 .pk-ov { z-index: 100001 !important; }   /* el selector (país…) debe verse por encima de las hojas «Tipo de cliente» / avisos */
+.toast.err { cursor: pointer; pointer-events: auto !important; padding-right: 18px; z-index: 100002 !important; } .toast.ok, .toast { z-index: 100002; }
+.err-inline { display: flex; gap: 8px; align-items: flex-start; margin: 10px 0; padding: 12px 14px; border-radius: 12px; background: #fdeceb; border: 1.5px solid #d32f2f; color: #8a1c14; font-size: 17px; line-height: 1.35; font-weight: 600; }
+.err-inline span { flex: 1; } .err-inline button { flex: none; width: 36px; height: 36px; border: 0; border-radius: 10px; background: #f6c9c6; color: #8a1c14; font-size: 18px; font-weight: 800; }
 .envio-prog { margin:10px 0 4px; padding:12px 14px; border-radius:12px; background:#e8f3ec; color:#14573a; }
 .envio-prog[hidden] { display:none; }
 .ep-t { font-size:18px; font-weight:700; margin-bottom:8px; }
@@ -1517,10 +1521,38 @@ function saveCarrito(){ localStorage.setItem('CARRITO', JSON.stringify(CARRITO))
 let _toastTimer;
 function toast(msg, tipo='ok'){
   const el = document.getElementById('toast');
+  const err = tipo === 'err';
   el.textContent = msg;
   el.className = 'toast ' + tipo + ' show';
+  el.onclick = err ? function(){ el.classList.remove('show'); clearTimeout(_toastTimer); } : null;
   clearTimeout(_toastTimer);
-  _toastTimer = setTimeout(()=> el.classList.remove('show'), 2800);
+  // Los avisos de error duran según su largo (mín. 7 s, máx. 14 s) y se cierran con un toque: antes desaparecían en 2.8 s y no daba tiempo de leerlos
+  _toastTimer = setTimeout(()=> el.classList.remove('show'), err ? Math.min(14000, Math.max(7000, 70 * String(msg).length)) : 2800);
+  if (err) _errorEnModal(msg);
+}
+// Si hay una ventana abierta (enviar, editar…) el error también se muestra DENTRO de ella (en el paso abierto), hasta que se cierre o se toque
+function _errorEnModal(msg){
+  try {
+    document.querySelectorAll('.err-inline').forEach(function(e){ e.remove(); });
+    var abiertos = [].slice.call(document.querySelectorAll('.modal:not(.hidden)'));
+    var m = abiertos[abiertos.length - 1]; if (!m) return;
+    var d = document.createElement('div');
+    d.className = 'err-inline'; d.setAttribute('role', 'alert');
+    d.innerHTML = '<b>Falta corregir:</b> <span></span><button type="button" aria-label="Cerrar aviso">✕</button>';
+    d.querySelector('span').textContent = msg;
+    d.querySelector('button').onclick = function(){ d.remove(); };
+    // Se coloca justo ARRIBA del campo que falta (los validadores le dan el foco enseguida); si no hay campo, en el paso abierto o bajo el encabezado
+    var ubicar = function(){
+      var f = document.activeElement, campo = (f && m.contains(f) && f !== m) ? (f.closest('.field') || f) : null;
+      var paso = m.querySelector('.pp-body:not([hidden])'), enc = m.querySelector('.modal-header');
+      if (campo && campo.parentNode) campo.parentNode.insertBefore(d, campo);
+      else if (paso) paso.insertBefore(d, paso.firstChild);
+      else if (enc) enc.parentNode.insertBefore(d, enc.nextSibling);
+      else return;
+      try { d.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {}
+    };
+    setTimeout(ubicar, 80);
+  } catch (e) {}
 }
 
 function toggleMenu(){var sb=document.getElementById('sidebar');var ov=document.getElementById('sidebarOverlay');sb.classList.toggle('open');ov.style.display=sb.classList.contains('open')?'block':'none';}function cerrarMenu(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').style.display='none';}
@@ -2114,5 +2146,5 @@ function limpiarHistorial(){
 
 window.addEventListener('load', init);
 </script>
-<script src="version.js"></script><script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=12"></script><script src="listas-ui.js?v=5"></script><script src="precios-ui.js?v=5"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=6"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="vendedor-ui.js?v=1"></script><script src="real-quote.js?v=20261059"></script><script src="tela-ui.js?v=15"></script><script src="carrito-ui.js?v=14"></script><script src="paso-a-paso.js?v=3"></script><script src="selector-producto.js?v=2"></script><script src="paso-envio.js?v=2"></script><script src="instalar-app.js?v=4"></script><script src="avisos.js?v=1"></script><script src="exterior.js?v=2"></script></body>
+<script src="version.js"></script><script src="html2pdf.bundle.min.js"></script><script src="pdf-share.js?v=12"></script><script src="listas-ui.js?v=5"></script><script src="precios-ui.js?v=5"></script><script src="medidas-iguales.js?v=2"></script><script src="flujo-compacto.js?v=6"></script><script src="precio-final.js?v=1"></script><script src="descripcion-linea.js?v=1"></script><script src="vendedor-ui.js?v=1"></script><script src="real-quote.js?v=20261061"></script><script src="tela-ui.js?v=15"></script><script src="carrito-ui.js?v=14"></script><script src="paso-a-paso.js?v=3"></script><script src="selector-producto.js?v=2"></script><script src="paso-envio.js?v=3"></script><script src="instalar-app.js?v=4"></script><script src="avisos.js?v=1"></script><script src="exterior.js?v=2"></script></body>
 </html>
