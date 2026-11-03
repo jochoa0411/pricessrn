@@ -1,2 +1,2 @@
 // Lo escribe publicar.sh en cada publicación: no editar a mano.
-window.APP_VERSION = { version: '2.0', build: 159, fecha: '2026-11-03', nota: 'Medios de pago: compartir imagen y PDF desde el menú' };
+window.APP_VERSION = { version: '2.0', build: 160, fecha: '2026-11-03', nota: 'Aviso de novedad: Medios de pago' };
