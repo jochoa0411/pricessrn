@@ -103,11 +103,46 @@
   // ── 3) Desplazamiento automático controlado por el usuario ──
   // «Subir al inicio después de agregar un ítem» (menú Más): activado por defecto; apagado, la pantalla se queda donde está.
   function subirActivo() { try { return localStorage.getItem('cotSubirAlAgregar') !== '0'; } catch (e) { return true; } }
-  window.alternarOpcionSubir = function () {
-    var b = $('optSubir'), on = b.getAttribute('aria-checked') !== 'true';
-    b.setAttribute('aria-checked', on ? 'true' : 'false');
-    try { localStorage.setItem('cotSubirAlAgregar', on ? '1' : '0'); } catch (e) {}
+  window.subirActivo = subirActivo;
+  window.subirFijar = function (on) { try { localStorage.setItem('cotSubirAlAgregar', on ? '1' : '0'); } catch (e) {} };
+  LGM.on('item:agregado', function () { compactarCliente(); });
+
+  // ── 2) Barra del presupuesto ──
+  function montarBarra() {
+    if ($('cartBar')) return;
+    var b = document.createElement('div');
+    b.id = 'cartBar'; b.className = 'cart-bar'; b.style.display = 'none';
+    b.innerHTML = '<div class="cart-bar-i"><span class="cart-bar-n"></span><b class="cart-bar-t"></b></div>'
+      + '<button type="button" class="cart-bar-b" onclick="irAlPresupuesto()">Ver y enviar</button>';
+    $('appShell').appendChild(b);
+  }
+  window.irAlPresupuesto = function () {
+    var w = document.querySelector('#cotizar .cart-wrap'); if (w) w.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
+  var cartVisible = false;
+  function actualizarBarra() {
+    var b = $('cartBar'); if (!b) return;
+    var enCotizar = $('cotizar') && $('cotizar').classList.contains('active');
+    var hay = typeof CARRITO !== 'undefined' && CARRITO.length > 0;
+    var ocupada = document.body.classList.contains('tl-bar-on');      // la barra de totales de la tela ya está abajo
+    var ver = enCotizar && hay && !ocupada && !cartVisible;
+    b.style.display = ver ? 'flex' : 'none';
+    document.body.classList.toggle('cartbar-on', ver);
+    if (hay) {
+      var n = CARRITO.length;
+      b.querySelector('.cart-bar-n').textContent = 'Presupuesto · ' + n + (n === 1 ? ' ítem' : ' ítems');
+      var tot = $('cartTotal'); b.querySelector('.cart-bar-t').textContent = tot ? tot.textContent : '';
+    }
+  }
+  LGM.on('carrito:render', actualizarBarra);
+  LGM.on('vista:cambio', actualizarBarra);
+  new MutationObserver(actualizarBarra).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+  // ── 3) Desplazamiento automático controlado por el usuario ──
+  // «Subir al inicio después de agregar un ítem» (menú Más): activado por defecto; apagado, la pantalla se queda donde está.
+  function subirActivo() { try { return localStorage.getItem('cotSubirAlAgregar') !== '0'; } catch (e) { return true; } }
+  window.subirActivo = subirActivo;
+  window.subirFijar = function (on) { try { localStorage.setItem('cotSubirAlAgregar', on ? '1' : '0'); } catch (e) {} };
   function montarOpcionScroll() {
     var foot = document.querySelector('#sidebar .nv-foot'); if (!foot || $('optSubir')) return;
     var l = document.createElement('div'); l.className = 'nv-opt';
@@ -122,7 +157,7 @@
   });
 
   window.addEventListener('load', function () {
-    montarBarra(); montarOpcionScroll();
+    montarBarra();
     var tb = $('tlBar'), shell = $('appShell');
     if (tb && shell && tb.parentNode !== shell) shell.appendChild(tb);   // la barra de totales de la tela también va dentro de la columna
     var w = document.querySelector('#cotizar .cart-wrap'), root = document.querySelector('.content');
