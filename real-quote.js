@@ -1731,7 +1731,9 @@ function medRender(){
   var ro = !_edit.editable, dis = ro ? 'disabled' : '';
   document.getElementById('medItems').innerHTML = _edit.items.map(function(it, i){
     return '<div class="med-line"><textarea rows="2" placeholder="Descripción" ' + dis + ' oninput="medSet(' + i + ',\'descripcion\',this.value)">' + _esc(it.descripcion) + '</textarea>'
-      + '<div class="med-grid"><div><label>Cantidad (' + _esc(it.unidad || 'UNIDAD') + ')</label><input type="number" inputmode="decimal" step="any" min="0" value="' + it.cantidad + '" ' + dis + ' oninput="medSet(' + i + ',\'cantidad\',this.value)"></div>'
+      + '<div class="med-grid"><div><label>Cantidad</label><input type="number" inputmode="decimal" step="any" min="0" value="' + it.cantidad + '" ' + dis + ' oninput="medSet(' + i + ',\'cantidad\',this.value)"></div>'
+      + '<div><label>Unidad de medida</label><input type="text" list="medUomLista" maxlength="20" autocomplete="off" placeholder="Ej: UNIDAD, ROLLO, METRO" value="' + _esc(it.unidad || 'UNIDAD') + '" ' + dis + ' oninput="medSet(' + i + ',\'unidad\',this.value)"></div></div>'
+      + '<div class="med-grid">'
       + '<div><label>Precio unitario</label><input type="number" inputmode="decimal" step="any" min="0" value="' + it.precio_unitario + '" ' + dis + ' oninput="medSet(' + i + ',\'precio_unitario\',this.value)"></div></div>'
       + '<div class="med-foot"><span class="med-lt" id="medLT' + i + '">' + _fmtMoneda(it.cantidad * it.precio_unitario, _edit.moneda) + '</span>'
       + (ro ? '' : '<button type="button" class="btn btn-danger btn-sm" onclick="medQuitar(' + i + ')">' + _ic('x') + ' Quitar línea</button>') + '</div></div>';
@@ -1739,7 +1741,7 @@ function medRender(){
   medRecalcular();
 }
 function medSet(i, k, v){
-  _edit.items[i][k] = k === 'descripcion' ? v : (parseFloat(v) || 0);
+  _edit.items[i][k] = (k === 'descripcion' || k === 'unidad') ? v : (parseFloat(v) || 0);
   var lt = document.getElementById('medLT' + i);
   if (lt) lt.textContent = _fmtMoneda(_edit.items[i].cantidad * _edit.items[i].precio_unitario, _edit.moneda);
   medRecalcular();
@@ -1774,6 +1776,7 @@ async function guardarEdicion(reenviar, autorizar){
   var telefono = document.getElementById('medTelefono').value.trim();
   if (!contacto) { toast('Ingresa la atención: con quién se cotiza', 'err'); document.getElementById('medContacto').focus(); return; }
   if (!correo && !telefono) { toast('Ingresa el correo o el teléfono del contacto', 'err'); document.getElementById('medTelefono').focus(); return; }
+  _edit.items.forEach(function(it){ it.unidad = String(it.unidad || '').trim().toUpperCase() || 'UNIDAD'; });
   var items = _edit.items.filter(function(it){ return String(it.descripcion).trim() && it.cantidad > 0; });
   if (!items.length) { toast('Agrega al menos un ítem con descripción y cantidad', 'err'); return; }
   if (items.length !== _edit.items.length && !confirm('Hay líneas vacías o con cantidad 0; se descartarán al guardar. ¿Continuar?')) return;
