@@ -301,7 +301,7 @@ if(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Loca
 // -- Sync de precios: la lista se edita en el ERP (PFS > Ventas > Catalogo > Catalogo de Precios)
 // y se descarga del relay con la sesion del vendedor (GET /precios). Sin sesion no sincroniza.
 var _ultimaSyncPrecios = 0;
-var SYNC_PRECIOS_MS = 5 * 60 * 1000;
+var SYNC_PRECIOS_MS = 30 * 1000;   // mínimo entre consultas automáticas (la respuesta «sin cambios» es mínima)
 
 async function syncPrecios(manual){
   try { await _syncPreciosCore(manual); } finally { LGM.emit('precios:sync'); }
@@ -318,7 +318,7 @@ async function _syncPreciosCore(manual){
     var data = resp.data;
     if(data.unchanged){ if(manual) toast('Ya tenes la ultima version (v'+data.version+')'); return; }
     // Listas por cliente: se guardan aunque la lista general no haya cambiado
-    if(data.listas_cliente && window.guardarListasCliente && data.listas_rev !== window.LISTAS_REV){ guardarListasCliente(data.listas_rev, data.listas_cliente); if(manual) toast('Listas por cliente actualizadas'); }
+    if(data.listas_cliente && window.guardarListasCliente && data.listas_rev !== window.LISTAS_REV){ guardarListasCliente(data.listas_rev, data.listas_cliente); if(window.guardarListasUsd) guardarListasUsd(data.listas_usd || []); if(manual) toast('Listas por cliente actualizadas'); }
 
     // Jumbos export: se guardan aunque la lista general no haya cambiado
     if(data.jumbos && window.guardarJumbos && data.jumbos_rev !== window.JUMBOS_REV){ guardarJumbos(data.jumbos); if(manual) toast('Lista de Jumbos actualizada'); }
@@ -366,7 +366,12 @@ window.addEventListener('load', function(){
   header.replaceChild(btn, header.lastElementChild);
 });
 
-setInterval(function(){ syncPrecios(false); }, 60 * 1000);
+// Automático: cada 45 s con la app abierta y al instante al volver a ella (desde el fondo, otra app o tras recuperar internet)
+setInterval(function(){ if(document.visibilityState !== 'hidden') syncPrecios(false); }, 45 * 1000);
+document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'visible') syncPrecios(false); });
+window.addEventListener('focus', function(){ syncPrecios(false); });
+window.addEventListener('online', function(){ syncPrecios(false); });
+window.addEventListener('pageshow', function(){ syncPrecios(false); });
 
 if(window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App){
   Capacitor.Plugins.App.addListener('appStateChange', function(state){

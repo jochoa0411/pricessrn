@@ -106,12 +106,13 @@
     var id = window.listaSacoId ? listaSacoId() : null;
     b.querySelector('.pk-btn-v').textContent = textoLista(id);
   };
-  function opcionesListas() {
+  function opcionesListas(paraConsulta) {
     var ops = [{ valor: '', texto: 'General (A / B / C)', sub: 'Precios de lista para todos', grupo: 'General' }];
     (window.LISTAS_CLIENTE || []).forEach(function (l) {
       var n = Object.keys(l.precios || {}).length;
       ops.push({ valor: String(l.id), texto: 'Lista de ' + l.nombre, sub: n + (n === 1 ? ' saco con precio' : ' sacos con precio'), grupo: 'Por cliente' });
     });
+    if (paraConsulta) (window.LISTAS_USD || []).forEach(function (c) { ops.push({ valor: 'usd:' + c.slug, texto: c.nombre, sub: 'Precios en US$ · ' + (c.incoterm || '') + ' · ' + c.filas.length + ' productos', grupo: 'Clientes en US$' }); });
     return ops;
   }
   window.elegirListaSaco = function () {
@@ -134,6 +135,14 @@
   // ───────────────────────── Jumbos export (producto × país) ─────────────────────────
   window.JUMBOS = null; window.JUMBOS_REV = 0;
   try { var jj = JSON.parse(localStorage.getItem('JUMBOS') || 'null'); if (jj && jj.productos) { window.JUMBOS = jj; window.JUMBOS_REV = jj.rev || 0; } } catch (e) {}
+  // Listas de clientes en US$ (KYM, UltraTech): solo llegan si el usuario tiene el acceso otorgado en el PFS
+  window.LISTAS_USD = [];
+  try { var lu = JSON.parse(localStorage.getItem('LISTAS_USD') || 'null'); if (Array.isArray(lu)) window.LISTAS_USD = lu; } catch (e) {}
+  window.guardarListasUsd = function (arr) {
+    window.LISTAS_USD = Array.isArray(arr) ? arr : [];
+    try { localStorage.setItem('LISTAS_USD', JSON.stringify(window.LISTAS_USD)); } catch (e) {}
+    var s = $('precios'); if (s && s.classList.contains('active')) renderPrecios();
+  };
   window.guardarJumbos = function (j) {
     window.JUMBOS = j; window.JUMBOS_REV = j.rev || 0;
     try { localStorage.setItem('JUMBOS', JSON.stringify(j)); } catch (e) {}
@@ -141,8 +150,8 @@
   };
 
   // ───────────────────────── Sección «Listas de precios» ─────────────────────────
-  var ST = { lista: '', vista: 'sacos', q: '', pais: '' };
-  try { var g = JSON.parse(localStorage.getItem('PRECIOS_VISTA') || 'null'); if (g) { ST.lista = g.lista || ''; ST.vista = g.vista || 'sacos'; } } catch (e) {}
+  var ST = { lista: '', vista: 'sacos', q: '', pais: '', usdLista: '' };
+  try { var g = JSON.parse(localStorage.getItem('PRECIOS_VISTA') || 'null'); if (g) { ST.lista = g.lista || ''; ST.vista = g.vista || 'sacos'; if (String(ST.lista).indexOf('usd:') === 0) ST.lista = ''; } } catch (e) {}
   function guardarVista() { try { localStorage.setItem('PRECIOS_VISTA', JSON.stringify({ lista: ST.lista, vista: ST.vista })); } catch (e) {} }
   function Q(v, d) { return v == null ? '—' : 'Q' + Number(v).toFixed(d == null ? 2 : d); }
   function listaActual() { return ST.lista ? (window.listaPorId ? listaPorId(ST.lista) : null) : null; }
@@ -225,6 +234,45 @@
     });
     return html + '</div>' + (J.nota ? '<p class="pr-pie">' + esc(J.nota) + '</p>' : '');
   }
+  // ── Listas de clientes en US$ (consulta) ──
+  function esUsd() { return String(ST.lista).indexOf('usd:') === 0; }
+  function usdActual() { var s = String(ST.lista).slice(4); return (window.LISTAS_USD || []).filter(function (c) { return c.slug === s; })[0] || null; }
+  function hoyISO() { var d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
+  function fdUsd(iso) { return iso ? iso.split('-').reverse().join('/') : ''; }
+  function vigTxt(l) { return l.hasta ? 'Vigente del ' + fdUsd(l.desde) + ' al ' + fdUsd(l.hasta) : 'Vigente desde el ' + fdUsd(l.desde); }
+  // Lista que se muestra: la elegida; si no, la vigente hoy (preferir lista base sobre oferta); si no, la primera
+  function usdListaSel(c) {
+    var ls = c.listas || [], h = hoyISO();
+    var elegida = ls.filter(function (l) { return String(l.id) === String(ST.usdLista); })[0]; if (elegida) return elegida;
+    var vig = ls.filter(function (l) { return l.desde <= h && (!l.hasta || l.hasta >= h); });
+    return vig.filter(function (l) { return l.tipo === 'lista'; })[0] || vig[0] || ls[0] || null;
+  }
+  window.elegirListaUsd = function () {
+    var c = usdActual(); if (!c) return; var h = hoyISO();
+    var ops = c.listas.map(function (l) {
+      var vig = l.desde <= h && (!l.hasta || l.hasta >= h);
+      return { valor: String(l.id), texto: l.nombre + (l.tipo === 'oferta' ? ' · oferta' : ''), sub: vigTxt(l) + (vig ? ' · vigente hoy' : l.desde > h ? ' · próxima' : ''), grupo: 'Listas' };
+    });
+    LGM.picker({ titulo: c.nombre, opciones: ops, valor: String((usdListaSel(c) || {}).id || ''), buscar: false, alElegir: function (v) { ST.usdLista = v; renderPrecios(); } });
+  };
+  function cuerpoUsd(c, q) {
+    var l = usdListaSel(c);
+    if (!l) return '<div class="pr-vacio">Esta lista aún no tiene precios.</div>';
+    var arr = c.filas.filter(function (f) { return f.p[l.id] != null && (!q || (f.c + ' ' + f.d).toLowerCase().indexOf(q) >= 0); });
+    var html = '<div class="card" style="margin-bottom:10px"><label style="margin-top:0">Lista</label>'
+      + '<button type="button" class="pk-btn" aria-haspopup="dialog" onclick="elegirListaUsd()"><span class="pk-btn-v">' + esc(l.nombre) + '</span></button>'
+      + '<p class="info-text" style="margin:8px 0 0"><b>' + esc(vigTxt(l)) + '</b></p></div>';
+    if (!arr.length) return html + '<div class="pr-vacio">' + (q ? 'No hay productos que coincidan con “' + esc(q) + '”.' : 'Esta lista no tiene productos con precio.') + '</div>';
+    html += '<div class="pr-cols c1"><span>' + arr.length + (arr.length === 1 ? ' producto' : ' productos') + '</span><span>' + esc((c.incoterm || '') + ' US$') + '</span></div><div class="pr-bloque">';
+    arr.forEach(function (f, i) {
+      var det = c.listas.filter(function (x) { return f.p[x.id] != null; }).map(function (x) {
+        return '<div class="pr-jp' + (x.id === l.id ? ' sel' : '') + '"><span>' + esc(x.nombre) + '<small style="display:block;opacity:.7">' + esc(vigTxt(x)) + '</small></span><b>US$' + Number(f.p[x.id]).toFixed(2) + '</b></div>';
+      }).join('');
+      html += '<div class="pr-r" id="prru' + i + '"><button type="button" class="pr-rb c1" aria-expanded="false" onclick="prAbrir(\'u' + i + '\')"><span class="pr-rn"><b>' + esc(f.c) + '</b><small>' + esc(f.d) + '</small></span><span class="pr-v">US$' + Number(f.p[l.id]).toFixed(2) + '</span></button>'
+        + '<div class="pr-x" hidden>' + det + '</div></div>';
+    });
+    return html + '</div>';
+  }
   window.elegirPaisJumbos = function () {
     var J = window.JUMBOS; if (!J) return;
     var ops = [{ valor: '', texto: 'Todos los países', sub: 'Muestra el rango de precios', grupo: 'Ver' }]
@@ -233,11 +281,14 @@
   };
   window.renderPrecios = function () {
     var box = $('preciosCuerpo'); if (!box) return;
-    var lista = listaActual();
-    if (ST.lista && !lista) { ST.lista = ''; }
+    var usd = esUsd() ? usdActual() : null;
+    if (esUsd() && !usd) ST.lista = '';
+    var lista = esUsd() ? null : listaActual();
+    if (ST.lista && !lista && !usd) { ST.lista = ''; }
     var q = ST.q.toLowerCase().trim();
-    $('prListaV').textContent = textoLista(ST.lista ? Number(ST.lista) : null);
-    $('prVistaBox').style.display = lista ? 'none' : 'flex';
+    $('prListaV').textContent = usd ? usd.nombre + ' (US$)' : textoLista(ST.lista ? Number(ST.lista) : null);
+    $('prVistaBox').style.display = (lista || usd) ? 'none' : 'flex';
+    if (usd) { $('prPaisBox').style.display = 'none'; $('prBuscar').placeholder = 'Buscar por código o descripción'; box.innerHTML = cuerpoUsd(usd, q); $('prPie').textContent = 'Precios en dólares (US$) por unidad · ' + (usd.incoterm || '') + ' · solo consulta'; return; }
     var enJumbos = ST.vista === 'jumbos' && !lista, enTelas = ST.vista === 'telas' && !lista;
     $('prSegSacos').classList.toggle('on', (ST.vista === 'sacos') || !!lista);
     $('prSegTelas').classList.toggle('on', enTelas);
@@ -251,7 +302,7 @@
     $('prPie').textContent = (v ? 'Precios vigentes · versión ' + v : 'Precios guardados en este teléfono') + (lista ? ' · lista de ' + lista.nombre : '');
   };
   window.elegirListaPrecios = function () {
-    LGM.picker({ titulo: 'Lista de precios', opciones: opcionesListas(), valor: ST.lista, buscar: (window.LISTAS_CLIENTE || []).length > 7,
+    LGM.picker({ titulo: 'Lista de precios', opciones: opcionesListas(true), valor: ST.lista, buscar: (window.LISTAS_CLIENTE || []).length > 7,
       alElegir: function (v) { ST.lista = v; guardarVista(); renderPrecios(); } });
   };
   window.prVista = function (v) { ST.vista = v; guardarVista(); renderPrecios(); };
