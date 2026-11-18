@@ -1324,43 +1324,46 @@ function renderMisCotizaciones(){
   if (!_misCot) return;
   var f = (document.getElementById('misCotFiltro').value || '').trim().toLowerCase();
   var porAprobar = _misCot.filter(function(c){ return c.puede_autorizar; });
-  var verOtras = _misCot.some(function(c){ return c.mia === false; });     // quien tiene «ver todas» o es revisor ve además las de otros vendedores
+  var verOtras = _misCot.some(function(c){ return c.mia === false; });
   var mias = _misCot.filter(function(c){ return c.mia !== false; });
-  if (!_filtroAprIni) { _filtroAprIni = true; _vista = porAprobar.length ? 'revisar' : 'mias'; }   // al abrir, el revisor ve primero lo que espera su revisión
+  if (!_filtroAprIni) { _filtroAprIni = true; _vista = porAprobar.length ? 'revisar' : 'mias'; }
   if (!verOtras) _vista = 'mias';
   if (_vista === 'revisar' && !porAprobar.length) _vista = 'mias';
   var lista = _misCot.filter(function(c){
     if (f && (c.no_cotizacion + ' ' + c.cliente + ' ' + (c.cliente_nit || '') + ' ' + (c.creado_por_nombre || '') + ' ' + (c.vendedor_nombre || '')).toLowerCase().indexOf(f) < 0) return false;
     return _vista === 'todas' ? true : _vista === 'revisar' ? !!c.puede_autorizar : c.mia !== false;
   });
-  var tab = function(v, txt, n){ return '<button type="button" role="tab" aria-selected="' + (_vista === v) + '" class="vista-tab' + (_vista === v ? ' on' : '') + '" onclick="_vista=\'' + v + '\';renderMisCotizaciones()">' + txt + ' <span class="vt-n">' + n + '</span></button>'; };
-  var barra = verOtras ? '<div class="vista-seg" role="tablist" aria-label="Qué cotizaciones ver">' + tab('mias', 'Mis cotizaciones', mias.length) + tab('todas', 'Todas', _misCot.length) + (porAprobar.length ? tab('revisar', 'Por revisar', porAprobar.length) : '') + '</div>' : '';
-  if (!lista.length) { el.innerHTML = barra + '<p class="muted">' + (_misCot.length ? (_vista === 'mias' && !f ? 'Aún no has generado cotizaciones.' : 'Sin resultados.') : 'Aún no has generado cotizaciones.') + '</p>'; return; }
+  var tab = function(v, txt, n){ return '<button type="button" role="tab" aria-selected="' + (_vista === v) + '" class="mq-tab' + (_vista === v ? ' on' : '') + '" onclick="_vista=\'' + v + '\';renderMisCotizaciones()">' + txt + '<span class="mq-n">' + n + '</span></button>'; };
+  var barra = (verOtras ? '<div class="mq-seg" role="tablist" aria-label="Qué cotizaciones ver">' + tab('mias', 'Mías', mias.length) + tab('todas', 'Todas', _misCot.length) + (porAprobar.length ? tab('revisar', 'Por revisar', porAprobar.length) : '') + '</div>' : '');
+  if (!lista.length) { el.innerHTML = barra + '<p class="mq-empty">' + (_misCot.length ? (_vista === 'mias' && !f ? 'Aún no has generado cotizaciones.' : 'Sin resultados.') : 'Aún no has generado cotizaciones.') + '</p>'; return; }
+  var fecha = function(v){ try { return new Date(v).toLocaleString('es-GT', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; } };
   el.innerHTML = barra + lista.map(function(c){
-    var pill = _ESTATUS_PILL[String(c.estatus || '').toUpperCase()] || [c.estatus, ''];
-    var editada = new Date(c.updated_at) - new Date(c.created_at) > 60000;
-    var corta = function (v) { try { return new Date(v).toLocaleString('es-GT', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; } };
-    var meta = [_fechaCorta(c.created_at), c.total_items + (c.total_items === 1 ? ' ítem' : ' ítems')];
-    if (c.vendedor_nombre) meta.push('Vendedor: ' + _esc(c.vendedor_nombre));
-    if (c.mia === false && c.creado_por_nombre) meta.push('Elaboró: ' + _esc(c.creado_por_nombre));
-    if (c.precios_version) meta.push('precios v' + c.precios_version);
-    return '<div class="item-card mc">'
-      + '<div class="mc-top"><strong>' + _esc(c.no_cotizacion) + ' — ' + _esc(c.cliente) + '</strong><span class="mc-tot">' + _fmtMoneda(c.total, c.moneda) + '</span></div>'
-      + '<div class="mc-meta">' + meta.join(' · ') + (editada ? '<br>Editada ' + _fechaCorta(c.updated_at) : '') + '</div>'
-      + (c.cliente_enviada_at && c.cliente_enviada_a ? '<div class="mc-meta">Enviada a ' + _esc(c.cliente_enviada_a) + '</div>' : '')
-      + (c.estado_revision === 'DEVUELTA' && c.revision_devuelta_nota ? '<div class="rev-nota"><b>Qué corregir:</b> ' + _esc(c.revision_devuelta_nota) + '</div>' : '')
-      + '<div class="mc-pills"><span class="pill ' + pill[1] + '">' + _esc(pill[0]) + '</span>' + (c.vendida ? '<span class="pill ok">Vendida</span>' : '')
-      + (c.cliente_exterior ? '<span class="pill conv">Exterior' + (c.pais ? ' · ' + _esc(c.pais) : '') + '</span>' : '')
-      + (c.aprobado_por_nombre && /^(APROBADA|CONVERTIDA)$/i.test(String(c.estatus || '')) ? '<span class="pill ok">Revisada y autorizada por ' + _esc(c.aprobado_por_nombre) + '</span>' : '')
-      + (c.estado_revision === 'EN_REVISION' ? '<span class="pill sin-enviar">En revisión' + (c.autorizador_nombre ? ' · ' + _esc(c.autorizador_nombre) : '') + '</span>' : '')
-      + (c.estado_revision === 'DEVUELTA' ? '<span class="pill" style="background:#d32f2f">Devuelta' + (c.revision_devuelta_por_nombre ? ' por ' + _esc(c.revision_devuelta_por_nombre) : '') + '</span>' : '')
-      + (c.estado_revision === 'SIN_SOLICITAR' ? '<span class="pill sin-enviar">Falta pedir la revisión</span>' : '')
-      + (c.cliente_enviada_at ? '<span class="pill ok">Enviada al cliente · ' + corta(c.cliente_enviada_at) + '</span>' : '')
-      + (c.origen === 'MOVIL' && !c.cliente_enviada_at && !c.vendida && !c.estado_revision && String(c.estatus).toUpperCase() !== 'CONVERTIDA' ? '<span class="pill sin-enviar">Sin enviar al cliente</span>' : '') + '</div>'
-      + '<div class="mc-acts">'
-      + (c.puede_autorizar && c.editable ? '<button class="btn btn-success btn-sm" onclick="abrirEditar(' + c.id + ')">' + _ic('check') + ' Revisar</button>'
-        : '<button class="btn btn-warning btn-sm" onclick="abrirEditar(' + c.id + ')">' + _ic(c.editable ? 'edit' : 'eye') + ' ' + (c.editable ? 'Editar' : 'Ver') + '</button>')
-      + '<button class="kebab-m" onclick="abrirAcciones(' + c.id + ')" aria-label="Más acciones">' + _ic('more') + '</button></div></div>';
+    var est = String(c.estatus || '').toUpperCase();
+    // Una sola píldora de estado, por orden de prioridad
+    var st, next = '';
+    if (c.vendida) st = ['Vendida', 'ok'];
+    else if (est === 'CONVERTIDA') st = ['Convertida a pedido', 'ok'];
+    else if (c.estado_revision === 'DEVUELTA') { st = ['Devuelta' + (c.revision_devuelta_por_nombre ? ' por ' + c.revision_devuelta_por_nombre : ''), 'warn']; next = c.revision_devuelta_nota ? 'Corregir: ' + c.revision_devuelta_nota : ''; }
+    else if (c.estado_revision === 'EN_REVISION') { st = ['En revisión', 'warn']; next = c.autorizador_nombre ? 'Espera a ' + c.autorizador_nombre : ''; }
+    else if (c.estado_revision === 'SIN_SOLICITAR') st = ['Falta pedir revisión', 'warn'];
+    else if (c.cliente_enviada_at) st = ['Enviada ' + fecha(c.cliente_enviada_at), 'ok'];
+    else st = (_ESTATUS_PILL[est] ? [_ESTATUS_PILL[est][0], ''] : [c.estatus || 'Borrador', '']);
+    if (!next && c.origen === 'MOVIL' && !c.cliente_enviada_at && !c.vendida && est !== 'CONVERTIDA' && !c.estado_revision) next = 'Falta enviar al cliente';
+    if (!next && c.aprobado_por_nombre && /^(APROBADA|CONVERTIDA)$/i.test(est)) next = 'Autorizada por ' + c.aprobado_por_nombre;
+    if (c.cliente_exterior && !next) next = 'Exterior' + (c.pais ? ' · ' + c.pais : '');
+    var quien = c.mia === false && c.creado_por_nombre ? 'Elaboró ' + c.creado_por_nombre : (c.vendedor_nombre ? 'Vendedor ' + c.vendedor_nombre : '');
+    var meta = [fecha(c.created_at), c.total_items + (c.total_items === 1 ? ' ítem' : ' ítems'), quien].filter(Boolean);
+    var puedeRev = c.puede_autorizar && c.editable;
+    return '<article class="mq-card">'
+      + '<header class="mq-card-h"><div class="mq-cli"><span class="mq-folio">' + _esc(c.no_cotizacion) + '</span><strong>' + _esc(c.cliente) + '</strong></div>'
+      + '<span class="mq-tot">' + _fmtMoneda(c.total, c.moneda) + '</span></header>'
+      + '<div class="mq-meta">' + meta.map(_esc).join(' · ') + '</div>'
+      + '<div class="mq-foot"><span class="mq-st mq-st-' + st[1] + '">' + _esc(st[0]) + '</span>'
+      + (next ? '<span class="mq-next">' + _esc(next) + '</span>' : '') + '</div>'
+      + '<div class="mq-acts">'
+      + '<button type="button" class="mq-pill mq-pill-main" onclick="abrirEditar(' + c.id + ')">' + (puedeRev ? 'Revisar' : c.editable ? 'Editar' : 'Ver') + '</button>'
+      + '<button type="button" class="mq-pill mq-kebab" onclick="abrirAcciones(' + c.id + ')" aria-label="Más acciones">' + _ic('more') + '</button>'
+      + '</div></article>';
   }).join('');
 }
 
@@ -1811,14 +1814,21 @@ else renderBannerRecalc();
 
 function medRender(){
   var ro = !_edit.editable, dis = ro ? 'disabled' : '';
+  var fijo = !ro && !!_edit.calculo;   // con cálculo guardado, el precio sale de la calculadora
+  var hint = document.getElementById('medHintPrecios');
+  if (hint) hint.textContent = ro ? '' : (fijo
+    ? 'Precios del cálculo. Para cambiarlos, toca Calcular precios.'
+    : 'Sin cálculo guardado: precios manuales. Toca Calcular precios para armarlos con la calculadora.');
   document.getElementById('medItems').innerHTML = _edit.items.map(function(it, i){
-    return '<div class="med-line"><textarea rows="2" placeholder="Descripción" ' + dis + ' oninput="medSet(' + i + ',\'descripcion\',this.value)">' + _esc(it.descripcion) + '</textarea>'
-      + '<div class="med-grid"><div><label>Cantidad</label><input type="number" inputmode="decimal" step="any" min="0" value="' + it.cantidad + '" ' + dis + ' oninput="medSet(' + i + ',\'cantidad\',this.value)"></div>'
-      + '<div><label>Unidad de medida</label><input type="text" list="medUomLista" maxlength="20" autocomplete="off" placeholder="Ej: UNIDAD, ROLLO, METRO" value="' + _esc(it.unidad || 'UNIDAD') + '" ' + dis + ' oninput="medSet(' + i + ',\'unidad\',this.value)"></div></div>'
-      + '<div class="med-grid">'
-      + '<div><label>Precio unitario</label><input type="number" inputmode="decimal" step="any" min="0" value="' + it.precio_unitario + '" ' + dis + ' oninput="medSet(' + i + ',\'precio_unitario\',this.value)"></div></div>'
-      + '<div class="med-foot"><span class="med-lt" id="medLT' + i + '">' + _fmtMoneda(it.cantidad * it.precio_unitario, _edit.moneda) + '</span>'
-      + (ro ? '' : '<button type="button" class="btn btn-danger btn-sm" onclick="medQuitar(' + i + ')">' + _ic('x') + ' Quitar línea</button>') + '</div></div>';
+    return '<div class="ed-line">'
+      + '<textarea rows="2" placeholder="Ej: Saco rojo 28x44 110 g" ' + dis + ' oninput="medSet(' + i + ',\'descripcion\',this.value)">' + _esc(it.descripcion) + '</textarea>'
+      + '<div class="ed-nums">'
+      + '<label>Cant.<input type="number" inputmode="decimal" step="any" min="0" value="' + it.cantidad + '" placeholder="Ej: 120" ' + dis + ' oninput="medSet(' + i + ',\'cantidad\',this.value)"></label>'
+      + '<label>Unidad<input type="text" list="medUomLista" maxlength="20" autocomplete="off" placeholder="Ej: UNIDAD" value="' + _esc(it.unidad || 'UNIDAD') + '" ' + dis + ' oninput="medSet(' + i + ',\'unidad\',this.value)"></label>'
+      + '<label>Precio<input type="number" inputmode="decimal" step="any" min="0" value="' + it.precio_unitario + '" placeholder="Ej: 45.00" ' + (dis || (fijo ? 'readonly' : '')) + ' class="' + (fijo ? 'ed-locked' : '') + '" oninput="medSet(' + i + ',\'precio_unitario\',this.value)"></label>'
+      + '<span class="ed-sub" id="medLT' + i + '">' + _fmtMoneda(it.cantidad * it.precio_unitario, _edit.moneda) + '</span>'
+      + (ro ? '' : '<button type="button" class="ed-x-sm" onclick="medQuitar(' + i + ')" aria-label="Quitar línea">×</button>')
+      + '</div></div>';
   }).join('');
   medRecalcular();
 }

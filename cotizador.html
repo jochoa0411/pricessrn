@@ -576,6 +576,77 @@ body.tl-bar-on .content { padding-bottom:104px; }
 .nv-foot { margin-top:auto; border-top:1px solid #efeff4; padding:10px 12px max(12px, env(safe-area-inset-bottom)); }
 .nv-salir { width:100%; display:flex; align-items:center; gap:10px; background:none; border:none; padding:12px 8px; border-radius:10px; color:#b91c1c; font-weight:700; font-size:16px; cursor:pointer; }
 .nv-salir:active { background:#fef2f2; } .nv-salir .ic svg { width:20px; height:20px; }
+
+/* ── Editor de cotización (norma PFS Clean: monocromo, píldoras, tarjetas 20px) ── */
+.ed-box { max-width: 620px; background: #F5F5F7; color: #1D1D1F; padding: 16px; border-radius: 24px; }
+.ed-top { display:flex; align-items:center; justify-content:space-between; gap:12px; margin: 2px 4px 12px; }
+.ed-title { font-size: 22px; font-weight: 600; letter-spacing: -.4px; }
+.ed-x { width: 36px; height: 36px; border-radius: 999px; border: none; background: #E5E5EA; color: #1D1D1F; font-size: 22px; line-height: 1; cursor: pointer; }
+.ed-box .res-warn { border: none !important; background: #FFFFFF !important; border-radius: 16px; padding: 12px 14px; margin: 0 0 12px; font-size: 14px; color: #1D1D1F !important; }
+.ed-box .res-warn strong { color: #1D1D1F !important; }
+.ed-box .rev-nota { font-size: 14px; }
+.ed-card { background: #FFFFFF; border-radius: 20px; padding: 16px; margin-bottom: 12px; border: 1px solid #E5E5EA; }
+.ed-card h5 { margin: 0; font-size: 13px; font-weight: 600; color: #86868B; text-transform: none; }
+.ed-head { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap: wrap; margin-bottom: 6px; }
+.ed-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
+.ed-box .field { margin-bottom: 10px; }
+.ed-box .field label { font-size: 13px; font-weight: 500; color: #86868B; margin-bottom: 4px; }
+.ed-box input, .ed-box select, .ed-box textarea { width: 100%; border: 1px solid #E5E5EA; border-radius: 12px; padding: 10px 12px; font-size: 16px; background: #FFFFFF; color: #1D1D1F; font-family: inherit; box-sizing: border-box; }
+.ed-box input[readonly].ed-locked { background: #F5F5F7; color: #1D1D1F; }
+.ed-hint { font-size: 13px; color: #86868B; margin: 0 0 10px; }
+.ed-line { border: 1px solid #E5E5EA; border-radius: 16px; padding: 10px; margin-bottom: 8px; position: relative; }
+.ed-line textarea { min-height: 44px; font-size: 15px; }
+.ed-nums { display:grid; grid-template-columns: 1fr 1.2fr 1fr auto; gap: 8px; align-items: end; margin-top: 8px; }
+.ed-nums label { font-size: 12px; color: #86868B; display:flex; flex-direction: column; gap: 3px; min-width: 0; }
+.ed-nums input { padding: 8px 10px; min-width: 0; }
+.ed-sub { grid-column: 1 / -1; font-size: 14px; font-weight: 600; color: #1D1D1F; text-align: right; margin-top: -2px; }
+.ed-x-sm { width: 30px; height: 30px; border-radius: 999px; border: none; background: #F5F5F7; color: #1D1D1F; font-size: 18px; cursor: pointer; position: absolute; top: 8px; right: 8px; }
+.ed-pill { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid #D1D1D6; background: #FFFFFF; color: #1D1D1F; font-size: 15px; font-weight: 500; cursor: pointer; font-family: inherit; }
+.ed-pill-main { background: #1D1D1F; color: #FFFFFF; border-color: #1D1D1F; }
+.ed-pill:disabled { opacity: .5; }
+.ed-block { width: 100%; margin-top: 8px; }
+.ed-totalrow { display:flex; align-items:center; justify-content:space-between; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+.ed-totalrow strong { font-size: 18px; font-weight: 600; }
+.ed-chk { font-size: 14px; color: #86868B; display:flex; gap:6px; align-items:center; }
+.ed-more { padding: 0; overflow: hidden; }
+.ed-more summary { list-style: none; cursor: pointer; padding: 16px; font-size: 15px; font-weight: 600; color: #1D1D1F; }
+.ed-more summary::-webkit-details-marker { display:none; }
+.ed-more summary::after { content: '＋'; float: right; color: #86868B; }
+.ed-more[open] summary::after { content: '−'; }
+.ed-more > .ed-grid, .ed-more > .field { padding: 0 16px; }
+.ed-more > .field:last-child { padding-bottom: 16px; }
+.ed-box [hidden], .ed-pill.hidden, .ed-block.hidden { display: none !important; }
+.ed-actions { position: sticky; bottom: 0; background: #F5F5F7; padding: 10px 0 max(env(safe-area-inset-bottom), 4px); }
+@media (max-width: 520px) { .ed-grid { grid-template-columns: 1fr; } .ed-nums { grid-template-columns: 1fr 1fr; } .ed-nums .ed-sub { grid-column: 1 / -1; } .ed-box { padding: 12px; } }
+
+/* ── Lista de Mis cotizaciones (norma PFS Clean) ── */
+#historial .card { background: #F5F5F7; border: none; box-shadow: none; padding: 16px; }
+.mq-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin: 2px 2px 12px; }
+.mq-title { font-size: 26px; font-weight: 600; letter-spacing: -.5px; color: #1D1D1F; }
+.mq-search { width: 100%; box-sizing: border-box; border: 1px solid #E5E5EA; border-radius: 999px; padding: 11px 16px; font-size: 16px; background: #FFFFFF; color: #1D1D1F; margin-bottom: 12px; font-family: inherit; }
+.mq-pill { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid #D1D1D6; background: #FFFFFF; color: #1D1D1F; font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit; }
+.mq-pill-main { background: #1D1D1F; color: #FFFFFF; border-color: #1D1D1F; }
+.mq-seg { display:flex; gap: 4px; background: #E5E5EA; border-radius: 999px; padding: 4px; margin-bottom: 14px; overflow-x: auto; }
+.mq-tab { flex: 1 1 auto; border: none; background: transparent; border-radius: 999px; padding: 8px 12px; font-size: 14px; color: #86868B; cursor: pointer; font-family: inherit; white-space: nowrap; display:flex; align-items:center; justify-content:center; gap:6px; }
+.mq-tab.on { background: #FFFFFF; color: #1D1D1F; font-weight: 600; }
+.mq-n { font-size: 12px; background: #E5E5EA; color: #1D1D1F; border-radius: 999px; padding: 1px 7px; }
+.mq-tab.on .mq-n { background: #1D1D1F; color: #FFFFFF; }
+.mq-empty { color: #86868B; font-size: 15px; text-align: center; padding: 24px 0; }
+.mq-card { background: #FFFFFF; border-radius: 20px; padding: 16px; margin-bottom: 10px; border: 1px solid #E5E5EA; }
+.mq-card-h { display:flex; justify-content:space-between; align-items:flex-start; gap: 12px; }
+.mq-cli { min-width: 0; display:flex; flex-direction: column; gap: 2px; }
+.mq-folio { font-size: 12px; color: #86868B; font-weight: 500; }
+.mq-cli strong { font-size: 16px; font-weight: 600; color: #1D1D1F; overflow-wrap: anywhere; line-height: 1.3; }
+.mq-tot { font-size: 16px; font-weight: 600; color: #1D1D1F; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.mq-meta { font-size: 13px; color: #86868B; margin-top: 6px; line-height: 1.4; }
+.mq-foot { display:flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.mq-st { display:inline-flex; align-items:center; min-height: 26px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #F5F5F7; color: #1D1D1F; }
+.mq-st-ok { background: #E6F4EA; color: #1E8E3E; }
+.mq-st-warn { background: #FFF4E5; color: #8A4B00; }
+.mq-next { font-size: 13px; color: #86868B; overflow-wrap: anywhere; }
+.mq-acts { display:flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.mq-kebab { width: 40px; padding: 0; }
+.mq-kebab .ic svg { width: 18px; height: 18px; }
 </style>
 <style id="fase1-accesible">
 /* ── Fase 1 · accesibilidad y claridad (revertible: tag git estable-2026-10-07) ──
@@ -1225,8 +1296,8 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
 
     <div id="historial" class="seccion">
       <div class="card">
-        <div class="card-title">Mis cotizaciones <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="cargarMisCotizaciones(true)"><span class="ic" data-ic="refresh"></span> Actualizar</button></div>
-        <input type="search" id="misCotFiltro" placeholder="Buscar por cliente o número…" oninput="renderMisCotizaciones()" style="margin-bottom:6px">
+        <div class="mq-head"><div class="mq-title">Mis cotizaciones</div><button type="button" class="mq-pill" onclick="cargarMisCotizaciones(true)"><span class="ic" data-ic="refresh"></span> Actualizar</button></div>
+        <input type="search" id="misCotFiltro" class="mq-search" placeholder="Buscar por cliente, NIT o número…" oninput="renderMisCotizaciones()">
         <div id="misCotList"><p class="muted">Cargando…</p></div>
       </div>
       <div class="card">
@@ -1289,42 +1360,64 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
 
 <!-- MODAL EDITAR / VER COTIZACION EXISTENTE -->
 <div id="modalEditar" class="modal hidden" onclick="if(event.target===this)cerrarModalEditar()">
-  <div class="modal-box" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <div class="modal-title" id="medTitle">Cotización</div>
-      <span class="modal-close" onclick="cerrarModalEditar()">×</span>
+  <div class="modal-box ed-box" onclick="event.stopPropagation()">
+    <div class="ed-top">
+      <div class="ed-title" id="medTitle">Cotización</div>
+      <button type="button" class="ed-x" onclick="cerrarModalEditar()" aria-label="Cerrar">×</button>
     </div>
     <div id="medAviso"></div>
-    <div class="field"><label>Cliente *</label><input type="text" id="medCliente"></div>
-    <div class="field"><label>NIT</label><input type="text" id="medNit"></div>
-    <div id="medExtBox" hidden>
-      <div class="field"><label for="medPais">País del cliente *</label><select id="medPais"></select></div>
-      <div class="field"><label for="medIncoterm">Incoterm *</label><input type="text" id="medIncoterm" maxlength="40" placeholder="Ej: FOB"></div>
-      <div class="field"><label for="medDireccion">Dirección del cliente</label><input type="text" id="medDireccion" maxlength="300"></div>
-    </div>
-<div class="field"><label>Vendedor *</label><button type="button" id="medVendedorBtn" class="pk-btn" aria-haspopup="dialog" onclick="elegirVendedor('med')"><span class="pk-btn-v"></span><span class="pk-btn-i"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></span></button></div>
-    <div class="field"><label>Atención (con quién se cotiza) *</label><input type="text" id="medContacto" autocomplete="off"></div>
-    <div class="field"><label>Teléfono del contacto</label><input type="tel" id="medTelefono" autocomplete="off"></div>
-    <div class="field"><label>Correo del cliente (copia al reenviar) — correo o teléfono es obligatorio *</label><input type="email" id="medClienteCorreo"></div>
-    <div class="field"><label>Ítems</label><datalist id="medUomLista"><option value="UNIDAD"><option value="ROLLO"><option value="METRO"><option value="PIE"><option value="SACO"><option value="PAQUETE"><option value="CAJA"></datalist>
-<div id="medItems"></div>
-      <button type="button" class="btn btn-ghost btn-sm" id="medAddLinea" onclick="medAgregarLinea()" style="margin-top:6px"><span class="ic" data-ic="plus"></span> Agregar línea</button>
-    </div>
-    <label class="chk"><input type="checkbox" id="medConIva" onchange="medRecalcular()"> Los precios incluyen IVA 12%</label>
-    <div class="total-box" style="margin-top:8px"><strong>Total: <span id="medTotal">—</span></strong></div>
-    <div class="field" style="margin-top:12px"><label>Forma de entrega</label><input type="text" id="medFormaEntrega"></div>
-    <div class="field"><label>Lugar de entrega</label><input type="text" id="medLugarEntrega"></div>
-    <div class="field"><label>Tiempo de entrega</label><input type="text" id="medTiempoEntrega"></div>
-    <div class="field"><label>Forma de pago</label><input type="text" id="medFormaPago"></div>
-    <div class="field"><label>Comentarios adicionales</label><textarea id="medComentarios" rows="2" style="width:100%;padding:12px;border:1px solid #d1d1d6;border-radius:10px;font-size:16px;font-family:inherit;resize:vertical"></textarea></div>
-    <div class="modal-btns" style="flex-direction:column">
-      <button class="btn btn-success btn-block" id="btnMedGuardarEnviar" onclick="guardarEdicion(true)"><span class="ic" data-ic="mail"></span> Guardar y reenviar</button>
-      <button class="btn btn-primary btn-block" id="btnMedGuardar" onclick="guardarEdicion(false)">Guardar sin enviar</button>
-      <button class="btn btn-success btn-block hidden" id="btnMedAutorizarGuardar" onclick="guardarEdicion(false, true)"><span class="ic" data-ic="check"></span> Guardar y autorizar</button>
-      <button class="btn btn-ghost btn-block hidden" id="btnMedCalcular" onclick="calcularDesdeEditor()"><span class="ic" data-ic="calc"></span> Calcular precios</button>
-      <button class="btn btn-ghost btn-block hidden" id="btnMedDevolver" onclick="abrirDevolver()">Devolver al vendedor…</button>
-      <button class="btn btn-success btn-block hidden" id="btnMedAprobar" onclick="aprobarDesdeEditor()"><span class="ic" data-ic="check"></span> Autorizar tal como está</button>
-      <button class="btn btn-success btn-block hidden" id="btnMedReenviar" onclick="reenviarDesdeEditor()"><span class="ic" data-ic="mail"></span> Reenviar tal como está</button>
+
+    <section class="ed-card">
+      <div class="ed-grid">
+        <div class="field"><label>Cliente *</label><input type="text" id="medCliente" placeholder="Ej: Constructora Comercializadora S.A."></div>
+        <div class="field"><label>NIT</label><input type="text" id="medNit" placeholder="Ej: 117371297 o C/F"></div>
+      </div>
+      <div id="medExtBox" class="ed-grid" hidden>
+        <div class="field"><label for="medPais">País del cliente *</label><select id="medPais"></select></div>
+        <div class="field"><label for="medIncoterm">Incoterm *</label><input type="text" id="medIncoterm" maxlength="40" placeholder="Ej: FOB"></div>
+        <div class="field"><label for="medDireccion">Dirección del cliente</label><input type="text" id="medDireccion" maxlength="300" placeholder="Ej: Ciudad de Guatemala, zona 10"></div>
+      </div>
+      <div class="field"><label>Vendedor *</label><button type="button" id="medVendedorBtn" class="pk-btn" aria-haspopup="dialog" onclick="elegirVendedor('med')"><span class="pk-btn-v"></span><span class="pk-btn-i"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></span></button></div>
+      <div class="ed-grid">
+        <div class="field"><label>Atención (con quién se cotiza) *</label><input type="text" id="medContacto" autocomplete="off" placeholder="Ej: Romeo Talento"></div>
+        <div class="field"><label>Teléfono del contacto</label><input type="tel" id="medTelefono" autocomplete="off" placeholder="Ej: 5710 8736"></div>
+      </div>
+      <div class="field"><label>Correo del cliente — correo o teléfono es obligatorio *</label><input type="email" id="medClienteCorreo" placeholder="Ej: compras@cliente.com"></div>
+    </section>
+
+    <section class="ed-card">
+      <div class="ed-head">
+        <h5>Ítems y precios</h5>
+        <button type="button" class="ed-pill ed-pill-main" id="btnMedCalcular" onclick="calcularDesdeEditor()">Calcular precios</button>
+      </div>
+      <p class="ed-hint" id="medHintPrecios"></p>
+      <div class="field"><label>Ítems</label><datalist id="medUomLista"><option value="UNIDAD"><option value="ROLLO"><option value="METRO"><option value="PIE"><option value="SACO"><option value="PAQUETE"><option value="CAJA"></datalist>
+      <div id="medItems"></div>
+      <button type="button" class="ed-pill" id="medAddLinea" onclick="medAgregarLinea()">+ Agregar línea</button>
+      <div class="ed-totalrow">
+        <label class="ed-chk"><input type="checkbox" id="medConIva" onchange="medRecalcular()"> Precios con IVA 12%</label>
+        <strong>Total <span id="medTotal">—</span></strong>
+      </div>
+    </section>
+
+    <details class="ed-card ed-more">
+      <summary>Condiciones de entrega y pago</summary>
+      <div class="ed-grid">
+        <div class="field"><label>Forma de entrega</label><input type="text" id="medFormaEntrega" placeholder="Ej: Entrega en bodega del cliente"></div>
+        <div class="field"><label>Lugar de entrega</label><input type="text" id="medLugarEntrega" placeholder="Ej: Bodega Zona 12"></div>
+        <div class="field"><label>Tiempo de entrega</label><input type="text" id="medTiempoEntrega" placeholder="Ej: 15 días hábiles"></div>
+        <div class="field"><label>Forma de pago</label><input type="text" id="medFormaPago" placeholder="Ej: Crédito 30 días"></div>
+      </div>
+      <div class="field"><label>Comentarios adicionales</label><textarea id="medComentarios" rows="2" placeholder="Ej: Incluye etiquetas de bodega"></textarea></div>
+    </details>
+
+    <div class="ed-actions">
+      <button class="ed-pill ed-pill-main ed-block" id="btnMedGuardarEnviar" onclick="guardarEdicion(true)"><span class="ic" data-ic="mail"></span> Guardar y reenviar</button>
+      <button class="ed-pill ed-block" id="btnMedGuardar" onclick="guardarEdicion(false)">Guardar sin enviar</button>
+      <button class="ed-pill ed-pill-main ed-block hidden" id="btnMedAutorizarGuardar" onclick="guardarEdicion(false, true)"><span class="ic" data-ic="check"></span> Guardar y autorizar</button>
+      <button class="ed-pill ed-block hidden" id="btnMedDevolver" onclick="abrirDevolver()">Devolver al vendedor…</button>
+      <button class="ed-pill ed-pill-main ed-block hidden" id="btnMedAprobar" onclick="aprobarDesdeEditor()"><span class="ic" data-ic="check"></span> Autorizar tal como está</button>
+      <button class="ed-pill ed-block hidden" id="btnMedReenviar" onclick="reenviarDesdeEditor()"><span class="ic" data-ic="mail"></span> Reenviar tal como está</button>
     </div>
   </div>
 </div>
