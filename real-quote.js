@@ -1825,7 +1825,7 @@ function medRender(){
       + '<div class="ed-nums">'
       + '<label>Cant.<input type="number" inputmode="decimal" step="any" min="0" value="' + it.cantidad + '" placeholder="Ej: 120" ' + dis + ' oninput="medSet(' + i + ',\'cantidad\',this.value)"></label>'
       + '<label>Unidad<input type="text" list="medUomLista" maxlength="20" autocomplete="off" placeholder="Ej: UNIDAD" value="' + _esc(it.unidad || 'UNIDAD') + '" ' + dis + ' oninput="medSet(' + i + ',\'unidad\',this.value)"></label>'
-      + '<label>Precio<input type="number" inputmode="decimal" step="any" min="0" value="' + it.precio_unitario + '" placeholder="Ej: 45.00" ' + (dis || (fijo ? 'readonly' : '')) + ' class="' + (fijo ? 'ed-locked' : '') + '" oninput="medSet(' + i + ',\'precio_unitario\',this.value)"></label>'
+      + '<label>Precio<input type="number" inputmode="decimal" step="any" min="0" value="' + (fijo ? (Math.round((+it.precio_unitario || 0) * 100) / 100).toFixed(2) : it.precio_unitario) + '" placeholder="Ej: 45.00" ' + (dis || (fijo ? 'readonly' : '')) + ' class="' + (fijo ? 'ed-locked' : '') + '" oninput="medSet(' + i + ',\'precio_unitario\',this.value)"></label>'
       + '<span class="ed-sub" id="medLT' + i + '">' + _fmtMoneda(it.cantidad * it.precio_unitario, _edit.moneda) + '</span>'
       + (ro ? '' : '<button type="button" class="ed-x-sm" onclick="medQuitar(' + i + ')" aria-label="Quitar línea">×</button>')
       + '</div></div>';
