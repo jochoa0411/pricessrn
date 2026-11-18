@@ -1509,7 +1509,9 @@ function abrirAcciones(id){
   var c = _cotLocal(id);
   if (!c) return;
   var it = function(ic, txt, fn, cls){ return '<button class="act-item' + (cls ? ' ' + cls : '') + '" onclick="cerrarAcciones();' + fn + '">' + _ic(ic) + '<span>' + txt + '</span></button>'; };
-  var h = it(c.puede_autorizar && c.editable ? 'check' : c.editable ? 'edit' : 'eye', c.puede_autorizar && c.editable ? 'Revisar' : c.editable ? 'Editar' : 'Ver', 'abrirEditar(' + id + ')')
+  var h = (c.puede_autorizar && c.editable ? it('check', 'Revisar', 'abrirEditar(' + id + ')') : '')
+    + (c.editable ? it('edit', 'Editar', 'abrirEditar(' + id + ')') : it('eye', 'Ver', 'abrirEditar(' + id + ')'))
+    + (c.editable ? it('calc', 'Calcular precios', 'calcularDesdeMenu(' + id + ')') : '')
     + (c.tiene_calculo ? it('calc', 'Ver cálculo', 'verCalculo(' + id + ')') : '')
     + it('print', 'Imprimir', "accionPdf(" + id + ",'imprimir')")
     + it('download', 'Descargar PDF', "accionPdf(" + id + ",'descargar')")
@@ -1662,7 +1664,7 @@ async function abrirEditar(id){
     var r = await _api('/mis/' + id);
     if (!r.ok) { toast(r.data.error || 'No se pudo abrir la cotización', 'err'); return; }
     var q = r.data;
-    _edit = { exterior: !!q.cliente_exterior, id: q.id, no: q.no_cotizacion, estatus: q.estatus, editable: q.editable, puedeAutorizar: !!q.puede_autorizar, revisor: !!(q.puede_autorizar && q.editable && q.mia === false), autor: q.creado_por_nombre || '', moneda: q.moneda, base: q.updated_at, codCliente: q.cod_cliente || null, items: q.items };
+    _edit = { exterior: !!q.cliente_exterior, id: q.id, no: q.no_cotizacion, estatus: q.estatus, editable: q.editable, puedeAutorizar: !!q.puede_autorizar, revisor: !!(q.puede_autorizar && q.editable && q.mia === false), autor: q.creado_por_nombre || '', moneda: q.moneda, base: q.updated_at, codCliente: q.cod_cliente || null, items: q.items, calculo: (q.calculo && q.calculo.length) ? q.calculo : null };
     var ro = !q.editable;
     document.getElementById('medTitle').textContent = (_edit.revisor ? 'Revisar ' : ro ? 'Ver ' : 'Editar ') + q.no_cotizacion;
     var est = String(q.estatus || '').toUpperCase();
@@ -1719,6 +1721,7 @@ async function abrirEditar(id){
     document.getElementById('btnMedGuardar').textContent = _edit.revisor ? 'Solo guardar cambios' : 'Guardar sin enviar';
     document.getElementById('btnMedAutorizarGuardar').classList.toggle('hidden', !_edit.revisor);
     document.getElementById('btnMedDevolver').classList.toggle('hidden', !_edit.revisor);
+    document.getElementById('btnMedCalcular').classList.toggle('hidden', ro);
     document.getElementById('btnMedReenviar').classList.toggle('hidden', !ro || q.mia === false);   // reenviar solo el autor
     document.getElementById('btnMedAprobar').classList.toggle('hidden', !q.puede_autorizar || _edit.revisor);
     medRender();
@@ -1728,6 +1731,83 @@ async function abrirEditar(id){
   }
 }
 function cerrarModalEditar(){ document.getElementById('modalEditar').classList.add('hidden'); _edit = null; }
+
+// ── Calcular precios desde el editor y volver a él ──
+// Qué cotización se está recalculando se guarda en localStorage (sobrevive a recargar). El cálculo vive en CARRITO.
+var RECALC_KEY = 'COT_RECALC';
+function _recalcLeer(){ try { return JSON.parse(localStorage.getItem(RECALC_KEY) || 'null'); } catch (e) { return null; } }
+function _recalcGuardar(v){ try { if (v) localStorage.setItem(RECALC_KEY, JSON.stringify(v)); else localStorage.removeItem(RECALC_KEY); } catch (e) {} }
+
+// Carga el cálculo de una cotización en la calculadora y lleva al usuario a «Cotizar»
+function irACalcular(q){
+  var msg = q.calculo
+    ? 'El presupuesto actual se reemplazará por el cálculo de ' + q.no + '. ¿Continuar?'
+    : 'Esta cotización no tiene cálculo guardado: el presupuesto actual se vaciará. ¿Continuar?';
+  if (CARRITO.length && !confirm(msg)) return;
+  var ahora = Date.now();
+  CARRITO = (q.calculo || []).map(function(i){ return Object.assign({}, i, { uid: ahora + Math.random(), addedAt: ahora }); });
+  saveCarrito(); renderCarrito();
+  _recalcGuardar({ id: q.id, no: q.no });
+  cerrarModalEditar();
+  abrirSeccion('cotizar', document.querySelector('#sidebar .nav-item'));
+  renderBannerRecalc();
+  toast(q.calculo ? 'Cálculo de ' + q.no + ' cargado: ajusta los precios' : 'Arma el presupuesto desde cero');
+}
+async function calcularDesdeMenu(id){
+  try {
+    var r = await _api('/mis/' + id);
+    if (!r.ok) { toast(r.data.error || 'No se pudo abrir la cotización', 'err'); return; }
+    irACalcular({ id: id, no: r.data.no_cotizacion, calculo: (r.data.calculo && r.data.calculo.length) ? r.data.calculo : null });
+  } catch (e) { if (!e.handled) toast('Sin conexión al sistema — revisa tu internet', 'err'); }
+}
+function calcularDesdeEditor(){
+  if (!_edit || !_edit.editable) return;
+  irACalcular({ id: _edit.id, no: _edit.no, calculo: _edit.calculo });
+}
+
+// Aviso fijo arriba de «Cotizar» mientras hay un recálculo pendiente
+function renderBannerRecalc(){
+  var viejo = document.getElementById('recalcBanner');
+  if (viejo) viejo.remove();
+  var rc = _recalcLeer(), sec = document.getElementById('cotizar');
+  if (!rc || !sec) return;
+  var b = document.createElement('div');
+  b.id = 'recalcBanner';
+  b.className = 'res-warn';
+  b.style.cssText = 'border-color:#1a6b45;background:#e8f3ec';
+  b.innerHTML = '<strong style="color:#14573a">Calculando precios de ' + _esc(rc.no) + '.</strong> Ajusta el presupuesto y luego toca «Volver a la edición» para pasar los precios a la cotización.'
+    + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button type="button" class="btn btn-success btn-sm" onclick="volverAEditorDesdeCalc()">' + _ic('check') + ' Volver a la edición</button>'
+    + '<button type="button" class="btn btn-ghost btn-sm" onclick="cancelarRecalc()">Cancelar</button></div>';
+  sec.insertBefore(b, sec.firstChild);
+}
+function cancelarRecalc(){ _recalcGuardar(null); renderBannerRecalc(); toast('Recálculo cancelado: la cotización no cambió'); }
+
+// Vuelve al editor de la cotización con las líneas del cálculo nuevo (sin guardar todavía)
+async function volverAEditorDesdeCalc(){
+  var rc = _recalcLeer();
+  if (!rc) { renderBannerRecalc(); return; }
+  if (!CARRITO.length) { toast('El presupuesto está vacío: agrega al menos un ítem', 'err'); return; }
+  var est = _estadoEnvio();
+  if (est.bloqueo) { abrirModalEnviarReal(); toast('Resuelve los avisos del resumen y vuelve a intentar', 'err'); return; }
+  var items = est.armado.items.map(function(it){ return { descripcion: it.descripcion, unidad: it.unidad || 'UNIDAD', cantidad: it.cantidad, precio_unitario: it.precio_unitario }; });
+  var calculo = CARRITO.map(function(i){ var o = {}; Object.keys(i).forEach(function(k){ if (k !== 'uid' && k !== 'addedAt') o[k] = i[k]; }); return o; });
+  await abrirEditar(rc.id);
+  if (!_edit || _edit.id !== rc.id) return;   // no se pudo abrir (abrirEditar ya avisó)
+  if (!_edit.editable) {
+    cerrarModalEditar(); _recalcGuardar(null); renderBannerRecalc();
+    toast('Esta cotización ya no se puede editar', 'err');
+    return;
+  }
+  _edit.items = items;
+  _edit.calculo = calculo;
+  _edit.moneda = est.armado.moneda || _edit.moneda;
+  medRender();
+  document.getElementById('medAviso').insertAdjacentHTML('afterbegin', '<div class="res-warn" style="border-color:#1a6b45;background:#e8f3ec"><strong style="color:#14573a">Precios recalculados.</strong> Las líneas son las del cálculo nuevo. Revísalas y toca «Guardar»: reemplazan a las anteriores.</div>');
+}
+
+// Al cargar la página: si quedó un recálculo pendiente, mostrar el aviso
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', renderBannerRecalc);
+else renderBannerRecalc();
 
 function medRender(){
   var ro = !_edit.editable, dis = ro ? 'disabled' : '';
@@ -1765,7 +1845,7 @@ function medRecalcular(){
 
 async function guardarEdicion(reenviar, autorizar){
   if (!_edit || !_edit.editable) return;
-  var comoRevisor = !!_edit.revisor, autorNombre = _edit.autor || '';
+  var comoRevisor = !!_edit.revisor, autorNombre = _edit.autor || '', idEd = _edit.id;
   if (autorizar && !confirm('¿Guardar los cambios y autorizar la cotización ' + _edit.no + '? Quedará como «Revisado y autorizado por» tu nombre.')) return;
   var cliente = document.getElementById('medCliente').value.trim();
   var correo = document.getElementById('medClienteCorreo').value.trim();
@@ -1793,6 +1873,7 @@ async function guardarEdicion(reenviar, autorizar){
       cliente_correo: correo, cliente_contacto: contacto, cliente_telefono: telefono, vendedor_id: vendedorEd,
       moneda: _edit.moneda, con_iva: document.getElementById('medConIva').checked,
       items: items,
+      calculo: _edit.calculo || undefined,   // solo si se recalcularon precios en la calculadora
       forma_entrega: document.getElementById('medFormaEntrega').value.trim(),
       lugar_entrega: document.getElementById('medLugarEntrega').value.trim(),
       tiempo_entrega: document.getElementById('medTiempoEntrega').value.trim(),
@@ -1804,6 +1885,8 @@ async function guardarEdicion(reenviar, autorizar){
     _recordarCliente({ nombre: cliente, nit: _nitONormal(document.getElementById('medNit').value), correo: correo, codigo: _edit.codCliente });
     _renderRecientes();
     cerrarModalEditar();
+    var rcGuardado = _recalcLeer();
+    if (rcGuardado && rcGuardado.id === idEd) { _recalcGuardar(null); renderBannerRecalc(); }
     _misCot = null;
     cargarMisCotizaciones(true);
     var sesion = _cargarSesion() || {};
