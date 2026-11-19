@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Ancho de rollo: combinaciones</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #F5F5F7; --panel: #FFFFFF; --fg: #1D1D1F; --muted: #86868B; --line: #E5E5EA;
+  --ink: #1D1D1F; --join: #FF3B30; --ok: #1E8E3E; --warn: #8A4B00; --warn-bg: #FFF4E5;
+  --p0: #1D1D1F; --p1: #8E8E93; --p2: #D1D1D6;
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #000; --panel: #1C1C1E; --fg: #F5F5F7; --muted: #98989D; --line: #38383A;
+    --ink: #F5F5F7; --join: #FF453A; --ok: #30D158; --warn: #FFB86B; --warn-bg: #3A2A12;
+    --p0: #F5F5F7; --p1: #98989D; --p2: #48484A;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #000; --panel: #1C1C1E; --fg: #F5F5F7; --muted: #98989D; --line: #38383A;
+  --ink: #F5F5F7; --join: #FF453A; --ok: #30D158; --warn: #FFB86B; --warn-bg: #3A2A12;
+  --p0: #F5F5F7; --p1: #98989D; --p2: #48484A;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--fg);
+  font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  padding-block: 20px 32px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 680px; margin: 0 auto; display: grid; gap: 12px; }
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.6px; margin: 4px 0 0; text-wrap: balance; }
+.sub { color: var(--muted); font-size: 14px; margin: 0; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 16px; }
+.card h2 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 0 0 10px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+@media (max-width: 480px) { .grid3 { grid-template-columns: 1fr 1fr; } }
+label.f { display: grid; gap: 4px; font-size: 13px; color: var(--muted); min-width: 0; }
+input.n {
+  width: 100%; min-width: 0; font: inherit; font-size: 16px; color: var(--fg); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px;
+}
+.rollo { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.rollo:last-child { border-bottom: none; }
+.rollo .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: middle; }
+.step { display: inline-flex; align-items: center; gap: 8px; }
+.step button {
+  width: 44px; height: 44px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--fg);
+  font-size: 22px; line-height: 1; cursor: pointer;
+}
+.step output { min-width: 28px; text-align: center; font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill {
+  appearance: none; border: 1px solid var(--line); background: var(--panel); color: var(--fg);
+  border-radius: 999px; padding: 8px 14px; font: inherit; font-size: 14px; cursor: pointer; min-height: 40px;
+}
+.pill.dark { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.pill:focus-visible, .step button:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+.viz { width: 100%; height: auto; display: block; }
+.viz text { fill: var(--fg); font-size: 12px; font-family: inherit; }
+.viz .m { fill: var(--muted); font-size: 11px; }
+.kv { display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; font-size: 14px; }
+.kv span:nth-child(odd) { color: var(--muted); }
+.kv span:nth-child(even) { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+.big { font-size: 26px; font-weight: 600; letter-spacing: -.5px; font-variant-numeric: tabular-nums; }
+.warn { background: var(--warn-bg); color: var(--warn); border-radius: 14px; padding: 10px 12px; font-size: 14px; }
+.ok { color: var(--ok); font-weight: 600; }
+.note { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
+.opt { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.opt:last-child { border-bottom: none; }
+.opt small { color: var(--muted); display: block; }
+.hint { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Ancho de rollo: combinaciones</h1>
+    <p class="sub">Escribe los anchos de rollo que tienes, elige cuántos de cada uno y el precio. Ves las uniones y lo que se cobra.</p>
+  </header>
+
+  <section class="card" aria-labelledby="h-ped">
+    <h2 id="h-ped">Pedido y precio</h2>
+    <div class="grid3">
+      <label class="f">Ancho pedido (m)<input class="n" id="ancho" type="number" inputmode="decimal" step="0.01" min="0" value="15" placeholder="Ej: 15"></label>
+      <label class="f">Largo por rollo (m)<input class="n" id="largo" type="number" inputmode="decimal" step="0.01" min="0" value="50" placeholder="Ej: 50"></label>
+      <label class="f">Rollos a cotizar<input class="n" id="cant" type="number" inputmode="numeric" step="1" min="1" value="800" placeholder="Ej: 800"></label>
+    </div>
+    <div class="grid3" style="margin-top:10px">
+      <label class="f">Precio por m² (US$)<input class="n" id="precio" type="number" inputmode="decimal" step="0.01" min="0" placeholder="Ej: 1.20"></label>
+      <label class="f">Merma por unión (pulgadas)<input class="n" id="merma" type="number" inputmode="decimal" step="0.25" min="0" placeholder="Ej: 2"></label>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="h-arm">
+    <h2 id="h-arm">Anchos de rollo que vas a usar</h2>
+    <div id="rollos"></div>
+    <div class="pills" style="margin-top:12px">
+      <button type="button" class="pill" id="agregar">+ Otro ancho</button>
+      <button type="button" class="pill dark" id="sugerir">Sugerir el mejor armado</button>
+    </div>
+    <p class="hint">Escribe el ancho en metros (ej. 5.10). Hasta 3 anchos distintos.</p>
+  </section>
+
+  <section class="card" aria-labelledby="h-viz">
+    <h2 id="h-viz">Vista a escala</h2>
+    <svg id="viz" class="viz" viewBox="0 0 640 150" role="img" aria-labelledby="h-viz"></svg>
+    <p class="note" id="viz-nota"></p>
+  </section>
+
+  <section class="card" aria-labelledby="h-res">
+    <h2 id="h-res">Resultado</h2>
+    <div id="aviso"></div>
+    <div class="kv" id="res" style="margin-top:6px"></div>
+    <p class="big" id="total" style="margin:14px 0 0"></p>
+  </section>
+
+  <section class="card" aria-labelledby="h-opc">
+    <h2 id="h-opc">Otras opciones que cubren el pedido</h2>
+    <div id="opc"></div>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const fmt = (n, d = 2) => Number(n).toLocaleString('es-GT', { minimumFractionDigits: d, maximumFractionDigits: d });
+const MT = 3.28, ROLLO_FT = 12.5;
+const COLORES = ['var(--p0)', 'var(--p1)', 'var(--p2)'];
+// Tres anchos editables; cada uno con su cantidad
+const tipos = [{ w: 5.10, n: 3 }, { w: 3.81, n: 0 }, { w: 0, n: 0 }];
+
+function reglaActualM(W) {
+  const ft = W * MT;
+  let c;
+  if (ft <= 6) c = 6; else if (ft <= ROLLO_FT) c = ROLLO_FT; else c = Math.ceil(ft / 6) * 6;
+  return c / MT;
+}
+
+// Combinaciones de hasta 6 rollos por cada ancho válido que cubren el pedido; menos uniones primero
+function opciones(W) {
+  const act = tipos.map((t, k) => ({ w: t.w, k })).filter((t) => t.w > 0);
+  if (!act.length || !(W > 0)) return [];
+  const out = [];
+  const rec = (idx, cuentas) => {
+    if (idx === act.length) {
+      const n = cuentas.reduce((a, b) => a + b, 0);
+      if (n < 1) return;
+      const cob = act.reduce((s, t, q) => s + cuentas[q] * t.w, 0);
+      const mermaM = (parseFloat($('merma').value) || 0) * 0.0254;
+      if (cob - (n - 1) * mermaM < W - 1e-9) return;
+      const cuentaPorTipo = tipos.map(() => 0);
+      act.forEach((t, q) => { cuentaPorTipo[t.k] = cuentas[q]; });
+      out.push({ cuentas: cuentaPorTipo, cob, sobra: cob - (n - 1) * mermaM - W, uniones: n - 1 });
+      return;
+    }
+    for (let c = 0; c <= 6; c++) rec(idx + 1, cuentas.concat([c]));
+  };
+  rec(0, []);
+  return out.sort((x, y) => x.uniones - y.uniones || x.cob - y.cob);
+}
+
+function etiqueta(o) {
+  return tipos.map((t, k) => (o.cuentas[k] ? o.cuentas[k] + ' × ' + fmt(t.w) + ' m' : '')).filter(Boolean).join(' + ') || '—';
+}
+
+function pintarRollos() {
+  $('rollos').innerHTML = tipos.map((t, k) =>
+    '<div class="rollo">'
+    + '<label class="f">' + '<span><span class="sw" style="background:' + COLORES[k] + '"></span>Ancho ' + (k + 1) + ' (m)</span>'
+    + '<input class="n" type="number" inputmode="decimal" step="0.01" min="0" data-w="' + k + '" value="' + (t.w || '') + '" placeholder="Ej: 5.10"></label>'
+    + '<div class="step"><button type="button" data-k="' + k + '" data-d="-1" aria-label="Quitar un rollo de ancho ' + (k + 1) + '">−</button>'
+    + '<output>' + t.n + '</output>'
+    + '<button type="button" data-k="' + k + '" data-d="1" aria-label="Agregar un rollo de ancho ' + (k + 1) + '">+</button></div>'
+    + '</div>').join('');
+  $('agregar').disabled = tipos.every((t) => t.w > 0);
+  $('agregar').style.display = tipos.every((t) => t.w > 0) ? 'none' : '';
+}
+
+function dibujar(W, cob, paneles, uniones, sobra) {
+  const svg = $('viz');
+  const ancho = 640, pad = 24, x0 = pad, x1 = ancho - pad, y = 52, h = 52;
+  const escala = (x1 - x0) / Math.max(cob, W);
+  const xW = x0 + W * escala;
+  let g = '', x = x0;
+  paneles.forEach((p, k) => {
+    const w = p.w * escala;
+    g += '<rect x="' + x.toFixed(1) + '" y="' + y + '" width="' + Math.max(w - 2, 1).toFixed(1) + '" height="' + h + '" rx="6" fill="' + COLORES[p.k] + '"/>';
+    g += '<text x="' + (x + w / 2).toFixed(1) + '" y="' + (y + h / 2 + 4) + '" text-anchor="middle" style="fill:' + (p.k === 0 ? 'var(--panel)' : 'var(--fg)') + ';font-weight:600">' + fmt(p.w) + '</text>';
+    x += w;
+    if (k < paneles.length - 1) g += '<line x1="' + x.toFixed(1) + '" x2="' + x.toFixed(1) + '" y1="' + (y - 10) + '" y2="' + (y + h + 10) + '" stroke="var(--join)" stroke-width="2.5" stroke-dasharray="4 3"/>';
+  });
+  if (sobra > 0.005 && x > xW) g += '<rect x="' + xW.toFixed(1) + '" y="' + y + '" width="' + (x - xW).toFixed(1) + '" height="' + h + '" rx="6" fill="none" stroke="var(--muted)" stroke-dasharray="3 3"/>';
+  g += '<line x1="' + xW.toFixed(1) + '" x2="' + xW.toFixed(1) + '" y1="' + (y - 22) + '" y2="' + (y + h + 22) + '" stroke="var(--fg)" stroke-width="1.5"/>';
+  g += '<text x="' + xW.toFixed(1) + '" y="' + (y - 28) + '" text-anchor="middle">Pedido ' + fmt(W) + ' m</text>';
+  g += '<text x="' + x0 + '" y="' + (y + h + 40) + '" class="m">Cobrado ' + fmt(cob) + ' m · ' + uniones + (uniones === 1 ? ' unión' : ' uniones') + (sobra > 0.005 ? ' · sobra ' + fmt(sobra) + ' m' : '') + '</text>';
+  svg.innerHTML = g;
+}
+
+function actualizarRollos() {
+  document.querySelectorAll('.step output').forEach((o, k) => { o.textContent = tipos[k].n; });
+  document.querySelectorAll('input[data-w]').forEach((w) => { const k = Number(w.dataset.w); if (document.activeElement !== w) w.value = tipos[k].w || ''; });
+}
+function render() {
+  actualizarRollos();
+  const W = Number($('ancho').value), L = Number($('largo').value), N = Number($('cant').value);
+  const paneles = [];
+  tipos.forEach((t, k) => { for (let q = 0; q < t.n; q++) if (t.w > 0) paneles.push({ w: t.w, k }); });
+  // Orden de la vista: de mayor a menor ancho
+  paneles.sort((a, b) => b.w - a.w);
+  if (!(W > 0) || !(L > 0)) {
+    $('viz').innerHTML = ''; $('res').innerHTML = ''; $('total').textContent = ''; $('viz-nota').textContent = '';
+    $('aviso').innerHTML = '<p class="note">Captura el ancho y el largo del pedido.</p>';
+    $('opc').innerHTML = ''; return;
+  }
+  if (!paneles.length) {
+    $('viz').innerHTML = ''; $('res').innerHTML = ''; $('total').textContent = ''; $('viz-nota').textContent = '';
+    $('aviso').innerHTML = '<p class="warn">Escribe el ancho de al menos un rollo y cuántos usas.</p>';
+    renderOpc(W); return;
+  }
+  const cob = paneles.reduce((s, p) => s + p.w, 0);
+  const uniones = paneles.length - 1, mermaM = (parseFloat($('merma').value) || 0) * 0.0254;
+  const perdida = uniones * mermaM, util = cob - perdida, sobra = util - W, ok = util >= W - 1e-9;
+  dibujar(W, cob, paneles, uniones, sobra);
+  $('viz-nota').textContent = 'Líneas rojas punteadas = uniones. Borde punteado = lo que sobra del rollo.';
+  $('aviso').innerHTML = ok
+    ? '<p class="ok" style="margin:0 0 8px">Cubre el pedido.</p>'
+    : '<p class="warn" style="margin:0 0 8px">No cubre el pedido: faltan ' + fmt(W - cob) + ' m.</p>';
+  const regla = reglaActualM(W), area = cob * L, dif = (cob / regla - 1) * 100;
+  const precio = parseFloat($('precio').value) || 0, areaTot = area * N;
+  $('res').innerHTML =
+      '<span>Ancho cobrado</span><span>' + fmt(cob) + ' m</span>'
+    + '<span>Ancho pedido</span><span>' + fmt(W) + ' m</span>'
+    + '<span>Uniones</span><span>' + uniones + '</span>'
+    + '<span>Merma en uniones</span><span>' + fmt(perdida) + ' m (' + fmt(perdida / 0.0254, 1) + ' pulg.)</span>'
+    + '<span>Ancho útil (sin merma)</span><span>' + fmt(util) + ' m</span>'
+    + '<span>Sobra</span><span>' + fmt(sobra) + ' m</span>'
+    + '<span>Área por pieza cobrada</span><span>' + fmt(area, 1) + ' m²</span>'
+    + '<span>Regla actual (múltiplo de 6 ft)</span><span>' + fmt(regla) + ' m</span>'
+    + '<span>Frente a la regla actual</span><span>' + (dif <= 0 ? '' : '+') + fmt(dif, 1) + ' %</span>'
+;
+  const totalUs = areaTot * precio;
+  $('total').textContent = precio > 0 ? 'Total: US$ ' + fmt(totalUs, 2) : 'Área total: ' + fmt(areaTot, 0) + ' m² · escribe el precio para ver el total en US$';
+  if (precio > 0) $('total').textContent += ' (' + N + ' rollos)';
+  renderOpc(W);
+}
+
+function renderOpc(W) {
+  const lista = opciones(W).slice(0, 5);
+  $('opc').innerHTML = lista.map((o) => {
+    const sel = tipos.every((t, k) => (t.n || 0) === (o.cuentas[k] || 0));
+    return '<div class="opt"><div>' + etiqueta(o) + '<small>' + fmt(o.cob) + ' m cobrados · ' + o.uniones + (o.uniones === 1 ? ' unión' : ' uniones') + ' · sobra ' + fmt(o.sobra) + ' m</small></div>'
+      + '<button type="button" class="pill' + (sel ? ' dark' : '') + '" data-usar="' + o.cuentas.join(',') + '">' + (sel ? 'Elegida' : 'Usar') + '</button></div>';
+  }).join('') || '<p class="note">Ninguna combinación cubre el pedido con los anchos escritos.</p>';
+}
+
+// Eventos
+document.addEventListener('click', (e) => {
+  const st = e.target.closest('.step button');
+  if (st) { const k = Number(st.dataset.k); tipos[k].n = Math.max(0, Math.min(12, tipos[k].n + Number(st.dataset.d))); render(); return; }
+  const u = e.target.closest('button[data-usar]');
+  if (u) { u.dataset.usar.split(',').forEach((v, k) => { tipos[k].n = Number(v); }); render(); return; }
+});
+document.addEventListener('input', (e) => {
+  const w = e.target.closest('input[data-w]');
+  if (w) { const k = Number(w.dataset.w); tipos[k].w = parseFloat(w.value) || 0; if (!tipos[k].w) tipos[k].n = 0; render(); }
+});
+$('agregar').addEventListener('click', () => { const libre = document.querySelector('input[data-w][value=""]') || document.querySelectorAll('input[data-w]')[tipos.findIndex((t) => !t.w)]; if (libre) libre.focus(); });
+$('sugerir').addEventListener('click', () => {
+  const best = opciones(Number($('ancho').value))[0];
+  if (best) { tipos.forEach((t, k) => { t.n = best.cuentas[k]; }); render(); }
+});
+['ancho', 'largo', 'cant', 'precio', 'merma'].forEach((id) => $(id).addEventListener('input', render));
+pintarRollos();
+render();
+</script>
+</body>
+</html>

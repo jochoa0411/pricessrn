@@ -1847,6 +1847,7 @@ function medDetalleCalc(c, ed){
   var fila = function(k, v){ return '<span>' + k + '</span><span>' + v + '</span>'; };
   return fila('Ancho pedido', _medida(c.aSolFt, c.aSolM, c.ua === 'm'))
     + fila('Ancho cobrado', _medida(c.aCobFt, c.aCobM, c.ua === 'm'))
+    + (c.armado ? fila('Armado con rollos', _esc(c.armado.txt)) : '')
     + fila('Largo por pieza', _medida(c.lFt, c.lM, c.ul === 'm'))
     + fila('Área por pieza', _fmtN((c.arCorte || 0) / m2, 2) + ' m²')
     + fila('Piezas', _fmtN(piezas, 0))

@@ -58,6 +58,70 @@
   }
   window.tlOrUnidad = function (u) { orUnidad = u === 'm' ? 'm' : 'ft'; pintarAcabado(); };
   window.tlOrCadaIn = function (v) { var x = parseFloat(v) || 0; orCada = orUnidad === 'm' ? x / PIE_M : x; pintarAcabado(); };
+  // ── Ancho especial: armar el ancho pedido con rollos de distinto ancho (sin el múltiplo de 6 ft) ──
+  var rolloEsp = false, armadoSel = 0, armadoOpts = [];
+  function anchoPedidoM() {
+    var a = parseFloat($('cotAncho').value) || 0;
+    return $('cotUAncho').value === 'm' ? a : a / 3.28;
+  }
+  // Combinaciones de hasta 6 rollos por ancho que cubren el pedido; primero las de menos uniones
+  function armadosPara(W) {
+    var a1 = $('tlRollo381').checked, a2 = $('tlRollo510').checked, out = [];
+    for (var i = 0; i <= 6; i++) for (var j = 0; j <= 6; j++) {
+      if (!a1 && i) continue;
+      if (!a2 && j) continue;
+      var n = i + j; if (n < 1) continue;
+      var cobM = i * 3.81 + j * 5.10;
+      if (cobM < W - 1e-9) continue;
+      out.push({ i: i, j: j, cobM: cobM, uniones: n - 1, sobraM: cobM - W });
+    }
+    return out.sort(function (x, y) { return x.uniones - y.uniones || x.cobM - y.cobM; }).slice(0, 4);
+  }
+  function armadoEtiqueta(o) {
+    var p = [];
+    if (o.i) p.push(o.i + ' × 3.81 m');
+    if (o.j) p.push(o.j + ' × 5.10 m');
+    return p.join(' + ');
+  }
+  window.tlPintarArmado = function () {
+    var box = $('tlArmadoBox'); if (!box) return;
+    box.style.display = rolloEsp ? 'block' : 'none';
+    setOn('tlRolStd', !rolloEsp); setOn('tlRolEsp', rolloEsp);
+    if (!rolloEsp) return;
+    var W = anchoPedidoM();
+    armadoOpts = W > 0 ? armadosPara(W) : [];
+    if (armadoSel >= armadoOpts.length) armadoSel = 0;
+    $('tlArmadoOpts').innerHTML = armadoOpts.length
+      ? armadoOpts.map(function (o, k) {
+          return '<button type="button" class="tl-or-q' + (k === armadoSel ? ' on' : '') + '" onclick="tlArmadoPick(' + k + ')">'
+            + armadoEtiqueta(o) + ' · ' + fmt(o.cobM, 2) + ' m' + (k === 0 ? ' · recomendado' : '') + '</button>';
+        }).join('')
+      : '<p class="ac-resumen">Captura el ancho del pedido y marca al menos un ancho de rollo.</p>';
+    var r = $('tlArmadoResumen'), o = armadoOpts[armadoSel];
+    if (r) r.textContent = o
+      ? 'Se cobra ' + fmt(o.cobM, 2) + ' m de ancho · ' + o.uniones + (o.uniones === 1 ? ' unión' : ' uniones') + ' · sobra ' + fmt(o.sobraM, 2) + ' m por rollo.'
+      : '';
+  };
+  window.tlArmadoPick = function (k) { armadoSel = k; tlPintarArmado(); cotCalcTela(); };
+  window.tlRolloModo = function (esp) { rolloEsp = !!esp; armadoSel = 0; tlPintarArmado(); cotCalcTela(); };
+  // Ancho que se cobra: el armado elegido en especial; si no, la regla estándar por tramos
+  window.tlAnchoCobrado = function (aFt) {
+    if (rolloEsp && armadoOpts[armadoSel]) return armadoOpts[armadoSel].cobM * 3.28;
+    return anchoCobradoFt(aFt);
+  };
+  // Armado guardado en el ítem (para el detalle y para editarlo después)
+  window.tlArmadoActual = function () {
+    if (!rolloEsp || !armadoOpts[armadoSel]) return null;
+    var o = armadoOpts[armadoSel];
+    return { txt: armadoEtiqueta(o) + ' (' + o.uniones + (o.uniones === 1 ? ' unión' : ' uniones') + ')', cobM: o.cobM, uniones: o.uniones };
+  };
+  window.tlRestaurarArmado = function (a) {
+    rolloEsp = !!a; armadoSel = 0; tlPintarArmado();
+    if (a) {
+      var k = armadoOpts.findIndex(function (o) { return Math.abs(o.cobM - a.cobM) < 1e-6; });
+      armadoSel = k >= 0 ? k : 0; tlPintarArmado();
+    }
+  };
   window.tlOR = function (v) { orSi = !!v; pintarAcabado(); };
   window.tlOrCada = function (v) { orCada = parseFloat(v) || 0; pintarAcabado(); };
   window.tlFuelle = function (v) { fuelle = !!v; pintarAcabado(); };

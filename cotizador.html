@@ -652,6 +652,7 @@ body.tl-bar-on .content { padding-bottom:104px; }
 .mq-next { font-size: 13px; color: #86868B; overflow-wrap: anywhere; }
 .mq-acts { display:flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
 .mq-kebab { width: 40px; padding: 0; }
+.mq-danger { width: 100%; color: #C62828; border-color: #F2C4C4; background: #FFFFFF; }
 .mq-kebab .ic svg { width: 18px; height: 18px; }
 
 /* ── Pantalla Cotizar (norma PFS Clean, solo dentro de #cotizar) ── */
@@ -683,6 +684,12 @@ body.tl-bar-on .content { padding-bottom:104px; }
 #cotizar .total-box { background:#1D1D1F; border:none; border-radius:999px; padding:12px 18px; margin-top:12px; color:#FFFFFF; }
 #cotizar .total-box strong { color:#FFFFFF; font-size:17px; font-weight:600; }
 #cotizar .info-text { color:#86868B !important; }
+#cotizar #tlArmadoBox .ac-opts { display:flex; flex-wrap:wrap; gap:8px; }
+#cotizar #tlArmadoBox .ac-opts button { min-height:40px; }
+#cotizar #tlArmadoBox .ac-opts button.on { background:#1D1D1F; border-color:#1D1D1F; color:#FFFFFF; }
+.ac-chks { display:flex; gap:14px; flex-wrap:wrap; }
+.ac-chk { display:inline-flex; align-items:center; gap:6px; font-size:15px; color:#1D1D1F; }
+.ac-chk input { width:18px; height:18px; margin:0; accent-color:#1D1D1F; }
 #cotizar .tl-hint { font-size:14px; color:#86868B; margin:8px 0 0; line-height:1.4; }
 
 /* ── Acabado (ojetes, separación, fuelle): una tarjeta con preguntas en orden ── */
@@ -1035,6 +1042,10 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
       <span class="ic" data-ic="clipboard"></span>
       <div class="nv-t"><b>Listas de precios</b><small>Consultar sin cotizar</small></div>
     </div>
+    <div class="nav-item nv-item" id="navCasos" style="display:none" onclick="abrirSeccion('casos',this)">
+      <span class="ic" data-ic="calc"></span>
+      <div class="nv-t"><b>Casos especiales</b><small>Armado de rollos y uniones</small></div>
+    </div>
     <div class="nav-item nv-item" onclick="abrirSeccion('historial',this)">
       <span class="ic" data-ic="file"></span>
       <div class="nv-t"><b>Mis cotizaciones</b><small>Buscar, editar y reenviar</small></div>
@@ -1190,6 +1201,27 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
                 <input type="number" id="cotLargo" placeholder="0" min="0" step="any" inputmode="decimal" oninput="cotCalcTela()">
                 <div class="tl-eq" id="tlEqLargo"></div>
                 <select id="cotULargo" hidden onchange="cotCalcTela()"><option value="m">m</option><option value="ft">ft</option></select>
+              </div>
+            </div>
+            <div class="tl-sec" id="tlRollo">
+              <div class="tl-h">Ancho del rollo</div>
+              <div class="tl-presets" role="group" aria-label="Ancho del rollo">
+                <button type="button" id="tlRolStd" onclick="tlRolloModo(false)">Estándar · 3.81 m</button>
+                <button type="button" id="tlRolEsp" onclick="tlRolloModo(true)">Especial · armar</button>
+              </div>
+              <div id="tlArmadoBox" class="ac-card" style="display:none;margin-top:10px">
+                <div class="ac-row">
+                  <div class="ac-q">Anchos de rollo que puedes usar</div>
+                  <div class="ac-chks">
+                    <label class="ac-chk"><input type="checkbox" id="tlRollo381" checked onchange="tlPintarArmado()"> 3.81 m</label>
+                    <label class="ac-chk"><input type="checkbox" id="tlRollo510" checked onchange="tlPintarArmado()"> 5.10 m</label>
+                  </div>
+                </div>
+                <div class="ac-row">
+                  <div class="ac-q">Armado (el primero usa menos uniones)</div>
+                  <div id="tlArmadoOpts" class="ac-opts"></div>
+                </div>
+                <p class="ac-resumen" id="tlArmadoResumen" aria-live="polite"></p>
               </div>
             </div>
             <div id="tlNorm" class="tl-norm" style="display:none"></div>
@@ -1367,6 +1399,9 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
       <p id="prPie" class="pr-pie"></p>
     </div>
 
+    <div id="casos" class="seccion">
+      <iframe src="casos-especiales.html" title="Casos especiales: armado de rollos" style="width:100%;height:82vh;min-height:520px;border:0;border-radius:20px;background:#F5F5F7"></iframe>
+    </div>
     <div id="historial" class="seccion">
       <div class="card">
         <div class="mq-head"><div class="mq-title">Mis cotizaciones</div><button type="button" class="mq-pill" onclick="cargarMisCotizaciones(true)"><span class="ic" data-ic="refresh"></span> Actualizar</button></div>
@@ -1374,9 +1409,9 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
         <div id="misCotList"><p class="muted">Cargando…</p></div>
       </div>
       <div class="card">
-        <div class="card-title">Borradores locales</div>
+        <div class="mq-head"><div class="mq-title" style="font-size:20px">Borradores locales</div></div>
         <div id="historialList"></div>
-        <button class="btn btn-danger btn-block" style="margin-top:12px;" onclick="limpiarHistorial()"><span class="ic" data-ic="trash"></span> Limpiar borradores</button>
+        <button type="button" class="mq-pill mq-danger" style="margin-top:12px" onclick="limpiarHistorial()">Limpiar borradores</button>
       </div>
     </div>
   </div>
@@ -1748,8 +1783,27 @@ function _errorEnModal(msg){
   } catch (e) {}
 }
 
-function toggleMenu(){var sb=document.getElementById('sidebar');var ov=document.getElementById('sidebarOverlay');sb.classList.toggle('open');ov.style.display=sb.classList.contains('open')?'block':'none';}function cerrarMenu(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').style.display='none';}
+function toggleMenu(){actualizarNavCasos();var sb=document.getElementById('sidebar');var ov=document.getElementById('sidebarOverlay');sb.classList.toggle('open');ov.style.display=sb.classList.contains('open')?'block':'none';}function cerrarMenu(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').style.display='none';}
 
+// Casos especiales: visible solo para la cuenta autorizada (visibilidad, no seguridad: el archivo es público)
+// Solo se guarda el SHA-256 del correo autorizado (minúsculas), no el correo en claro
+var CASOS_HASH = '62c771286568fd257fb39c7c33388263a43bd86503e6f052dd9ab15f416d5001';
+async function actualizarNavCasos(){
+  var ses = _cargarSesion() || {};
+  var ok = false;
+  try {
+    var correo = String(ses.correo || '').trim().toLowerCase();
+    if (correo && window.crypto && crypto.subtle) {
+      var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(correo));
+      var hex = Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2, '0'); }).join('');
+      ok = hex === CASOS_HASH;
+    }
+  } catch (e) { ok = false; }
+  var nav = document.getElementById('navCasos');
+  if (nav) nav.style.display = ok ? '' : 'none';
+  return ok;
+}
+document.addEventListener('DOMContentLoaded', actualizarNavCasos);
 function abrirSeccion(sec, el){
   document.querySelectorAll('.seccion').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -1911,6 +1965,7 @@ function actSacoPreview(){
 }
 
 function cotCalcTela(){
+  if (window.tlPintarArmado) tlPintarArmado();
   _cotCalcTelaBase();
   if(window.syncTelaUI) syncTelaUI();
 }
@@ -1932,7 +1987,7 @@ function _cotCalcTelaBase(){
 
   const aFt = ua==='m' ? a*MT : a;
   const lFt = ul==='m' ? l*MT : l;
-  const aC  = anchoCobradoFt(aFt);
+  const aC  = tlAnchoCobrado(aFt);
   const arCorte = aC * lFt;
   const ar  = arCorte * cant;
 
@@ -2059,7 +2114,7 @@ function agregarTela(){
 
   const aFt = ua==='m' ? a*MT : a;
   const lFt = ul==='m' ? l*MT : l;
-  const aC  = anchoCobradoFt(aFt);
+  const aC  = tlAnchoCobrado(aFt);
   const arCorte = aC * lFt;
   const ar  = arCorte * cant;
 
@@ -2074,7 +2129,7 @@ function agregarTela(){
     uid: Date.now() + Math.random(),
     addedAt: Date.now(),
     tipo: 'tela', telaId: t.id, nombre: t.nombre,
-    ua, ul, aSolFt: aFt, aSolM: a, aCobFt: aC, aCobM: aC/MT, fac: 2, lFt, lM: l,
+    ua, ul, aSolFt: aFt, aSolM: a, aCobFt: aC, aCobM: aC/MT, fac: 2, armado: (window.tlArmadoActual ? tlArmadoActual() : null), lFt, lM: l,
     cant, arCorte, ar, p, tu, tc: tcValido ? tc : null,
     totalQ: tcValido ? tu*tc : null,
     modo, recargo: r, precioManual: (!isNaN(pm)&&pm>0) ? pm : null
@@ -2166,6 +2221,7 @@ function editarItemCarrito(uid){
     document.getElementById('cotCantTela').value      = item.cant ?? 1;
     document.getElementById('cotTC').value            = item.tc ?? '';
     document.getElementById('cotRecargo').value       = item.recargo ?? 0;
+    if (window.tlRestaurarArmado) tlRestaurarArmado(item.armado || null);
     document.getElementById('cotPrecioManual').value  = item.precioManual != null ? +(item.precioManual * m2De(item)).toFixed(3) : '';
     const modoRadio = document.querySelector(`input[name="cotModoTela"][value="${item.modo||'conf'}"]`);
     if(modoRadio) modoRadio.checked = true;
