@@ -78,6 +78,7 @@ input.n {
 .opt:last-child { border-bottom: none; }
 .opt small { color: var(--muted); display: block; }
 .hint { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
+.quitar { border:none; background:transparent; color:var(--muted); font:inherit; font-size:13px; cursor:pointer; padding:6px 4px; text-decoration:underline; }
 </style>
 </head>
 <body>
@@ -103,6 +104,7 @@ input.n {
   <section class="card" aria-labelledby="h-arm">
     <h2 id="h-arm">Anchos de rollo que vas a usar</h2>
     <div id="rollos"></div>
+    <div class="note" id="sumaRollos"></div>
     <div class="pills" style="margin-top:12px">
       <button type="button" class="pill" id="agregar">+ Otro ancho</button>
       <button type="button" class="pill dark" id="sugerir">Sugerir el mejor armado</button>
@@ -174,9 +176,9 @@ function etiqueta(o) {
 function pintarRollos() {
   $('rollos').innerHTML = tipos.map((t, k) =>
     '<div class="rollo">'
-    + '<label class="f">' + '<span><span class="sw" style="background:' + COLORES[k] + '"></span>Ancho ' + (k + 1) + ' (m)</span>'
+    + '<label class="f">' + '<span><span class="sw" style="background:' + COLORES[k] + '"></span>Rollo ' + 'ABC'[k] + ' · ancho en metros</span>'
     + '<input class="n" type="number" inputmode="decimal" step="0.01" min="0" data-w="' + k + '" value="' + (t.w || '') + '" placeholder="' + ['Ej: 5.10 m (rollo grande)', 'Ej: 3.81 m (rollo chico)', 'Ej: 4.50 m (opcional)'][k] + '"></label>'
-    + '<div class="step"><button type="button" data-k="' + k + '" data-d="-1" aria-label="Quitar un rollo de ancho ' + (k + 1) + '">−</button>'
+    + '<div class="step"><button type="button" class="quitar" data-quitar="' + k + '" aria-label="Quitar este ancho">Quitar</button><button type="button" data-k="' + k + '" data-d="-1" aria-label="Quitar un rollo de ancho ' + (k + 1) + '">−</button>'
     + '<output>' + t.n + '</output>'
     + '<button type="button" data-k="' + k + '" data-d="1" aria-label="Agregar un rollo de ancho ' + (k + 1) + '">+</button></div>'
     + '</div>').join('');
@@ -210,6 +212,7 @@ function actualizarRollos() {
 }
 function render() {
   actualizarRollos();
+  $('sumaRollos').textContent = '';
   const W = Number($('ancho').value), L = Number($('largo').value), N = Number($('cant').value);
   const paneles = [];
   tipos.forEach((t, k) => { for (let q = 0; q < t.n; q++) if (t.w > 0) paneles.push({ w: t.w, k }); });
@@ -228,6 +231,9 @@ function render() {
   const cob = paneles.reduce((s, p) => s + p.w, 0);
   const uniones = paneles.length - 1, mermaM = (parseFloat($('merma').value) || 0) * 0.0254;
   const perdida = uniones * mermaM, util = cob - perdida, sobra = util - W, ok = util >= W - 1e-9;
+  $('sumaRollos').textContent = 'Suma de rollos ' + fmt(cob) + ' m · pedido ' + fmt(W) + ' m · '
+    + uniones + (uniones === 1 ? ' unión' : ' uniones') + ' · merma ' + fmt(perdida) + ' m · ancho útil ' + fmt(util) + ' m · '
+    + (ok ? 'cubre el pedido' : 'no cubre, faltan ' + fmt(W - util) + ' m');
   dibujar(W, cob, paneles, uniones, sobra);
   $('viz-nota').textContent = 'Líneas rojas punteadas = uniones. Borde punteado = lo que sobra del rollo.';
   $('aviso').innerHTML = ok
@@ -263,6 +269,8 @@ function renderOpc(W) {
 
 // Eventos
 document.addEventListener('click', (e) => {
+  const qt = e.target.closest('button[data-quitar]');
+  if (qt) { const k = Number(qt.dataset.quitar); tipos[k] = { w: 0, n: 0 }; pintarRollos(); render(); return; }
   const st = e.target.closest('.step button');
   if (st) { const k = Number(st.dataset.k); tipos[k].n = Math.max(0, Math.min(12, tipos[k].n + Number(st.dataset.d))); render(); return; }
   const u = e.target.closest('button[data-usar]');
