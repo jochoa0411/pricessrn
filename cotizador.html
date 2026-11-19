@@ -1081,7 +1081,7 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
 
           <div id="cotModoDesc" hidden></div>
           <div class="tl-sec">
-            <div class="tl-h">Modalidad <small>precio de lista por pie²</small></div>
+            <div class="tl-h">Modalidad <small>precio de lista por m²</small></div>
             <div class="tl-radios" aria-hidden="true">
               <input type="radio" name="cotModoTela" value="master" checked onchange="actTelaPreview()">
               <input type="radio" name="cotModoTela" value="conf" onchange="actTelaPreview()">
@@ -1193,7 +1193,7 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
             </div>
             <details class="tl-adv">
               <summary>Sobrescribir precio de lista (excepción)</summary>
-              <label for="cotPrecioManual">Precio base manual USD / pie²</label>
+              <label for="cotPrecioManual">Precio base manual USD / m²</label>
               <input type="number" id="cotPrecioManual" placeholder="Vacío = precio de lista" step="0.001" min="0" inputmode="decimal" oninput="cotCalcTela()">
             </details>
           </div>
@@ -1206,7 +1206,7 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
             <div class="resultado-row"><span>Área por pieza</span><strong id="rAreaCorte">—</strong></div>
             <div id="rCantFilaTela" class="resultado-row"><span>Cantidad de piezas</span><strong id="rCantTela">—</strong></div>
             <div class="resultado-row"><span>Área total facturada</span><strong id="rArea">—</strong></div>
-            <div class="resultado-row"><span>Precio/pie²</span><strong id="rPrecio">—</strong></div>
+            <div class="resultado-row"><span>Precio/m²</span><strong id="rPrecio">—</strong></div>
             <div class="resultado-row"><span>Total USD</span><strong id="rUsd">—</strong></div>
             <div id="rIvaBoxTela" style="display:none;margin-top:10px;padding:10px;background:#fff8e1;border-radius:6px;border:1px solid #ffe082;font-size:14px;">
               <div class="resultado-row"><span>Desglose:</span><strong id="rSubTela">—</strong></div>
@@ -1600,6 +1600,7 @@ const LGM = (function(){
   };
 })();
 const MT = 3.28084;
+const M2_FT2 = 10.7639;   // pie² por m²: la lista sigue en pie², se muestra en m²
 
 let TELAS = JSON.parse(localStorage.getItem('TELAS')) || [
   {id:1,nombre:'Saran Negro 40%',cat:'Saran',sombra:'40%',rollo:"12'x300'",pm:0.080,pc:0.097},
@@ -1858,7 +1859,7 @@ function _cotCalcTelaBase(){
   const ul = document.getElementById('cotULargo').value;
   const tc = parseFloat(document.getElementById('cotTC').value);
   const r  = parseFloat(document.getElementById('cotRecargo').value)||0;
-  const pm = parseFloat(document.getElementById('cotPrecioManual').value);
+  const pm = parseFloat(document.getElementById('cotPrecioManual').value) / M2_FT2;
   const cant = Math.max(1, parseInt(document.getElementById('cotCantTela').value)||1);
 
   if(!a || !l){ res.classList.remove('show'); return; }
@@ -1880,11 +1881,11 @@ function _cotCalcTelaBase(){
   document.getElementById('rAnchoSol').textContent  = ua==='m' ? a.toFixed(2)+' m' : aFt.toFixed(1)+' ft';
   document.getElementById('rAnchoCob').textContent  = ua==='m' ? `${(aC/MT).toFixed(2)} m (${aC.toFixed(0)} ft)` : `${aC.toFixed(0)} ft`;
   document.getElementById('rLargo').textContent     = ul==='m' ? `${(lFt/MT).toFixed(2)} m (${lFt.toFixed(1)} ft)` : `${lFt.toFixed(1)} ft`;
-  document.getElementById('rAreaCorte').textContent = arCorte.toFixed(1)+' pie²';
+  document.getElementById('rAreaCorte').textContent = (arCorte/M2_FT2).toFixed(2)+' m²';
   document.getElementById('rCantFilaTela').style.display = cant > 1 ? 'flex' : 'none';
   document.getElementById('rCantTela').textContent  = cant+' piezas';
-  document.getElementById('rArea').textContent      = ar.toFixed(1)+' pie²'+(cant>1?' (total)':'');
-  document.getElementById('rPrecio').textContent    = '$'+p.toFixed(3)+'/pie²';
+  document.getElementById('rArea').textContent      = (ar/M2_FT2).toFixed(2)+' m²'+(cant>1?' (total)':'');
+  document.getElementById('rPrecio').textContent    = '$'+(p*M2_FT2).toFixed(3)+'/m²';
   document.getElementById('rUsd').textContent       = '$'+tu.toFixed(2);
 
   const tcValido = !isNaN(tc) && tc > 0;
@@ -1898,7 +1899,7 @@ function _cotCalcTelaBase(){
       var pSinIva = p / 1.12;
       var tuSinIva = ar * pSinIva;
       var tqSinIva = tuSinIva * tc;
-      document.getElementById('rPrecio').textContent = '$'+pSinIva.toFixed(3)+'/pie2 (sin IVA)';
+      document.getElementById('rPrecio').textContent = '$'+(pSinIva*M2_FT2).toFixed(3)+'/m² (sin IVA)';
       document.getElementById('rUsd').textContent = '$'+tuSinIva.toFixed(2);
       document.getElementById('rQ').textContent = 'Q'+tqSinIva.toFixed(2);
       document.getElementById('rSubTela').textContent = 'Q'+tqSinIva.toFixed(2)+' (sin IVA)';
@@ -1909,7 +1910,7 @@ function _cotCalcTelaBase(){
       var ivaUsd = tu - subUsd;
       var sub = tq / 1.12;
       var iva = tq - sub;
-      document.getElementById('rPrecio').textContent = '$'+p.toFixed(3)+'/pie2';
+      document.getElementById('rPrecio').textContent = '$'+(p*M2_FT2).toFixed(3)+'/m²';
       document.getElementById('rUsd').textContent = '$'+tu.toFixed(2);
       document.getElementById('rQ').textContent = 'Q'+tq.toFixed(2);
       document.getElementById('rSubTela').textContent = 'Q'+sub.toFixed(2)+' + IVA Q'+iva.toFixed(2)+' = Q'+tq.toFixed(2);
@@ -1987,7 +1988,7 @@ function agregarTela(){
   const ul   = document.getElementById('cotULargo').value;
   const tc   = parseFloat(document.getElementById('cotTC').value);
   const r    = parseFloat(document.getElementById('cotRecargo').value)||0;
-  const pm   = parseFloat(document.getElementById('cotPrecioManual').value);
+  const pm   = parseFloat(document.getElementById('cotPrecioManual').value) / M2_FT2;
   const cant = Math.max(1, parseInt(document.getElementById('cotCantTela').value)||1);
 
   const aFt = ua==='m' ? a*MT : a;
@@ -2099,7 +2100,7 @@ function editarItemCarrito(uid){
     document.getElementById('cotCantTela').value      = item.cant ?? 1;
     document.getElementById('cotTC').value            = item.tc ?? '';
     document.getElementById('cotRecargo').value       = item.recargo ?? 0;
-    document.getElementById('cotPrecioManual').value  = item.precioManual ?? '';
+    document.getElementById('cotPrecioManual').value  = item.precioManual != null ? +(item.precioManual * M2_FT2).toFixed(3) : '';
     const modoRadio = document.querySelector(`input[name="cotModoTela"][value="${item.modo||'conf'}"]`);
     if(modoRadio) modoRadio.checked = true;
     actTelaPreview();
@@ -2160,7 +2161,7 @@ function renderCarrito(){
       html += `<div class="cart-item">
         <div class="cart-item-body">
           <div class="ci-nombre">${_ic('fabric')} ${cantLabel}${item.nombre}</div>
-          <div class="ci-detalle">${solLabel} × ${lLabel}${item.cant>1?' c/u':''} → ${item.ar.toFixed(1)} pie² · $${item.p.toFixed(3)}/pie² (${item.modo==='master'?'Master':'Conf.'})${tcLabel}</div>
+          <div class="ci-detalle">${solLabel} × ${lLabel}${item.cant>1?' c/u':''} → ${(item.ar/M2_FT2).toFixed(2)} m² · $${(item.p*M2_FT2).toFixed(3)}/m² (${item.modo==='master'?'Master':'Conf.'})${tcLabel}</div>
           ${difiere?`<div class="ci-cobrado">${_ic('warn')} Cobrado: ${cobLabel}</div>`:''}
         </div>
         <div class="ci-total">${qLabel}</div>
@@ -2207,7 +2208,7 @@ function generarPDF_OLD_UNUSED(){
       txt += `\n${idx+1}. ${item.cant>1?item.cant+'× ':''}${item.nombre} (${item.modo==='master'?'Master':'Confeccionado'})\n`;
       txt += `   Solicitado: ${solLabel} × ${lLabel}\n`;
       if(difiere) txt += `   ATENCIÓN - Cobrado: ${cobLabel} × ${lLabel} (múltiplo 6ft)\n`;
-      txt += `   Área: ${item.ar.toFixed(1)} pie² · $${item.p.toFixed(3)}/pie²\n`;
+      txt += `   Área: ${(item.ar/M2_FT2).toFixed(2)} m² · $${(item.p*M2_FT2).toFixed(3)}/m²\n`;
       txt += `   Total: $${item.tu.toFixed(2)} USD`;
       if(item.totalQ !== null) txt += ` = Q${item.totalQ.toFixed(2)} (TC ${item.tc})`;
       txt += '\n';

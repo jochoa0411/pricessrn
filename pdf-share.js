@@ -312,10 +312,12 @@ async function _syncPreciosCore(manual){
     var sesion = typeof _cargarSesion === 'function' ? _cargarSesion() : null;
     if(!sesion || !sesion.token){ if(manual) toast('Inicia sesion para actualizar los precios','err'); return; }
     // Se manda la versión local: si no cambió, el servidor responde {unchanged:true} sin reenviar la lista
-    var resp = await _api('/precios?v=' + (parseInt(localStorage.getItem('PRECIOS_VERSION')||'0') || 0) + '&l=' + (window.LISTAS_REV || 0) + '&j=' + (window.JUMBOS_REV || 0));
+    var resp = await _api('/precios?v=' + (parseInt(localStorage.getItem('PRECIOS_VERSION')||'0') || 0) + '&l=' + (window.LISTAS_REV || 0) + '&j=' + (window.JUMBOS_REV || 0) + '&u=m2');
     if(!resp.ok) throw new Error(resp.data && resp.data.error || ('HTTP '+resp.status));
     _ultimaSyncPrecios = Date.now();
     var data = resp.data;
+    // Telas llegan en m²: se guardan en pie² (motor de cálculo) para no cambiar ningún total
+    if(data.unidad_precio === 'm2' && data.telas) data.telas = data.telas.map(function(t){ return Object.assign({}, t, { pm: t.pm / M2_FT2, pc: t.pc / M2_FT2 }); });
     if(data.unchanged){ if(manual) toast('Ya tenes la ultima version (v'+data.version+')'); return; }
     // Listas por cliente: se guardan aunque la lista general no haya cambiado
     if(data.listas_cliente && window.guardarListasCliente && data.listas_rev !== window.LISTAS_REV){ guardarListasCliente(data.listas_rev, data.listas_cliente); if(window.guardarListasUsd) guardarListasUsd(data.listas_usd || []); if(manual) toast('Listas por cliente actualizadas'); }
