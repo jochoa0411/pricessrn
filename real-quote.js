@@ -1667,7 +1667,7 @@ async function abrirEditar(id){
     var r = await _api('/mis/' + id);
     if (!r.ok) { toast(r.data.error || 'No se pudo abrir la cotización', 'err'); return; }
     var q = r.data;
-    _edit = { exterior: !!q.cliente_exterior, id: q.id, no: q.no_cotizacion, estatus: q.estatus, editable: q.editable, puedeAutorizar: !!q.puede_autorizar, revisor: !!(q.puede_autorizar && q.editable && q.mia === false), autor: q.creado_por_nombre || '', moneda: q.moneda, base: q.updated_at, codCliente: q.cod_cliente || null, items: q.items, calculo: (q.calculo && q.calculo.length) ? q.calculo : null };
+    _edit = { exterior: !!q.cliente_exterior, id: q.id, no: q.no_cotizacion, estatus: q.estatus, editable: q.editable, puedeAutorizar: !!q.puede_autorizar, revisor: !!(q.puede_autorizar && q.editable && q.mia === false), autor: q.creado_por_nombre || '', moneda: q.moneda, base: q.updated_at, codCliente: q.cod_cliente || null, creado: q.created_at, version: q.precios_version, items: q.items, calculo: (q.calculo && q.calculo.length) ? q.calculo : null };
     var ro = !q.editable;
     document.getElementById('medTitle').textContent = (_edit.revisor ? 'Revisar ' : ro ? 'Ver ' : 'Editar ') + q.no_cotizacion;
     var est = String(q.estatus || '').toUpperCase();
@@ -1823,7 +1823,7 @@ function medRender(){
   var calcs = (_edit.calculo && _edit.calculo.length === _edit.items.length) ? _edit.calculo : null;
   document.getElementById('medItems').innerHTML = _edit.items.map(function(it, i){
     var c = calcs ? calcs[i] : null;
-    var det = (c && c.tipo === 'tela') ? '<div class="ed-calc">' + medDetalleCalc(c) + '</div>' : '';
+    var det = (c && c.tipo === 'tela') ? '<div class="ed-calc">' + medDetalleCalc(c, _edit) + '</div>' : '';
     return '<div class="ed-line">'
       + '<div class="ed-lhead"><span>Línea ' + (i + 1) + '</span>'
       + (ro ? '' : '<button type="button" class="ed-x-sm" onclick="medQuitar(' + i + ')" aria-label="Quitar línea">×</button>') + '</div>'
@@ -1836,12 +1836,13 @@ function medRender(){
       + '<span class="ed-sub" id="medLT' + i + '">' + _fmtMoneda(it.cantidad * it.precio_unitario, _edit.moneda) + '</span>'
       + '</div></div>';
   }).join('');
-  document.querySelectorAll('#medItems textarea').forEach(medAutosize);
+  // Después de mostrar el modal: oculto, scrollHeight vale 0 y el texto quedaría cortado
+  requestAnimationFrame(function(){ document.querySelectorAll('#medItems textarea').forEach(medAutosize); });
   medRecalcular();
 }
 function medAutosize(t){ t.style.height = 'auto'; t.style.height = (t.scrollHeight + 2) + 'px'; }
 // Lo que el revisor necesita para validar un precio de tela: anchos, área y precio por m²
-function medDetalleCalc(c){
+function medDetalleCalc(c, ed){
   var m2 = m2De(c), piezas = c.cant || 1;
   var fila = function(k, v){ return '<span>' + k + '</span><span>' + v + '</span>'; };
   return fila('Ancho pedido', _medida(c.aSolFt, c.aSolM, c.ua === 'm'))
@@ -1849,7 +1850,27 @@ function medDetalleCalc(c){
     + fila('Largo por pieza', _medida(c.lFt, c.lM, c.ul === 'm'))
     + fila('Área por pieza', _fmtN((c.arCorte || 0) / m2, 2) + ' m²')
     + fila('Piezas', _fmtN(piezas, 0))
-    + fila('Precio por m²', '$' + _fmtN((c.p || 0) * m2, 3));
+    + fila('Precio por m²', '$' + _fmtN((c.p || 0) * m2, 3))
+    + medFilaVsLista(c, m2)
+    + (c.tc ? fila('Tipo de cambio', 'Q' + _fmtN(c.tc, 4) + ' por US$') : fila('Moneda', 'US$'))
+    + fila('Fecha del cálculo', ed && ed.creado ? _esc(_fechaCorta(ed.creado)) : '—')
+    + (ed && ed.version ? fila('Lista de precios', 'v' + ed.version) : '');
+}
+// % del precio aplicado frente a la lista por m². Sin precio manual, la lista guardada es p/(1+recargo);
+// con precio manual no hay lista guardada, así que se compara contra la lista de hoy (marcado como «hoy»).
+function medFilaVsLista(c, m2){
+  var lista = null, hoy = false;
+  if (c.precioManual) {
+    var t = TELAS.find(function(x){ return x.id === c.telaId; });
+    lista = t ? (c.modo === 'master' ? t.pm : t.pc) : null; hoy = true;
+  } else {
+    lista = (c.p || 0) / (1 + (c.recargo || 0) / 100);
+  }
+  if (!lista) return '';
+  var pct = ((c.p || 0) / lista - 1) * 100;
+  var txt = Math.abs(pct) < 0.05 ? 'En lista' : (pct > 0 ? '+' : '−') + _fmtN(Math.abs(pct), 1) + ' %';
+  return '<span>Lista por m²' + (hoy ? ' (hoy)' : '') + '</span><span>$' + _fmtN(lista * m2, 3) + '</span>'
+    + '<span>Vs. lista</span><span>' + txt + '</span>';
 }
 function medSet(i, k, v){
   _edit.items[i][k] = (k === 'descripcion' || k === 'unidad') ? v : (parseFloat(v) || 0);
