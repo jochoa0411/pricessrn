@@ -683,6 +683,20 @@ body.tl-bar-on .content { padding-bottom:104px; }
 #cotizar .total-box { background:#1D1D1F; border:none; border-radius:999px; padding:12px 18px; margin-top:12px; color:#FFFFFF; }
 #cotizar .total-box strong { color:#FFFFFF; font-size:17px; font-weight:600; }
 #cotizar .info-text { color:#86868B !important; }
+
+/* ── Acabado (ojetes, separación, fuelle): una tarjeta con preguntas en orden ── */
+.ac-card { background:#FFFFFF; border:1px solid #E5E5EA; border-radius:16px; padding:4px 14px 12px; }
+.ac-row { display:flex; flex-direction:column; gap:8px; padding:12px 0; border-bottom:1px solid #F0F0F2; }
+.ac-row:first-child { padding-top:10px; }
+.ac-q { font-size:15px; font-weight:600; color:#1D1D1F; }
+.ac-otra { display:inline-flex; align-items:center; gap:6px; font-size:14px; color:#86868B; margin-left:4px; }
+.ac-otra input { width:78px; padding:8px 10px; border:1px solid #E5E5EA; border-radius:999px; font-size:15px; text-align:center; }
+.ac-resumen { margin:10px 0 0; font-size:14px; color:#1D1D1F; font-weight:500; }
+#cotizar .ac-card .tl-presets { margin-bottom:0; background:#F0F0F2; }
+#cotizar .ac-card .tl-presets button.on { background:#FFFFFF; color:#1D1D1F; font-weight:600; box-shadow:0 1px 2px rgba(0,0,0,.08); }
+#cotizar .ac-card .tl-or-q { border-color:#D1D1D6; min-height:40px; }
+#cotizar .ac-card .tl-or-q.on { background:#1D1D1F; border-color:#1D1D1F; color:#FFFFFF; }
+#cotizar .ac-card .tl-or { margin-top:0; align-items:center; }
 </style>
 <style id="fase1-accesible">
 /* ── Fase 1 · accesibilidad y claridad (revertible: tag git estable-2026-10-07) ──
@@ -1106,22 +1120,33 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
           </div>
 
           <div class="tl-sec" id="tlAcabado" style="display:none">
-            <div class="tl-h">Acabado <small>con ojetes y ribete, y fuelle</small></div>
-            <div class="tl-presets" role="group" aria-label="Ojetes y ribete">
-              <button type="button" id="tlOrSi" onclick="tlOR(true)">Con ojetes y ribete</button>
-              <button type="button" id="tlOrNo" onclick="tlOR(false)">Sin ojetes</button>
-            </div>
-            <div id="tlOrBox" class="tl-or">
-              <span class="tl-or-l">Ojetes cada</span>
-              <div class="tl-or-in"><input type="number" id="tlOrCada" inputmode="decimal" step="0.5" min="0.5" value="2" oninput="tlOrCada(this.value)"><span>pies</span></div>
-              <button type="button" class="tl-or-q" data-v="1" onclick="tlOrCada(1)">1</button>
-              <button type="button" class="tl-or-q" data-v="1.5" onclick="tlOrCada(1.5)">1.5</button>
-              <button type="button" class="tl-or-q" data-v="2" onclick="tlOrCada(2)">2</button>
-              <button type="button" class="tl-or-q" data-v="3" onclick="tlOrCada(3)">3</button>
-            </div>
-            <div class="tl-presets" style="margin-top:10px" role="group" aria-label="Fuelle">
-              <button type="button" id="tlFuNo" onclick="tlFuelle(false)">Sin fuelle</button>
-              <button type="button" id="tlFuSi" onclick="tlFuelle(true)">Con fuelle</button>
+            <div class="tl-h">Acabado <small>solo Confeccionado</small></div>
+            <div class="ac-card">
+              <div class="ac-row">
+                <div class="ac-q">¿Lleva ojetes y ribete?</div>
+                <div class="tl-presets" role="group" aria-label="¿Lleva ojetes y ribete?">
+                  <button type="button" id="tlOrSi" onclick="tlOR(true)">Sí</button>
+                  <button type="button" id="tlOrNo" onclick="tlOR(false)">No</button>
+                </div>
+              </div>
+              <div class="ac-row" id="tlOrBox">
+                <div class="ac-q">¿Cada cuántos pies?</div>
+                <div class="tl-or">
+                  <button type="button" class="tl-or-q" data-v="1" onclick="tlOrCada(1)">1</button>
+                  <button type="button" class="tl-or-q" data-v="1.5" onclick="tlOrCada(1.5)">1.5</button>
+                  <button type="button" class="tl-or-q" data-v="2" onclick="tlOrCada(2)">2</button>
+                  <button type="button" class="tl-or-q" data-v="3" onclick="tlOrCada(3)">3</button>
+                  <label class="ac-otra"><span>Otra</span><input type="number" id="tlOrCada" inputmode="decimal" step="0.5" min="0.5" placeholder="Ej: 2.5" oninput="tlOrCada(this.value)"><span>pies</span></label>
+                </div>
+              </div>
+              <div class="ac-row">
+                <div class="ac-q">¿Lleva fuelle?</div>
+                <div class="tl-presets" role="group" aria-label="¿Lleva fuelle?">
+                  <button type="button" id="tlFuNo" onclick="tlFuelle(false)">No</button>
+                  <button type="button" id="tlFuSi" onclick="tlFuelle(true)">Sí</button>
+                </div>
+              </div>
+              <p class="ac-resumen" id="tlAcabadoResumen" aria-live="polite"></p>
             </div>
           </div>
 

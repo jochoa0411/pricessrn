@@ -35,8 +35,11 @@
     box.style.display = conf ? 'block' : 'none';
     setOn('tlOrSi', orSi); setOn('tlOrNo', !orSi); setOn('tlFuSi', fuelle); setOn('tlFuNo', !fuelle);
     $('tlOrBox').style.display = orSi ? 'flex' : 'none';
-    if (document.activeElement !== $('tlOrCada')) $('tlOrCada').value = orCada || '';
+    if (document.activeElement !== $('tlOrCada')) $('tlOrCada').value = (orCada && [1, 1.5, 2, 3].indexOf(orCada) < 0) ? orCada : '';   // «Otra» solo muestra valores fuera de los chips
     document.querySelectorAll('.tl-or-q').forEach(function (b) { b.classList.toggle('on', parseFloat(b.dataset.v) === orCada); });
+    var res = $('tlAcabadoResumen');
+    if (res) res.textContent = (orSi ? 'Con ojetes y ribete cada ' + fmt(orCada, orCada % 1 ? 1 : 0) + ' ' + (orCada === 1 ? 'pie' : 'pies') : 'Sin ojetes ni ribete')
+      + (fuelle ? ', con fuelle.' : ', sin fuelle.');
   }
   window.tlOR = function (v) { orSi = !!v; pintarAcabado(); };
   window.tlOrCada = function (v) { orCada = parseFloat(v) || 0; pintarAcabado(); };
