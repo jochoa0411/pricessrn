@@ -1819,18 +1819,37 @@ function medRender(){
   if (hint) hint.textContent = ro ? '' : (fijo
     ? 'Precios del cálculo. Para cambiarlos, toca Calcular precios.'
     : 'Sin cálculo guardado: precios manuales. Toca Calcular precios para armarlos con la calculadora.');
+  // Detalle del cálculo solo si cada línea tiene su tela calculada (mismo número de líneas)
+  var calcs = (_edit.calculo && _edit.calculo.length === _edit.items.length) ? _edit.calculo : null;
   document.getElementById('medItems').innerHTML = _edit.items.map(function(it, i){
+    var c = calcs ? calcs[i] : null;
+    var det = (c && c.tipo === 'tela') ? '<div class="ed-calc">' + medDetalleCalc(c) + '</div>' : '';
     return '<div class="ed-line">'
-      + '<textarea rows="2" placeholder="Ej: Saco rojo 28x44 110 g" ' + dis + ' oninput="medSet(' + i + ',\'descripcion\',this.value)">' + _esc(it.descripcion) + '</textarea>'
+      + '<div class="ed-lhead"><span>Línea ' + (i + 1) + '</span>'
+      + (ro ? '' : '<button type="button" class="ed-x-sm" onclick="medQuitar(' + i + ')" aria-label="Quitar línea">×</button>') + '</div>'
+      + '<textarea rows="2" placeholder="Ej: Saco rojo 28x44 110 g" ' + dis + ' oninput="medSet(' + i + ',\'descripcion\',this.value);medAutosize(this)">' + _esc(it.descripcion) + '</textarea>'
+      + det
       + '<div class="ed-nums">'
       + '<label>Cant.<input type="number" inputmode="decimal" step="any" min="0" value="' + it.cantidad + '" placeholder="Ej: 120" ' + dis + ' oninput="medSet(' + i + ',\'cantidad\',this.value)"></label>'
       + '<label>Unidad<input type="text" list="medUomLista" maxlength="20" autocomplete="off" placeholder="Ej: UNIDAD" value="' + _esc(it.unidad || 'UNIDAD') + '" ' + dis + ' oninput="medSet(' + i + ',\'unidad\',this.value)"></label>'
       + '<label>Precio<input type="number" inputmode="decimal" step="any" min="0" value="' + (fijo ? (Math.round((+it.precio_unitario || 0) * 100) / 100).toFixed(2) : it.precio_unitario) + '" placeholder="Ej: 45.00" ' + (dis || (fijo ? 'readonly' : '')) + ' class="' + (fijo ? 'ed-locked' : '') + '" oninput="medSet(' + i + ',\'precio_unitario\',this.value)"></label>'
       + '<span class="ed-sub" id="medLT' + i + '">' + _fmtMoneda(it.cantidad * it.precio_unitario, _edit.moneda) + '</span>'
-      + (ro ? '' : '<button type="button" class="ed-x-sm" onclick="medQuitar(' + i + ')" aria-label="Quitar línea">×</button>')
       + '</div></div>';
   }).join('');
+  document.querySelectorAll('#medItems textarea').forEach(medAutosize);
   medRecalcular();
+}
+function medAutosize(t){ t.style.height = 'auto'; t.style.height = (t.scrollHeight + 2) + 'px'; }
+// Lo que el revisor necesita para validar un precio de tela: anchos, área y precio por m²
+function medDetalleCalc(c){
+  var m2 = m2De(c), piezas = c.cant || 1;
+  var fila = function(k, v){ return '<span>' + k + '</span><span>' + v + '</span>'; };
+  return fila('Ancho pedido', _medida(c.aSolFt, c.aSolM, c.ua === 'm'))
+    + fila('Ancho cobrado', _medida(c.aCobFt, c.aCobM, c.ua === 'm'))
+    + fila('Largo por pieza', _medida(c.lFt, c.lM, c.ul === 'm'))
+    + fila('Área por pieza', _fmtN((c.arCorte || 0) / m2, 2) + ' m²')
+    + fila('Piezas', _fmtN(piezas, 0))
+    + fila('Precio por m²', '$' + _fmtN((c.p || 0) * m2, 3));
 }
 function medSet(i, k, v){
   _edit.items[i][k] = (k === 'descripcion' || k === 'unidad') ? v : (parseFloat(v) || 0);
