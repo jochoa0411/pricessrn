@@ -1869,8 +1869,8 @@ function medFilaVsLista(c, m2){
   if (!lista) return '';
   var pct = ((c.p || 0) / lista - 1) * 100;
   var txt = Math.abs(pct) < 0.05 ? 'En lista' : (pct > 0 ? '+' : '−') + _fmtN(Math.abs(pct), 1) + ' %';
-  return '<span>Lista por m²' + (hoy ? ' (hoy)' : '') + '</span><span>$' + _fmtN(lista * m2, 3) + '</span>'
-    + '<span>Vs. lista</span><span>' + txt + '</span>';
+  return '<span>Precio de lista' + (hoy ? ' (hoy)' : '') + '</span><span>$' + _fmtN(lista * m2, 3) + '</span>'
+    + '<span>Vs p/lista</span><span>' + txt + '</span>';
 }
 function medSet(i, k, v){
   _edit.items[i][k] = (k === 'descripcion' || k === 'unidad') ? v : (parseFloat(v) || 0);

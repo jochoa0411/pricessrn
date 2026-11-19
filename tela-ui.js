@@ -27,20 +27,37 @@
     if (r) { r.checked = true; actTelaPreview(); pintarAcabado(); }
   };
 
-  // ── Acabado de la pieza confeccionada: ojetes y ribete (OR) cada N pies + fuelle. Solo informa (no cambia el precio) ──
-  var orSi = true, orCada = 2, fuelle = false;
+  // Acabado de la pieza confeccionada: ojetes y ribete (OR), distancia entre OR y fuelle. Solo informa (no cambia el precio).
+  // orCada se guarda SIEMPRE en pies (así lo leen los presupuestos guardados); orUnidad solo cambia cómo se muestra.
+  var orSi = true, orCada = 2, fuelle = false, orUnidad = 'ft';
+  var PIE_M = 0.3048;
   function pintarAcabado() {
     var box = $('tlAcabado'); if (!box) return;
     var conf = (document.querySelector('input[name="cotModoTela"]:checked') || {}).value === 'conf';
     box.style.display = conf ? 'block' : 'none';
     setOn('tlOrSi', orSi); setOn('tlOrNo', !orSi); setOn('tlFuSi', fuelle); setOn('tlFuNo', !fuelle);
+    setOn('tlOrUnFt', orUnidad === 'ft'); setOn('tlOrUnM', orUnidad === 'm');
     $('tlOrBox').style.display = orSi ? 'flex' : 'none';
-    if (document.activeElement !== $('tlOrCada')) $('tlOrCada').value = (orCada && [1, 1.5, 2, 3].indexOf(orCada) < 0) ? orCada : '';   // «Otra» solo muestra valores fuera de los chips
-    document.querySelectorAll('.tl-or-q').forEach(function (b) { b.classList.toggle('on', parseFloat(b.dataset.v) === orCada); });
+    var enM = orUnidad === 'm';
+    document.querySelectorAll('.tl-or-q').forEach(function (b) {
+      var v = parseFloat(b.dataset.v);
+      b.textContent = enM ? fmt(v * PIE_M, 2) : String(v);
+      b.classList.toggle('on', v === orCada);
+    });
+    document.querySelectorAll('.ac-unit').forEach(function (s) { s.textContent = enM ? 'm' : 'pies'; });
+    var inp = $('tlOrCada');
+    if (document.activeElement !== inp) {
+      var esOtra = orCada > 0 && [1, 1.5, 2, 3].indexOf(orCada) < 0;
+      inp.value = esOtra ? (enM ? fmt(orCada * PIE_M, 2) : String(orCada)) : '';
+    }
     var res = $('tlAcabadoResumen');
-    if (res) res.textContent = (orSi ? 'Con ojetes y ribete cada ' + fmt(orCada, orCada % 1 ? 1 : 0) + ' ' + (orCada === 1 ? 'pie' : 'pies') : 'Sin ojetes ni ribete')
-      + (fuelle ? ', con fuelle.' : ', sin fuelle.');
+    if (res) {
+      var dist = enM ? fmt(orCada * PIE_M, 2) + ' m' : orCada + ' pies';
+      res.textContent = (orSi ? 'Con ojetes y ribete, distancia entre OR ' + dist : 'Sin ojetes ni ribete') + (fuelle ? ', con fuelle.' : '.');
+    }
   }
+  window.tlOrUnidad = function (u) { orUnidad = u === 'm' ? 'm' : 'ft'; pintarAcabado(); };
+  window.tlOrCadaIn = function (v) { var x = parseFloat(v) || 0; orCada = orUnidad === 'm' ? x / PIE_M : x; pintarAcabado(); };
   window.tlOR = function (v) { orSi = !!v; pintarAcabado(); };
   window.tlOrCada = function (v) { orCada = parseFloat(v) || 0; pintarAcabado(); };
   window.tlFuelle = function (v) { fuelle = !!v; pintarAcabado(); };
@@ -107,6 +124,9 @@
   function aplicarAdj() {
     var v = Math.abs(n($('tlAdjPct').value));
     $('cotRecargo').value = adjTipo === 'none' ? 0 : (adjTipo === 'desc' ? -v : v);
+    var exp = $('tlAdjExp');
+    if (exp) exp.textContent = adjTipo === 'none' ? 'Sin ajuste: el precio queda igual al de la lista.'
+      : (!v ? 'Escribe el porcentaje.' : (adjTipo === 'rec' ? 'El precio sube ' + v + ' % sobre la lista.' : 'El precio baja ' + v + ' % bajo la lista.'));
     cotCalcTela();
   }
   window.tlAdj = function (t) {
@@ -183,6 +203,8 @@
   window.tlMoneda = function (m) {
     if (moneda === m) return;
     moneda = m;
+    var hint = $('tlMonHint');
+    if (hint) hint.textContent = m === 'Q' ? 'El total se muestra en quetzales. Necesitas el tipo de cambio del día.' : 'El total se muestra en dólares (US$).';
     if (m === 'Q') { $('tcBox').style.display = 'block'; tcManual = false; tcVacio = false; aplicarTcOficial(true); if (!tcOficial && $('tcEditor').style.display === 'none') tlTcEditar(); }
     else { $('tcBox').style.display = 'none'; $('tcEditor').style.display = 'none'; $('cotTC').value = ''; }
     cotCalcTela();

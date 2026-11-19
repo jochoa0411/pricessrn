@@ -683,6 +683,7 @@ body.tl-bar-on .content { padding-bottom:104px; }
 #cotizar .total-box { background:#1D1D1F; border:none; border-radius:999px; padding:12px 18px; margin-top:12px; color:#FFFFFF; }
 #cotizar .total-box strong { color:#FFFFFF; font-size:17px; font-weight:600; }
 #cotizar .info-text { color:#86868B !important; }
+#cotizar .tl-hint { font-size:14px; color:#86868B; margin:8px 0 0; line-height:1.4; }
 
 /* ── Acabado (ojetes, separación, fuelle): una tarjeta con preguntas en orden ── */
 .ac-card { background:#FFFFFF; border:1px solid #E5E5EA; border-radius:16px; padding:4px 14px 12px; }
@@ -691,6 +692,9 @@ body.tl-bar-on .content { padding-bottom:104px; }
 .ac-q { font-size:15px; font-weight:600; color:#1D1D1F; }
 .ac-otra { display:inline-flex; align-items:center; gap:6px; font-size:14px; color:#86868B; margin-left:4px; }
 .ac-otra input { width:78px; padding:8px 10px; border:1px solid #E5E5EA; border-radius:999px; font-size:15px; text-align:center; }
+.ac-head { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+.ac-unidad { margin-bottom:0; }
+.ac-unidad button { flex:0 0 auto; padding:6px 12px; }
 .ac-resumen { margin:10px 0 0; font-size:14px; color:#1D1D1F; font-weight:500; }
 #cotizar .ac-card .tl-presets { margin-bottom:0; background:#F0F0F2; }
 #cotizar .ac-card .tl-presets button.on { background:#FFFFFF; color:#1D1D1F; font-weight:600; box-shadow:0 1px 2px rgba(0,0,0,.08); }
@@ -1123,25 +1127,31 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
             <div class="tl-h">Acabado <small>solo Confeccionado</small></div>
             <div class="ac-card">
               <div class="ac-row">
-                <div class="ac-q">¿Lleva ojetes y ribete?</div>
-                <div class="tl-presets" role="group" aria-label="¿Lleva ojetes y ribete?">
+                <div class="ac-q">Ojetes y ribete</div>
+                <div class="tl-presets" role="group" aria-label="Ojetes y ribete">
                   <button type="button" id="tlOrSi" onclick="tlOR(true)">Sí</button>
                   <button type="button" id="tlOrNo" onclick="tlOR(false)">No</button>
                 </div>
               </div>
               <div class="ac-row" id="tlOrBox">
-                <div class="ac-q">¿Cada cuántos pies?</div>
+                <div class="ac-head">
+                  <div class="ac-q">Distancia entre OR</div>
+                  <div class="tl-presets ac-unidad" role="group" aria-label="Unidad de la distancia">
+                    <button type="button" id="tlOrUnFt" onclick="tlOrUnidad('ft')">pies</button>
+                    <button type="button" id="tlOrUnM" onclick="tlOrUnidad('m')">m</button>
+                  </div>
+                </div>
                 <div class="tl-or">
                   <button type="button" class="tl-or-q" data-v="1" onclick="tlOrCada(1)">1</button>
                   <button type="button" class="tl-or-q" data-v="1.5" onclick="tlOrCada(1.5)">1.5</button>
                   <button type="button" class="tl-or-q" data-v="2" onclick="tlOrCada(2)">2</button>
                   <button type="button" class="tl-or-q" data-v="3" onclick="tlOrCada(3)">3</button>
-                  <label class="ac-otra"><span>Otra</span><input type="number" id="tlOrCada" inputmode="decimal" step="0.5" min="0.5" placeholder="Ej: 2.5" oninput="tlOrCada(this.value)"><span>pies</span></label>
+                  <label class="ac-otra"><span>Otra</span><input type="number" id="tlOrCada" inputmode="decimal" step="0.01" min="0.01" placeholder="Ej: 2.5" oninput="tlOrCadaIn(this.value)"><span class="ac-unit">pies</span></label>
                 </div>
               </div>
               <div class="ac-row">
-                <div class="ac-q">¿Lleva fuelle?</div>
-                <div class="tl-presets" role="group" aria-label="¿Lleva fuelle?">
+                <div class="ac-q">Fuelle</div>
+                <div class="tl-presets" role="group" aria-label="Fuelle">
                   <button type="button" id="tlFuNo" onclick="tlFuelle(false)">No</button>
                   <button type="button" id="tlFuSi" onclick="tlFuelle(true)">Sí</button>
                 </div>
@@ -1200,16 +1210,17 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
           <div class="pp" data-pp="3">
           <div class="tl-sec">
             <div>
-              <div class="tl-h">Ajuste comercial <small>opcional</small></div>
+              <div class="tl-h">Ajuste al precio de lista <small>opcional</small></div>
               <div class="tl-seg tl-seg-w" role="group" aria-label="Ajuste comercial">
-                <button type="button" id="tlAdjNone" onclick="tlAdj('none')">Ninguno</button>
-                <button type="button" id="tlAdjDesc" onclick="tlAdj('desc')">Descuento</button>
-                <button type="button" id="tlAdjRec" onclick="tlAdj('rec')">Recargo</button>
+                <button type="button" id="tlAdjNone" onclick="tlAdj('none')">Sin ajuste</button>
+                <button type="button" id="tlAdjRec" onclick="tlAdj('rec')">Recargo (+)</button>
+                <button type="button" id="tlAdjDesc" onclick="tlAdj('desc')">Descuento (−)</button>
               </div>
               <div id="tlAdjBox" class="tl-adj" style="display:none">
                 <div class="tl-pct"><input type="number" id="tlAdjPct" min="0" max="90" step="0.5" inputmode="decimal" placeholder="0" oninput="tlAdjPct()"><span>%</span></div>
                 <button type="button" onclick="tlQuick(5)">5%</button><button type="button" onclick="tlQuick(10)">10%</button><button type="button" onclick="tlQuick(15)">15%</button>
               </div>
+              <p class="tl-hint" id="tlAdjExp">Sin ajuste: el precio queda igual al de la lista.</p>
               <input type="number" id="cotRecargo" value="0" hidden oninput="cotCalcTela()">
             </div>
           </div>
@@ -1220,6 +1231,7 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
               <button type="button" id="tlMonUsd" class="on" onclick="tlMoneda('USD')">Dólares (US$)</button>
               <button type="button" id="tlMonQ" onclick="tlMoneda('Q')">Quetzales (Q)</button>
             </div>
+            <p class="tl-hint" id="tlMonHint">El total se muestra en dólares (US$).</p>
             <div id="tcBox" style="display:none;margin-top:10px">
               <button type="button" class="opt-chip" id="tcChip" onclick="tlTcEditar()" aria-expanded="false"></button>
               <div id="tcEditor" class="tc-editor" style="display:none">
