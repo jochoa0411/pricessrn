@@ -1382,14 +1382,14 @@ function _htmlCalculoItem(i){
     var base = i.precioManual ? i.precioManual : (i.p / (1 + (i.recargo || 0) / 100));
     h += '<h5>' + _ic('fabric') + ' ' + _esc(i.nombre) + ' · ' + (i.modo === 'master' ? 'Rollo Master' : 'Confeccionado') + '</h5>'
       + _filaCalc('Ancho solicitado', _medida(i.aSolFt, i.aSolM, i.ua === 'm'))
-      + _filaCalc('Ancho cobrado (múltiplo de 6 ft)', _medida(i.aCobFt, i.aCobM, i.ua === 'm') + (difiere ? ' ⟵ ajustado' : ''))
+      + _filaCalc('Ancho cobrado', _medida(i.aCobFt, i.aCobM, i.ua === 'm') + (difiere ? ' ⟵ ajustado' : ''))
       + _filaCalc('Largo por pieza', _medida(i.lFt, i.lM, i.ul === 'm'))
       + _filaCalc('Piezas', _fmtN(i.cant || 1, 0))
-      + _filaCalc('Área por pieza', _fmtN(i.arCorte / M2_FT2, 2) + ' m²')
-      + _filaCalc('Área total facturada', _fmtN(i.ar / M2_FT2, 2) + ' m²')
-      + _filaCalc(i.precioManual ? 'Precio manual' : 'Precio de lista', '$' + _fmtN(base * M2_FT2, 3) + ' /m²')
+      + _filaCalc('Área por pieza', _fmtN(i.arCorte / m2De(i), 2) + ' m²')
+      + _filaCalc('Área total facturada', _fmtN(i.ar / m2De(i), 2) + ' m²')
+      + _filaCalc(i.precioManual ? 'Precio manual' : 'Precio de lista', '$' + _fmtN(base * m2De(i), 3) + ' /m²')
       + (i.recargo ? _filaCalc('Recargo / descuento', (i.recargo > 0 ? '+' : '') + _fmtN(i.recargo, 1) + ' %') : '')
-      + _filaCalc('Precio aplicado', '$' + _fmtN(i.p * M2_FT2, 3) + ' /m²')
+      + _filaCalc('Precio aplicado', '$' + _fmtN(i.p * m2De(i), 3) + ' /m²')
       + _filaCalc('Total USD', '$' + _fmtN(i.tu, 2))
       + (i.tc ? _filaCalc('Tipo de cambio', 'Q' + _fmtN(i.tc, 2) + ' por US$1') + _filaCalc('Total Q', 'Q' + _fmtN(i.totalQ, 2)) : '');
   } else {
@@ -1438,14 +1438,14 @@ function _htmlCalculoPdf(c){
       hayUsd = true; usd += i.tu || 0; q += i.totalQ || 0;
       h = '<b style="font-size:15px;color:#1a6b45;">' + (n + 1) + '. ' + _esc(i.nombre) + ' · ' + (i.modo === 'master' ? 'Rollo Master' : 'Confeccionado') + '</b><table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:6px;">'
         + fila('Ancho solicitado', _medida(i.aSolFt, i.aSolM, i.ua === 'm'))
-        + fila('Ancho cobrado (múltiplo de 6 ft)', _medida(i.aCobFt, i.aCobM, i.ua === 'm') + (difiere ? ' — ajustado' : ''))
+        + fila('Ancho cobrado', _medida(i.aCobFt, i.aCobM, i.ua === 'm') + (difiere ? ' — ajustado' : ''))
         + fila('Largo por pieza', _medida(i.lFt, i.lM, i.ul === 'm'))
         + fila('Piezas', _fmtN(i.cant || 1, 0))
-        + fila('Área por pieza', _fmtN(i.arCorte / M2_FT2, 2) + ' m²')
-        + fila('Área total facturada', _fmtN(i.ar / M2_FT2, 2) + ' m²')
-        + fila(i.precioManual ? 'Precio manual' : 'Precio de lista', '$' + _fmtN(base * M2_FT2, 3) + ' /m²')
+        + fila('Área por pieza', _fmtN(i.arCorte / m2De(i), 2) + ' m²')
+        + fila('Área total facturada', _fmtN(i.ar / m2De(i), 2) + ' m²')
+        + fila(i.precioManual ? 'Precio manual' : 'Precio de lista', '$' + _fmtN(base * m2De(i), 3) + ' /m²')
         + (i.recargo ? fila(i.recargo > 0 ? 'Recargo' : 'Descuento', _fmtN(Math.abs(i.recargo), 1) + ' %') : '')
-        + fila('Precio aplicado', '$' + _fmtN(i.p * M2_FT2, 3) + ' /m²')
+        + fila('Precio aplicado', '$' + _fmtN(i.p * m2De(i), 3) + ' /m²')
         + fila('Total USD', '$' + _fmtN(i.tu, 2))
         + (i.tc ? fila('Tipo de cambio', 'Q' + _fmtN(i.tc, 2) + ' por US$1') + fila('Total Q', 'Q' + _fmtN(i.totalQ, 2)) : '') + '</table>';
     } else {

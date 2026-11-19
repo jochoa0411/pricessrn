@@ -103,7 +103,7 @@ async function generarPDF(){
     if(item.tipo === 'tela'){
       // Medidas y cálculo en metros y en pies (el ancho cobrado es el múltiplo de 6 ft superior al solicitado)
       var n1 = function(v,d){ return Number(v||0).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}); };
-      var M2 = 10.7639, FT = 3.28084;
+      var M2 = item.fac === 2 ? 10.7584 : 10.7639, FT = item.fac === 2 ? 3.28 : 3.28084;
       var aSolFt = item.aSolFt || 0, aSolM = item.aSolM || aSolFt/FT, lFt = item.lFt || (item.lM||0)*FT, lM = item.lM || lFt/FT;
       var aCobFt = item.aCobFt || aSolFt, aCobM = item.aCobM || aCobFt/FT;
       var cant = Math.max(1, item.cant || 1);

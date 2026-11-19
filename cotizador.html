@@ -667,6 +667,18 @@ body.tl-bar-on .content { padding-bottom:104px; }
 #cotizar .tl-modo-d, #cotizar .tl-modo-p small { color:#86868B; }
 #cotizar .btn-success, #cotizar .btn-primary { background:#1D1D1F; border-color:#1D1D1F; color:#FFFFFF; border-radius:999px; }
 #cotizar .btn-ghost { border-radius:999px; }
+
+/* ── Cuadro de resultado del cálculo (norma PFS Clean, solo dentro de #cotizar) ── */
+#cotizar .resultado { background:#FFFFFF; border:1px solid #E5E5EA; border-radius:20px; padding:16px; margin-top:12px; box-shadow:none; }
+#cotizar .resultado-row { border-bottom:1px solid #F0F0F2; padding:10px 0; font-size:15px; color:#1D1D1F; }
+#cotizar .resultado-row:last-of-type { border-bottom:none; }
+#cotizar .resultado-row > span { color:#86868B; }
+#cotizar .resultado-row strong { color:#1D1D1F; font-size:15px; font-weight:600; font-variant-numeric:tabular-nums; }
+#cotizar .warn-box { background:#F5F5F7; border:none; border-radius:14px; color:#1D1D1F; font-size:14px; padding:10px 12px; margin:0 0 6px; }
+#cotizar .warn-box .ic svg { color:#86868B; }
+#cotizar .total-box { background:#1D1D1F; border:none; border-radius:999px; padding:12px 18px; margin-top:12px; color:#FFFFFF; }
+#cotizar .total-box strong { color:#FFFFFF; font-size:17px; font-weight:600; }
+#cotizar .info-text { color:#86868B !important; }
 </style>
 <style id="fase1-accesible">
 /* ── Fase 1 · accesibilidad y claridad (revertible: tag git estable-2026-10-07) ──
@@ -1201,7 +1213,7 @@ body.tl-bar-on #appShell .content { padding-bottom: 118px; }
           <div id="cotResTela" class="resultado">
             <div id="warnTela"></div>
             <div class="resultado-row"><span>Ancho solicitado</span><strong id="rAnchoSol">—</strong></div>
-            <div class="resultado-row"><span>Ancho cobrado (múlt. 6ft)</span><strong id="rAnchoCob">—</strong></div>
+            <div class="resultado-row"><span>Ancho cobrado</span><strong id="rAnchoCob">—</strong></div>
             <div class="resultado-row"><span>Largo por pieza</span><strong id="rLargo">—</strong></div>
             <div class="resultado-row"><span>Área por pieza</span><strong id="rAreaCorte">—</strong></div>
             <div id="rCantFilaTela" class="resultado-row"><span>Cantidad de piezas</span><strong id="rCantTela">—</strong></div>
@@ -1599,8 +1611,21 @@ const LGM = (function(){
     check(ev, d){ return (m[ev] || []).every(f => f(d) !== false); }
   };
 })();
-const MT = 3.28084;
-const M2_FT2 = 10.7639;   // pie² por m²: la lista sigue en pie², se muestra en m²
+const MT = 3.28;
+const M2_FT2 = 10.7584;   // pie² por m² (3.28²): cálculos nuevos
+const M2_VIEJO = 10.7639; // pie² por m² (3.28084²): cálculos guardados antes del cambio
+// Cada ítem lleva fac:2 si se calculó con 3.28; los anteriores no lo tienen y conservan sus números
+function m2De(item){ return item && item.fac === 2 ? M2_FT2 : M2_VIEJO; }
+// Ancho de rollo de 3.81 m (12.5 ft). Cobro: ≤6 ft → 6 ft · 6–12.5 ft → 12.5 ft (rollo completo) · >12.5 ft → múltiplo de 6 ft (uniones).
+const ANCHO_ROLLO_FT = 12.5;
+function anchoCobradoFt(aFt){
+  if(!(aFt>0)) return 6;
+  // Se compara en metros redondeados a cm (la precisión con que se trabaja): 6 ft ≈ 1.83 m, 12.5 ft = 3.81 m
+  const aM = Math.round(aFt/MT*100)/100;
+  if(aM <= 1.83) return 6;                          // hasta 6 ft (1.83 m): se cobra 6 ft
+  if(aM <= 3.81) return ANCHO_ROLLO_FT;              // de 6 ft a 3.81 m: se cobra el rollo completo
+  return Math.ceil(aFt/6)*6;                        // más ancho que el rollo: múltiplo de 6 ft (uniones)
+}
 
 let TELAS = JSON.parse(localStorage.getItem('TELAS')) || [
   {id:1,nombre:'Saran Negro 40%',cat:'Saran',sombra:'40%',rollo:"12'x300'",pm:0.080,pc:0.097},
@@ -1866,7 +1891,7 @@ function _cotCalcTelaBase(){
 
   const aFt = ua==='m' ? a*MT : a;
   const lFt = ul==='m' ? l*MT : l;
-  const aC  = Math.ceil(aFt/6)*6 || 6;
+  const aC  = anchoCobradoFt(aFt);
   const arCorte = aC * lFt;
   const ar  = arCorte * cant;
 
@@ -1879,7 +1904,7 @@ function _cotCalcTelaBase(){
   const fmtA = (ft,u) => u==='m' ? (ft/MT).toFixed(2)+' m' : ft.toFixed(0)+' ft';
 
   document.getElementById('rAnchoSol').textContent  = ua==='m' ? a.toFixed(2)+' m' : aFt.toFixed(1)+' ft';
-  document.getElementById('rAnchoCob').textContent  = ua==='m' ? `${(aC/MT).toFixed(2)} m (${aC.toFixed(0)} ft)` : `${aC.toFixed(0)} ft`;
+  document.getElementById('rAnchoCob').textContent  = ua==='m' ? `${(aC/MT).toFixed(2)} m (${aC.toFixed(1)} ft)` : `${aC.toFixed(1)} ft`;
   document.getElementById('rLargo').textContent     = ul==='m' ? `${(lFt/MT).toFixed(2)} m (${lFt.toFixed(1)} ft)` : `${lFt.toFixed(1)} ft`;
   document.getElementById('rAreaCorte').textContent = (arCorte/M2_FT2).toFixed(2)+' m²';
   document.getElementById('rCantFilaTela').style.display = cant > 1 ? 'flex' : 'none';
@@ -1922,7 +1947,7 @@ function _cotCalcTelaBase(){
   const warn = document.getElementById('warnTela');
   const desperdicio = aC - aFt;
   if(desperdicio > 0.05){
-    warn.innerHTML = `<div class="warn-box">${_ic('warn')} Ancho ${ua==='m'?a.toFixed(2)+' m':aFt.toFixed(1)+' ft'} → cobrado ${fmtA(aC,ua)} (múltiplo de 6 ft). ${cant>1?cant+' piezas × ':''}${desperdicio.toFixed(1)} ft desperdicio c/u.</div>`;
+    warn.innerHTML = `<div class="warn-box">${_ic('warn')} Ancho ${ua==='m'?a.toFixed(2)+' m':aFt.toFixed(1)+' ft'} → cobrado ${fmtA(aC,ua)}${aC===ANCHO_ROLLO_FT ? ' (ancho del rollo, sin subir al siguiente múltiplo)' : ' (múltiplo de 6 ft)'}. ${cant>1?cant+' piezas × ':''}${desperdicio.toFixed(1)} ft desperdicio c/u.</div>`;
   } else { warn.innerHTML = ''; }
 
   res.classList.add('show');
@@ -1993,7 +2018,7 @@ function agregarTela(){
 
   const aFt = ua==='m' ? a*MT : a;
   const lFt = ul==='m' ? l*MT : l;
-  const aC  = Math.ceil(aFt/6)*6 || 6;
+  const aC  = anchoCobradoFt(aFt);
   const arCorte = aC * lFt;
   const ar  = arCorte * cant;
 
@@ -2008,7 +2033,7 @@ function agregarTela(){
     uid: Date.now() + Math.random(),
     addedAt: Date.now(),
     tipo: 'tela', telaId: t.id, nombre: t.nombre,
-    ua, ul, aSolFt: aFt, aSolM: a, aCobFt: aC, aCobM: aC/MT, lFt, lM: l,
+    ua, ul, aSolFt: aFt, aSolM: a, aCobFt: aC, aCobM: aC/MT, fac: 2, lFt, lM: l,
     cant, arCorte, ar, p, tu, tc: tcValido ? tc : null,
     totalQ: tcValido ? tu*tc : null,
     modo, recargo: r, precioManual: (!isNaN(pm)&&pm>0) ? pm : null
@@ -2100,7 +2125,7 @@ function editarItemCarrito(uid){
     document.getElementById('cotCantTela').value      = item.cant ?? 1;
     document.getElementById('cotTC').value            = item.tc ?? '';
     document.getElementById('cotRecargo').value       = item.recargo ?? 0;
-    document.getElementById('cotPrecioManual').value  = item.precioManual != null ? +(item.precioManual * M2_FT2).toFixed(3) : '';
+    document.getElementById('cotPrecioManual').value  = item.precioManual != null ? +(item.precioManual * m2De(item)).toFixed(3) : '';
     const modoRadio = document.querySelector(`input[name="cotModoTela"][value="${item.modo||'conf'}"]`);
     if(modoRadio) modoRadio.checked = true;
     actTelaPreview();
@@ -2152,7 +2177,7 @@ function renderCarrito(){
 
     if(item.tipo==='tela'){
       const solLabel = item.ua==='m' ? item.aSolM.toFixed(2)+' m' : item.aSolFt.toFixed(1)+' ft';
-      const cobLabel = item.ua==='m' ? `${item.aCobM.toFixed(2)} m (${item.aCobFt.toFixed(0)} ft)` : `${item.aCobFt.toFixed(0)} ft`;
+      const cobLabel = item.ua==='m' ? `${item.aCobM.toFixed(2)} m (${item.aCobFt.toFixed(1)} ft)` : `${item.aCobFt.toFixed(1)} ft`;
       const lLabel   = item.ul==='m' ? `${item.lM.toFixed(2)} m` : `${item.lFt.toFixed(1)} ft`;
       const difiere  = Math.abs(item.aCobFt - item.aSolFt) > 0.05;
       const tcLabel  = item.tc ? ` · TC ${item.tc}` : '';
@@ -2161,7 +2186,7 @@ function renderCarrito(){
       html += `<div class="cart-item">
         <div class="cart-item-body">
           <div class="ci-nombre">${_ic('fabric')} ${cantLabel}${item.nombre}</div>
-          <div class="ci-detalle">${solLabel} × ${lLabel}${item.cant>1?' c/u':''} → ${(item.ar/M2_FT2).toFixed(2)} m² · $${(item.p*M2_FT2).toFixed(3)}/m² (${item.modo==='master'?'Master':'Conf.'})${tcLabel}</div>
+          <div class="ci-detalle">${solLabel} × ${lLabel}${item.cant>1?' c/u':''} → ${(item.ar/m2De(item)).toFixed(2)} m² · $${(item.p*m2De(item)).toFixed(3)}/m² (${item.modo==='master'?'Master':'Conf.'})${tcLabel}</div>
           ${difiere?`<div class="ci-cobrado">${_ic('warn')} Cobrado: ${cobLabel}</div>`:''}
         </div>
         <div class="ci-total">${qLabel}</div>
@@ -2202,13 +2227,13 @@ function generarPDF_OLD_UNUSED(){
   CARRITO.forEach((item,idx)=>{
     if(item.tipo==='tela'){
       const solLabel = item.ua==='m' ? item.aSolM.toFixed(2)+' m' : item.aSolFt.toFixed(1)+' ft';
-      const cobLabel = item.ua==='m' ? `${item.aCobM.toFixed(2)} m (${item.aCobFt.toFixed(0)} ft)` : `${item.aCobFt.toFixed(0)} ft`;
+      const cobLabel = item.ua==='m' ? `${item.aCobM.toFixed(2)} m (${item.aCobFt.toFixed(1)} ft)` : `${item.aCobFt.toFixed(1)} ft`;
       const lLabel   = item.ul==='m' ? `${item.lM.toFixed(2)} m` : `${item.lFt.toFixed(1)} ft`;
       const difiere  = Math.abs(item.aCobFt - item.aSolFt) > 0.05;
       txt += `\n${idx+1}. ${item.cant>1?item.cant+'× ':''}${item.nombre} (${item.modo==='master'?'Master':'Confeccionado'})\n`;
       txt += `   Solicitado: ${solLabel} × ${lLabel}\n`;
-      if(difiere) txt += `   ATENCIÓN - Cobrado: ${cobLabel} × ${lLabel} (múltiplo 6ft)\n`;
-      txt += `   Área: ${(item.ar/M2_FT2).toFixed(2)} m² · $${(item.p*M2_FT2).toFixed(3)}/m²\n`;
+      if(difiere) txt += `   ATENCIÓN - Cobrado: ${cobLabel} × ${lLabel}\n`;
+      txt += `   Área: ${(item.ar/m2De(item)).toFixed(2)} m² · $${(item.p*m2De(item)).toFixed(3)}/m²\n`;
       txt += `   Total: $${item.tu.toFixed(2)} USD`;
       if(item.totalQ !== null) txt += ` = Q${item.totalQ.toFixed(2)} (TC ${item.tc})`;
       txt += '\n';
@@ -2221,7 +2246,7 @@ function generarPDF_OLD_UNUSED(){
 
   txt += '\n━━━━━━━━━━━━━━━━━━━━\n';
   txt += `TOTAL GENERAL: Q${gran.toFixed(2)}${haySinTC?' (*items USD sin TC no incluidos)':''}\n`;
-  txt += '\nATENCIÓN: anchos cobrados = múltiplo de 6 pies superior al solicitado.\nPalín, Escuintla · Guatemala';
+  txt += '\nATENCIÓN: anchos cobrados = múltiplo de 6 pies superior al solicitado, o el ancho del rollo (12.5 pies) cuando la medida cabe en él.\nPalín, Escuintla · Guatemala';
 
   if(navigator.share){
     navigator.share({ title: `Cotización ${ref}`, text: txt }).catch(()=>{});

@@ -3,7 +3,7 @@
 // controles de esta pantalla escriben en los MISMOS campos de siempre (cotAncho, cotUAncho, cotCantTela,
 // cotRecargo, radios cotModoTela…), así que el cálculo, el carrito y el envío no cambian.
 (function () {
-  var MT_ = 3.28084;
+  var MT_ = 3.28;
   function $(id) { return document.getElementById(id); }
   function n(v) { return parseFloat(v) || 0; }
   function fmt(v, d) { return Number(v).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
@@ -18,7 +18,7 @@
     box.innerHTML = items.map(function (m) {
       return '<button type="button" class="tl-modo' + (modo === m.v ? ' on' : '') + '" onclick="tlModo(\'' + m.v + '\')" aria-pressed="' + (modo === m.v) + '">'
         + '<div class="tl-modo-top"><span>' + m.titulo + '</span><span class="tl-dot"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span></div>'
-        + '<div class="tl-modo-p">' + (m.precio == null ? '—' : '$' + (Number(m.precio) * 10.7639).toFixed(3)) + ' <small>/ m²</small></div>'
+        + '<div class="tl-modo-p">' + (m.precio == null ? '—' : '$' + (Number(m.precio) * 10.7584).toFixed(3)) + ' <small>/ m²</small></div>'
         + '<div class="tl-modo-d">' + m.desc + '</div></button>';
     }).join('');
   };

@@ -46,7 +46,7 @@
       var totalUsd = it.tc ? v / it.tc : v, pPie = totalUsd / it.ar, piezas = it.cant || 1;
       l.push('Por pieza: <b>' + cur.simbolo + f(v / piezas, 2) + '</b>');
       l.push('Por pie²: <b>$' + f(pPie, 3) + '</b>' + (lista ? ' <span>(lista $' + f(lista, 3) + ' · ' + (pPie >= lista ? '+' : '') + f((pPie / lista - 1) * 100, 1) + ' %)</span>' : ''));
-      l.push('Por m²: <b>$' + f(pPie * 10.7639, 2) + '</b>');
+      l.push('Por m²: <b>$' + f(pPie * 10.7584, 2) + '</b>');
     } else {
       var u = v / it.cantidad;
       l.push('Por unidad: <b>Q' + f(u, 2) + '</b>' + (lista ? ' <span>(lista Q' + f(lista, 2) + ' · ' + (u >= lista ? '+' : '') + f((u / lista - 1) * 100, 1) + ' %)</span>' : ''));
