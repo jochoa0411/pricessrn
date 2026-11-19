@@ -90,13 +90,13 @@ input.n {
   <section class="card" aria-labelledby="h-ped">
     <h2 id="h-ped">Pedido y precio</h2>
     <div class="grid3">
-      <label class="f">Ancho pedido (m)<input class="n" id="ancho" type="number" inputmode="decimal" step="0.01" min="0" value="15" placeholder="Ej: 15"></label>
-      <label class="f">Largo por rollo (m)<input class="n" id="largo" type="number" inputmode="decimal" step="0.01" min="0" value="50" placeholder="Ej: 50"></label>
-      <label class="f">Rollos a cotizar<input class="n" id="cant" type="number" inputmode="numeric" step="1" min="1" value="800" placeholder="Ej: 800"></label>
+      <label class="f">Ancho pedido (m)<input class="n" id="ancho" type="number" inputmode="decimal" step="0.01" min="0" value="15" placeholder="Ej: 15.00 m del pedido"></label>
+      <label class="f">Largo por rollo (m)<input class="n" id="largo" type="number" inputmode="decimal" step="0.01" min="0" value="50" placeholder="Ej: 50.00 m de largo"></label>
+      <label class="f">Rollos a cotizar<input class="n" id="cant" type="number" inputmode="numeric" step="1" min="1" value="800" placeholder="Ej: 800 rollos"></label>
     </div>
     <div class="grid3" style="margin-top:10px">
-      <label class="f">Precio por m² (US$)<input class="n" id="precio" type="number" inputmode="decimal" step="0.01" min="0" placeholder="Ej: 1.20"></label>
-      <label class="f">Merma por unión (pulgadas)<input class="n" id="merma" type="number" inputmode="decimal" step="0.25" min="0" placeholder="Ej: 2"></label>
+      <label class="f">Precio por m² (US$)<input class="n" id="precio" type="number" inputmode="decimal" step="0.01" min="0" placeholder="Ej: 1.20 US$ por m²"></label>
+      <label class="f">Merma por unión (pulgadas)<input class="n" id="merma" type="number" inputmode="decimal" step="0.25" min="0" placeholder="Ej: 2 pulgadas por unión"></label>
     </div>
   </section>
 
@@ -175,7 +175,7 @@ function pintarRollos() {
   $('rollos').innerHTML = tipos.map((t, k) =>
     '<div class="rollo">'
     + '<label class="f">' + '<span><span class="sw" style="background:' + COLORES[k] + '"></span>Ancho ' + (k + 1) + ' (m)</span>'
-    + '<input class="n" type="number" inputmode="decimal" step="0.01" min="0" data-w="' + k + '" value="' + (t.w || '') + '" placeholder="Ej: 5.10"></label>'
+    + '<input class="n" type="number" inputmode="decimal" step="0.01" min="0" data-w="' + k + '" value="' + (t.w || '') + '" placeholder="' + ['Ej: 5.10 m (rollo grande)', 'Ej: 3.81 m (rollo chico)', 'Ej: 4.50 m (opcional)'][k] + '"></label>'
     + '<div class="step"><button type="button" data-k="' + k + '" data-d="-1" aria-label="Quitar un rollo de ancho ' + (k + 1) + '">−</button>'
     + '<output>' + t.n + '</output>'
     + '<button type="button" data-k="' + k + '" data-d="1" aria-label="Agregar un rollo de ancho ' + (k + 1) + '">+</button></div>'
