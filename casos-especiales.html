@@ -13,20 +13,6 @@
   --p0: #1D1D1F; --p1: #8E8E93; --p2: #D1D1D6;
   padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-    --bg: #000; --panel: #1C1C1E; --fg: #F5F5F7; --muted: #98989D; --line: #38383A;
-    --ink: #F5F5F7; --join: #FF453A; --ok: #30D158; --warn: #FFB86B; --warn-bg: #3A2A12;
-    --p0: #F5F5F7; --p1: #98989D; --p2: #48484A;
-  }
-}
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --bg: #000; --panel: #1C1C1E; --fg: #F5F5F7; --muted: #98989D; --line: #38383A;
-  --ink: #F5F5F7; --join: #FF453A; --ok: #30D158; --warn: #FFB86B; --warn-bg: #3A2A12;
-  --p0: #F5F5F7; --p1: #98989D; --p2: #48484A;
-}
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 body {
@@ -48,10 +34,13 @@ input.n {
   width: 100%; min-width: 0; font: inherit; font-size: 16px; color: var(--fg); background: var(--panel);
   border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px;
 }
-.rollo { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.rollo { display: grid; grid-template-columns: 1fr; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.rollo:last-child { border-bottom: none; }
+.rollo label.f { width: 100%; }
 .rollo:last-child { border-bottom: none; }
 .rollo .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: middle; }
-.step { display: inline-flex; align-items: center; gap: 8px; }
+.step { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; }
+.stepper { display: inline-flex; align-items: center; gap: 8px; }
 .step button {
   width: 44px; height: 44px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--fg);
   font-size: 22px; line-height: 1; cursor: pointer;
@@ -78,7 +67,7 @@ input.n {
 .opt:last-child { border-bottom: none; }
 .opt small { color: var(--muted); display: block; }
 .hint { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
-.quitar { border:none; background:transparent; color:var(--muted); font:inherit; font-size:13px; cursor:pointer; padding:6px 4px; text-decoration:underline; }
+.quitar { border:1px solid var(--line); background:var(--panel); color:var(--fg); font:inherit; font-size:14px; cursor:pointer; min-height:40px; padding:0 14px; border-radius:999px; }
 </style>
 </head>
 <body>
@@ -176,11 +165,15 @@ function etiqueta(o) {
 function pintarRollos() {
   $('rollos').innerHTML = tipos.map((t, k) =>
     '<div class="rollo">'
-    + '<label class="f">' + '<span><span class="sw" style="background:' + COLORES[k] + '"></span>Rollo ' + 'ABC'[k] + ' · ancho en metros</span>'
+    + '<label class="f"><span><span class="sw" style="background:' + COLORES[k] + '"></span>Rollo ' + 'ABC'[k] + ' · ancho en metros</span>'
     + '<input class="n" type="number" inputmode="decimal" step="0.01" min="0" data-w="' + k + '" value="' + (t.w || '') + '" placeholder="' + ['Ej: 5.10 m (rollo grande)', 'Ej: 3.81 m (rollo chico)', 'Ej: 4.50 m (opcional)'][k] + '"></label>'
-    + '<div class="step"><button type="button" class="quitar" data-quitar="' + k + '" aria-label="Quitar este ancho">Quitar</button><button type="button" data-k="' + k + '" data-d="-1" aria-label="Quitar un rollo de ancho ' + (k + 1) + '">−</button>'
+    + '<div class="step">'
+    + '<button type="button" class="quitar" data-quitar="' + k + '" aria-label="Quitar este ancho">Quitar ancho</button>'
+    + '<div class="stepper">'
+    + '<button type="button" data-k="' + k + '" data-d="-1" aria-label="Quitar un rollo de este ancho">−</button>'
     + '<output>' + t.n + '</output>'
-    + '<button type="button" data-k="' + k + '" data-d="1" aria-label="Agregar un rollo de ancho ' + (k + 1) + '">+</button></div>'
+    + '<button type="button" data-k="' + k + '" data-d="1" aria-label="Agregar un rollo de este ancho">+</button>'
+    + '</div></div>'
     + '</div>').join('');
   $('agregar').disabled = tipos.every((t) => t.w > 0);
   $('agregar').style.display = tipos.every((t) => t.w > 0) ? 'none' : '';
